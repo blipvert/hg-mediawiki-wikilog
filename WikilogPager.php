@@ -140,24 +140,7 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		$heading = "<h2>{$heading}</h2>\n";
 
 		# Retrieve article parser output
-		$article = new Article( $itemTitle );
-		$content = $article->fetchContent();
-		if ( $wgEnableParserCache
-				&& intval( $wgUser->getOption( 'stubthreshold' ) ) == 0 )
-		{
-			$parserCache = ParserCache::singleton();
-			$parserOutput = $parserCache->get( $article, $wgUser );
-
-			if ( !$parserOutput ) {
-				$parserOutput = $wgParser->parse( $content, $itemTitle, $this->mParserOptions );
-				if ( $parserOutput->getCacheTime() != -1 ) {
-					$parserCache = ParserCache::singleton();
-					$parserCache->save( $parserOutput, $article, $wgUser );
-				}
-			}
-		} else {
-			$parserOutput = $wgParser->parse( $content, $itemTitle, $this->mParserOptions );
-		}
+		list( $article, $parserOutput ) = Wikilog::parsedArticle( $itemTitle );
 
 		if ( isset( $parserOutput->mExtWikilog ) && $parserOutput->mExtWikilog->mSummary ) {
 			$content = $parserOutput->mExtWikilog->mSummary;

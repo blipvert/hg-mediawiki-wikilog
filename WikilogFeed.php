@@ -125,24 +125,7 @@ class WikilogFeed {
 		$itemTitle =& Title::makeTitle( $row->page_namespace, $row->page_title );
 
 		# Retrieve article parser output
-		$article = new Article( $itemTitle );
-		$arttext = $article->fetchContent();
-		if ( $wgEnableParserCache
-				&& intval( $wgUser->getOption( 'stubthreshold' ) ) == 0 )
-		{
-			$parserCache = ParserCache::singleton();
-			$parserOutput = $parserCache->get( $article, $wgUser );
-
-			if ( !$parserOutput ) {
-				$parserOutput = $wgParser->parse( $arttext, $itemTitle, $this->mParserOptions );
-				if ( $parserOutput->getCacheTime() != -1 ) {
-					$parserCache = ParserCache::singleton();
-					$parserCache->save( $parserOutput, $article, $wgUser );
-				}
-			}
-		} else {
-			$parserOutput = $wgParser->parse( $arttext, $itemTitle, $this->mParserOptions );
-		}
+		list( $article, $parserOutput ) = Wikilog::parsedArticle( $itemTitle );
 
 		# Generate some fixed bits
 		$authors = unserialize( $row->wlp_authors );

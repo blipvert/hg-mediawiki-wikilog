@@ -417,6 +417,49 @@ class Wikilog {
 		return $authorSigCache[$author];
 	}
 
+	/**
+	 * Retrieves an article parsed ouput either from parser cache or by
+	 * parsing it again. If parsing again, stores it back into parser cache.
+	 *
+	 * @note This should really be part of MediaWiki, but it doesn't provide
+	 *   such convenient functionality in a single function, and we have to
+	 *   implement it here.
+	 *
+	 * @param $title Article title object.
+	 * @return Two-element array containing the article and its parser output.
+	 */
+	static function parsedArticle( Title $title ) {
+		static $parserOpt = false;
+		global $wgUser, $wgParser, $wgEnableParserCache;
+
+		if ( !$parserOpt ) {
+			$parserOpt = ParserOptions::newFromUser( $wgUser );
+			$parserOpt->setTidy( true );
+			$parserOpt->enableLimitReport();
+		}
+
+		$article = new Article( $title );
+		if ( $wgEnableParserCache
+				&& intval( $wgUser->getOption( 'stubthreshold' ) ) == 0 )
+		{
+			$parserCache = ParserCache::singleton();
+			$parserOutput = $parserCache->get( $article, $wgUser );
+
+			if ( !$parserOutput ) {
+				$arttext = $article->fetchContent();
+				$parserOutput = $wgParser->parse( $arttext, $itemTitle, $parserOpt );
+				if ( $parserOutput->getCacheTime() != -1 ) {
+					$parserCache = ParserCache::singleton();
+					$parserCache->save( $parserOutput, $article, $wgUser );
+				}
+			}
+		} else {
+			$arttext = $article->fetchContent();
+			$parserOutput = $wgParser->parse( $arttext, $itemTitle, $parserOpt );
+		}
+
+		return array( $article, $parserOutput );
+	}
 }
 
 
