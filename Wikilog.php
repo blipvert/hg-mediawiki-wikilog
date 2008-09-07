@@ -148,12 +148,19 @@ $wgWikilogFeedClasses = array(
 $wgWikilogNamespaces = array();
 
 
+/**
+ * Main Wikilog class. Used as a namespace. No instances of this class are
+ * intended to exist, all member functions are static.
+ */
 class Wikilog {
 
 	###
 	##  MediaWiki hooks.
 	#
 
+	/**
+	 * Extension setup function.
+	 */
 	static function Setup() {
 		global $wgWikilogNamespaces, $wgNamespacesWithSubpages;
 
@@ -164,6 +171,12 @@ class Wikilog {
 		}
 	}
 
+	/**
+	 * ArticleFromTitle hook handler function.
+	 * Detects if the article is a wikilog article (self::getWikilogInfo
+	 * returns an instance of WikilogInfo) and returns the proper class
+	 * instance for the article.
+	 */
 	static function ArticleFromTitle( &$title, &$article ) {
 		if ( ( $wi = self::getWikilogInfo( $title ) ) ) {
 			if ( $title->isTalkPage() ) {
@@ -178,6 +191,10 @@ class Wikilog {
 		return true;
 	}
 
+	/**
+	 * ArticleEditUpdatesDeleteFromRecentchanges hook handler function.
+	 * Performs post-edit updates if article is a wikilog article.
+	 */
 	static function ArticleEditUpdates( &$article ) {
 		$wi = self::getWikilogInfo( $article->getTitle() );
 
@@ -237,6 +254,11 @@ class Wikilog {
 		return true;
 	}
 
+	/**
+	 * ArticleDeleteComplete hook handler function.
+	 * Purges wikilog metadata when an article is deleted.
+	 * @note This function REQUIRES MediaWiki 1.13 or higher ($id parameter).
+	 */
 	static function ArticleDeleteComplete( &$article, &$user, $reason, $id )
 	{
 		# Retrieve wikilog information.
@@ -261,7 +283,11 @@ class Wikilog {
 
 		return true;
 	}
-	
+
+	/**
+	 * TitleMoveComplete hook handler function.
+	 * Handles moving articles to and from wikilog namespaces.
+	 */
 	static function TitleMoveComplete( &$oldtitle, &$newtitle, &$user, $pageid,
 			$redirid )
 	{
@@ -293,6 +319,10 @@ class Wikilog {
 		return true;
 	}
 
+	/**
+	 * LanguageGetSpecialPageAliases hook handler function.
+	 * Adds language aliases for special pages.
+	 */
 	static function LanguageGetSpecialPageAliases( &$specialPageAliases, $lang ) {
 		wfLoadExtensionMessages( 'Wikilog' );
 		$title = Title::newFromText( wfMsg( 'wikilog-specialwikilog' ) );
@@ -300,6 +330,10 @@ class Wikilog {
 		return true;
 	}
 
+	/**
+	 * LanguageGetMagic hook handler function.
+	 * Adds language aliases for magic words.
+	 */
 	static function LanguageGetMagic( &$magicWords, $lang ) {
 		/* TODO */
 		$magicWords['wl-publish'] = array( 0, 'wl-publish' );
@@ -312,6 +346,14 @@ class Wikilog {
 	##  Other global wikilog functions.
 	#
 
+	/**
+	 * Returns wikilog information for the given title.
+	 * This function checks if @a $title is an article title in a wikilog
+	 * namespace, and returns an appropriate WikilogInfo instance if so.
+	 *
+	 * @param $title Article title object.
+	 * @returns WikilogInfo instance, or NULL.
+	 */
 	static function getWikilogInfo( $title ) {
 		global $wgWikilogNamespaces;
 
@@ -323,6 +365,15 @@ class Wikilog {
 		}
 	}
 
+	/**
+	 * Formats a list of authors.
+	 * Given a list of authors, this function formats it in wiki syntax,
+	 * with links to their user and user-talk pages, according to the
+	 * 'wikilog-author-signature' system message.
+	 *
+	 * @param $list Array of authors.
+	 * @return Wikitext-formatted textual list of authors.
+	 */
 	static function authorList( $list ) {
 		wfLoadExtensionMessages( 'Wikilog' );
 
@@ -352,6 +403,14 @@ class Wikilog {
 		}
 	}
 
+	/**
+	 * Formats a single author signature.
+	 * Uses the 'wikilog-author-signature' system message, in order to provide
+	 * user and user-talk links.
+	 *
+	 * @param $author String, author name.
+	 * @return Wikitext-formatted author signature.
+	 */
 	static function authorSig( $author ) {
 		static $authorSigCache = array();
 		if ( !isset( $authorSigCache[$author] ) )
@@ -362,13 +421,23 @@ class Wikilog {
 }
 
 
+/**
+ * Wikilog information class.
+ * This class represents relationship information about a wikilog article,
+ * given its title. It is used to derive the main wikilog article name or the
+ * comments page name from the wikilog post, for example.
+ */
 class WikilogInfo {
 
-	public $mWikilogName;
-	public $mWikilogTitle;
-	public $mItemName;
-	public $mItemTitle;
+	public $mWikilogName;		///< Wikilog title (textual string).
+	public $mWikilogTitle;		///< Wikilog main article title object.
+	public $mItemName;			///< Wikilog post title (textual string).
+	public $mItemTitle;			///< Wikilog post title object.
 
+	/**
+	 * Constructor.
+	 * @param $title Title object.
+	 */
 	function __construct( $title ) {
 		$ns = Namespace::getSubject( $title->getNamespace() );
 		if ( strpos( $title->getText(), '/' ) !== false ) {
@@ -385,7 +454,6 @@ class WikilogInfo {
 	}
 
 	function isItem() { return $this->mItemTitle !== null; }
-
 	function getName() { return $this->mWikilogName; }
 	function getTitle() { return $this->mWikilogTitle; }
 	function getItemName() { return $this->mItemName; }
