@@ -166,7 +166,8 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		}
 
 		# Generate some fixed bits
-		$authors = $this->authorList( unserialize( $row->wlp_authors ) );
+		$authors = unserialize( $row->wlp_authors );
+		$authors = Wikilog::authorList( array_keys( $authors ) );
 		$pubdate = $wgContLang->timeanddate( $row->wlp_pubdate, true );
 
 		# Item header and footer
@@ -202,41 +203,6 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		$url = $skin->makeKnownLinkObj( $title, wfMsg('editsection'), 'action=edit' );
 		$result = wfMsg( 'editsection-brackets', $url );
 		return "<span class=\"editsection\">$result</span>";
-	}
-
-	private function authorList( $list ) {
-		if ( is_string( $list ) ) {
-			return $this->authorSig( $list );
-		}
-		else if ( is_array( $list ) ) {
-			$list = array_keys( $list );
-			$count = count( $list );
-
-			if ( $count == 0 ) {
-				return '';
-			}
-			else if ( $count == 1 ) {
-				return $this->authorSig( $list[0] );
-			}
-			else {
-				$first = implode( ', ', array_map( array( &$this, 'authorSig' ),
-					array_slice( $list, 0, $count - 1 ) ) );
-				$last = $this->authorSig( $list[$count-1] );
-				$and = wfMsgForContent( 'and' );
-
-				return "{$first} {$and} {$last}";
-			}
-		}
-		else {
-			return '';
-		}
-	}
-
-	private function authorSig( $author ) {
-		static $authorSigCache = array();
-		if ( !isset( $authorSigCache[$author] ) )
-			$authorSigCache[$author] = wfMsgForContent( 'wikilog-author-signature', $author );
-		return $authorSigCache[$author];
 	}
 
 }

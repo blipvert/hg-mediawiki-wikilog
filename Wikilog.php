@@ -381,7 +381,6 @@ class Wikilog {
 			return self::authorSig( $list );
 		}
 		else if ( is_array( $list ) ) {
-			$list = array_keys( $list );
 			$count = count( $list );
 
 			if ( $count == 0 ) {
