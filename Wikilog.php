@@ -84,6 +84,9 @@ $wgHooks['ArticleFromTitle'][] = 'Wikilog::ArticleFromTitle';
 $wgHooks['ArticleEditUpdatesDeleteFromRecentchanges'][] = 'Wikilog::ArticleEditUpdates';
 $wgHooks['ArticleDeleteComplete'][] = 'Wikilog::ArticleDeleteComplete';
 $wgHooks['TitleMoveComplete'][] = 'Wikilog::TitleMoveComplete';
+$wgHooks['GetLocalURL'][] = 'Wikilog::GetLocalURL';
+$wgHooks['GetFullURL'][] = 'Wikilog::GetFullURL';
+$wgHooks['PageRenderingHash'][] = 'Wikilog::PageRenderingHash';
 $wgHooks['LanguageGetSpecialPageAliases'][] = 'Wikilog::LanguageGetSpecialPageAliases';
 $wgHooks['LanguageGetMagic'][] = 'Wikilog::LanguageGetMagic';
 
@@ -154,6 +157,17 @@ $wgWikilogNamespaces = array();
  */
 class Wikilog {
 
+	/**
+	 * True if we are expanding local URLs (in order to render stand-alone,
+	 * base-less feeds.
+	 */
+	static public $expandingUrls = false;
+
+	/**
+	 * Original paths before expansion.
+	 */
+	static public $originalPaths = null;
+
 	###
 	##  MediaWiki hooks.
 	#
@@ -168,6 +182,13 @@ class Wikilog {
 		foreach ( $wgWikilogNamespaces as $ns ) {
 			$wgNamespacesWithSubpages[$ns  ] = true;
 			$wgNamespacesWithSubpages[$ns^1] = true;
+		}
+
+		# Work around bug in MediaWiki 1.13 when '?action=render'.
+		# https://bugzilla.wikimedia.org/show_bug.cgi?id=15512
+		global $wgRequest;
+		if ( $wgRequest->getVal( 'action' ) == 'render' ) {
+			self::expandLocalUrls();
 		}
 	}
 
@@ -320,6 +341,47 @@ class Wikilog {
 	}
 
 	/**
+	 * GetLocalURL hook handler function.
+	 * Expands local URL @a $url if self::$expandingUrls is true.
+	 */
+	static function GetLocalURL( &$title, &$url, $query ) {
+		if ( self::$expandingUrls ) {
+			$url = wfExpandUrl( $url );
+		}
+		return true;
+	}
+
+	/**
+	 * GetFullURL hook handler function.
+	 * Fix some brain-damage in Title::getFullURL() (as of MW 1.13) that
+	 * prepends $wgServer to URL without using wfExpandUrl(), in part because
+	 * we want (above in Wikilog::GetLocalURL()) to return an absolute URL
+	 * from Title::getLocalURL() in situations where action != 'render'.
+	 * @todo Report this bug to MediaWiki bugzilla.
+	 */
+	static function GetFullURL( &$title, &$url, $query ) {
+		global $wgServer;
+		if ( self::$expandingUrls ) {
+			$l = strlen( $wgServer );
+			if ( substr( $url, 0, 2*$l ) == $wgServer.$wgServer ) {
+				$url = substr( $url, $l );
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * PageRenderingHash hook handler function.
+	 * Add a tag to page rendering hash if self::$expandingUrls is true.
+	 */
+	static function PageRenderingHash( &$confstr ) {
+		if ( self::$expandingUrls ) {
+			$confstr .= '!wl-expurls';
+		}
+		return true;
+	}
+
+	/**
 	 * LanguageGetSpecialPageAliases hook handler function.
 	 * Adds language aliases for special pages.
 	 */
@@ -363,6 +425,62 @@ class Wikilog {
 		} else {
 			return null;
 		}
+	}
+
+	/**
+	 * Enable expansion of local URLs.
+	 *
+	 * In order to output stand-alone content with all absolute links, it is
+	 * necessary to expand local URLs. MediaWiki tries to do this in a few
+	 * places by sniffing into the 'action' GET request parameter, but this
+	 * fails in many ways. This function tries to remedy this.
+	 *
+	 * This function pre-expands all base URL fragments used by MediaWiki,
+	 * and also enables URL expansion in the Wikilog::GetLocalURL hook.
+	 * The original values of all URLs are saved when $enable = true, and
+	 * restored back when $enabled = false.
+	 *
+	 * The proper way to use this function is:
+	 * @code
+	 *   $saveExpUrls = Wikilog::expandLocalUrls();
+	 *   # ...code that uses $wgParser in order to parse articles...
+	 *   Wikilog::expandLocalUrls( $saveExpUrls );
+	 * @endcode
+	 *
+	 * @note Using this function changes the behavior of Parser. When enabled,
+	 *   parsed content should be cached under a different key than when
+	 *   disabled.
+	 */
+	static function expandLocalUrls( $enable = true ) {
+		global $wgScriptPath, $wgUploadPath, $wgStylePath, $wgMathPath, $wgLocalFileRepo;
+		$prev = self::$expandingUrls;
+
+		if ( $enable ) {
+			if ( !self::$expandingUrls ) {
+				self::$expandingUrls = true;
+
+				# Save original values.
+				self::$originalPaths = array( $wgScriptPath, $wgUploadPath,
+					$wgStylePath, $wgMathPath, $wgLocalFileRepo['url'] );
+
+				# Expand paths.
+				$wgScriptPath = wfExpandUrl( $wgScriptPath );
+				$wgUploadPath = wfExpandUrl( $wgUploadPath );
+				$wgStylePath  = wfExpandUrl( $wgStylePath  );
+				$wgMathPath   = wfExpandUrl( $wgMathPath   );
+				$wgLocalFileRepo['url'] = wfExpandUrl( $wgLocalFileRepo['url'] );
+			}
+		} else {
+			if ( self::$expandingUrls ) {
+				self::$expandingUrls = false;
+
+				# Restore original values.
+				list( $wgScriptPath, $wgUploadPath, $wgStylePath, $wgMathPath,
+					$wgLocalFileRepo['url'] ) = self::$originalPaths;
+			}
+		}
+
+		return $prev;
 	}
 
 	/**
