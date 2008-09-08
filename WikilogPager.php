@@ -294,7 +294,7 @@ class WikilogArchivesPager extends TablePager {
 		$fields['wlp_pubdate']	= wfMsgHtml( 'wikilog-published' );
 		$fields['wlp_authors']	= wfMsgHtml( 'wikilog-authors' );
 
-		if ( !$this->mWikilogData->isSingleWikilog() )
+		if ( !$this->mQuery->isSingleWikilog() )
 			$fields['_wl_wikilog'] = wfMsgHtml( 'wikilog-wikilog' );
 
 		$fields['_wl_title']	= wfMsgHtml( 'wikilog-title' );
