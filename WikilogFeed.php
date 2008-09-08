@@ -97,7 +97,7 @@ class WikilogFeed {
 		}
 
 		$feed = new $wgWikilogFeedClasses[$type](
-			$this->mTitle->getFullUrl(), /// TODO: make a proper tag
+			$this->mTitle->getFullUrl(),
 			$name,
 			wfTimestampNow(),
 			$this->mTitle->getFullUrl()
@@ -134,7 +134,7 @@ class WikilogFeed {
 	}
 
 	function feedEntry( $row ) {
-		global $wgParser, $wgEnableParserCache, $wgUser;
+		global $wgServerName, $wgParser, $wgUser, $wgEnableParserCache;
 		
 		list( $wikilogTitleName, $itemName ) =
 			explode( '/', str_replace( '_', ' ', $row->page_title ), 2 );
@@ -149,10 +149,11 @@ class WikilogFeed {
 		$pubdate = $row->wlp_pubdate;
 
 		# Create new syndication entry.
+		$wkid = wfWikiID();
 		$entry = new WlSyndicationEntry(
-			$itemTitle->getFullUrl(),
+			"tag:$wgServerName,$wkid,{$row->page_id}",
 			$itemName,
-			$pubdate,
+			$article->getTimestamp(),	# or $article->getTouched()?
 			$itemTitle->getFullUrl()
 		);
 
