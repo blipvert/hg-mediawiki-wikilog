@@ -43,8 +43,8 @@ class WikilogItemPage extends Article {
 	private   $mItemDataLoaded = false;
 	public    $mItemPublish    = false;
 	public    $mItemPubDate    = false;
-	public    $mItemAuthors    = false;
-	public    $mItemTags       = false;
+	public    $mItemAuthors    = array();
+	public    $mItemTags       = array();
 
 	function __construct( &$title, &$wi ) {
 		parent::__construct( $title );
@@ -166,8 +166,16 @@ class WikilogItemPage extends Article {
 			if ( $data ) {
 				$this->mItemPublish = $data->wlp_publish;
 				$this->mItemPubDate = wfTimestamp( TS_MW, $data->wlp_pubdate );
+
 				$this->mItemAuthors = unserialize( $data->wlp_authors );
+				if ( !is_array( $this->mItemAuthors ) ) {
+					$this->mItemAuthors = array();
+				}
+
 				$this->mItemTags = unserialize( $data->wlp_tags );
+				if ( !is_array( $this->mItemTags ) ) {
+					$this->mItemTags = array();
+				}
 			}
 
 			$this->mItemDataLoaded = true;
