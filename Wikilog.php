@@ -417,9 +417,9 @@ class Wikilog {
 			);
 		} else if( $wgDBtype == 'postgres' ) {
 			/// TODO: PostgreSQL tables.
-			print "\n"
+			print "\n".
 				"Warning: There are no PostgreSQL table structures for the\n".
-				"Wikilog extension at this moment.\n\n"
+				"Wikilog extension at this moment.\n\n";
 		}
 		return true;
 	}
