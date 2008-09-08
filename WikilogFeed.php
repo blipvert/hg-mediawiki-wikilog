@@ -37,6 +37,8 @@ class WikilogFeed {
 	public $mQuery;
 	public $mDb;
 
+	protected $mCopyright;
+
 	protected $mParserOptions;
 	protected $mParser;
 	protected $mFrame;
@@ -51,6 +53,11 @@ class WikilogFeed {
 		$this->mTitle = $title;
 		$this->mQuery = $query;
 		$this->mDb = wfGetDB( DB_SLAVE );
+
+		# Retrieve copyright notice.
+		global $wgUser;
+		$skin = $wgUser->getSkin();
+		$this->mCopyright = $skin->getCopyright( 'normal' );
 	}
 
 	function feed( $type, $limit ) {
@@ -90,7 +97,7 @@ class WikilogFeed {
 		}
 
 		$feed = new $wgWikilogFeedClasses[$type](
-			$this->mTitle->getFullUrl(),
+			$this->mTitle->getFullUrl(), /// TODO: make a proper tag
 			$name,
 			wfTimestampNow(),
 			$this->mTitle->getFullUrl()
@@ -102,6 +109,10 @@ class WikilogFeed {
 		}
 
 		$feed->setSubtitle( $descr );
+
+		if ( $this->mCopyright ) {
+			$feed->setRights( new WlTextConstruct( 'html', $this->mCopyright ) );
+		}
 
 		$feed->outHeader();
 
@@ -145,15 +156,15 @@ class WikilogFeed {
 			$itemTitle->getFullUrl()
 		);
 
-		# Summary, if available.
-		if ( isset( $parserOutput->mExtWikilog ) && $parserOutput->mExtWikilog->mSummary ) {
-			$summary = Sanitizer::removeHTMLcomments( $parserOutput->mExtWikilog->mSummary );
+		# Retrieve summary and content.
+		list( $summary, $content ) = Wikilog::splitSummaryContent( $parserOutput );
+
+		if ( $summary ) {
 			$entry->setSummary( new WlTextConstruct( 'html', $summary ) );
 		}
-
-		# Content.
-		$content = Sanitizer::removeHTMLcomments( $parserOutput->getText() );
-		$entry->setContent( new WlTextConstruct( 'html', $content ) );
+		if ( $content ) {
+			$entry->setContent( new WlTextConstruct( 'html', $content ) );
+		}
 
 		# Authors.
 		foreach ( $authors as $user => $userid ) {

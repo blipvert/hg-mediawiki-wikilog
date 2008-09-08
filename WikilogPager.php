@@ -115,46 +115,35 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 
 		$skin = $this->getSkin();
 
+		# Get titles.
 		list( $wikilogTitleName, $itemName ) =
 			explode( '/', str_replace( '_', ' ', $row->page_title ), 2 );
 		$wikilogTitleTitle =& Title::makeTitle( $row->page_namespace, $wikilogTitleName );
 		$itemTitle =& Title::makeTitle( $row->page_namespace, $row->page_title );
 
-		# Entry div class
-		$divclass = 'wl-entry';
-
-		# Edit section link
-		$edit = '';
-		if ( $itemTitle->userCanEdit() )
-			$edit = $this->editLink( $itemTitle );
-
-		# Item Heading
-		$heading = $skin->makeKnownLinkObj( $itemTitle, $itemName );
-
-		## XXX: wfMsgForContent->HTML
-		if ( !$row->wlp_publish ) {
-			$heading .= ' ' . wfMsgForContent( 'wikilog-draft-title-mark' );
-			$divclass .= ' wl-draft';
-		}
-
-		$heading = "<h2>{$heading}</h2>\n";
-
-		# Retrieve article parser output
+		# Retrieve article parser output and other data.
 		list( $article, $parserOutput ) = Wikilog::parsedArticle( $itemTitle );
-
-		if ( isset( $parserOutput->mExtWikilog ) && $parserOutput->mExtWikilog->mSummary ) {
-			$content = $parserOutput->mExtWikilog->mSummary;
-		} else {
-			$content = $parserOutput->getText();
-		}
-
-		# Generate some fixed bits
+		list( $summary, $content ) = Wikilog::splitSummaryContent( $parserOutput );
 		$authors = unserialize( $row->wlp_authors );
 		$authors = Wikilog::authorList( array_keys( $authors ) );
 		$pubdate = $wgContLang->timeanddate( $row->wlp_pubdate, true );
 
-		# Item header and footer
-		$itemHeader = wfMsgExt( 'wikilog-item-brief-header',
+		# Entry div class.
+		$divclass = 'wl-entry' . ( $row->wlp_publish ? '' : ' wl-draft' );
+		$result = "<div class=\"{$divclass} visualClear\">";
+
+		# Edit section link.
+		if ( $itemTitle->userCanEdit() ) {
+			$result .= $this->editLink( $itemTitle );
+		}
+
+		# Title heading, with link.
+		$heading = $skin->makeKnownLinkObj( $itemTitle, $itemName .
+			( $row->wlp_publish ? '' : ' '. wfMsgForContent( 'wikilog-draft-title-mark' ) ) );
+		$result .= "<h2>{$heading}</h2>\n";
+
+		# Item header.
+		$result .= wfMsgExt( 'wikilog-item-brief-header',
 			array( 'parse', 'content' ),
 			/* $1 */ $wikilogTitleTitle->getPrefixedURL(),
 			/* $2 */ $wikilogTitleName,
@@ -162,8 +151,23 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 			/* $4 */ $itemName,
 			/* $5 */ $authors,
 			/* $6 */ $pubdate
-		);
-		$itemFooter = wfMsgExt( 'wikilog-item-brief-footer',
+		) . "\n";
+
+		if ( $summary ) {
+			$more = wfMsgExt( 'wikilog-item-more',
+				array( 'parse', 'content' ),
+				/* $1 */ $wikilogTitleTitle->getPrefixedURL(),
+				/* $2 */ $wikilogTitleName,
+				/* $3 */ $itemTitle->getPrefixedURL(),
+				/* $4 */ $itemName
+			);
+			$result .= "<div class=\"wl-summary\">{$summary}{$more}</div>\n";
+		} else {
+			$result .= "<div class=\"wl-summary\">{$content}</div>\n";
+		}
+
+		# Item footer.
+		$result .= wfMsgExt( 'wikilog-item-brief-footer',
 			array( 'parse', 'content' ),
 			/* $1 */ $wikilogTitleTitle->getPrefixedURL(),
 			/* $2 */ $wikilogTitleName,
@@ -173,11 +177,7 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 			/* $6 */ $pubdate
 		);
 
-		$result = "<div class=\"{$divclass} visualClear\">".
-			"{$edit}{$heading}{$itemHeader}\n".
-			"<div class=\"wl-summary\">{$content}</div>\n".
-			"{$itemFooter}</div>\n\n";
-
+		$result .= "</div>\n\n";
 		return $result;
 	}
 

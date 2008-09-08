@@ -484,6 +484,39 @@ class Wikilog {
 	}
 
 	/**
+	 * Split summary of a wikilog post from the contents.
+	 * If summary was provided in <summary>...</summary> tags, use it,
+	 * otherwise, use some heuristics to find it in the content.
+	 */
+	static function splitSummaryContent( $parserOutput ) {
+		$content = Sanitizer::removeHTMLcomments( $parserOutput->getText() );
+
+		if ( isset( $parserOutput->mExtWikilog ) && $parserOutput->mExtWikilog->mSummary ) {
+			$summary = Sanitizer::removeHTMLcomments( $parserOutput->mExtWikilog->mSummary );
+		} else {
+			$blocks = preg_split( '/< (h[1-6]) .*? > .*? <\\/\\1>/ix', $content );
+
+			if ( count( $blocks ) > 1 ) {
+				# Long article, get only the first paragraph.
+				$pextr = '/<(p)
+					( \\s+ (?: [^\'"\\/>] | \'[^\']*\' | "[^"]*" )* )?
+					(?: > .*? <\\/\\1\\s*> | \\/> )/isx';
+
+				if ( preg_match_all( $pextr, $blocks[0], $m ) ) {
+					$summary = implode( "\n", $m[0] );
+				} else {
+					$summary = null;
+				}
+			} else {
+				# Short article, no summary.
+				$summary = null;
+			}
+		}
+
+		return array( $summary, $content );
+	}
+
+	/**
 	 * Formats a list of authors.
 	 * Given a list of authors, this function formats it in wiki syntax,
 	 * with links to their user and user-talk pages, according to the
@@ -565,7 +598,7 @@ class Wikilog {
 
 			if ( !$parserOutput ) {
 				$arttext = $article->fetchContent();
-				$parserOutput = $wgParser->parse( $arttext, $itemTitle, $parserOpt );
+				$parserOutput = $wgParser->parse( $arttext, $title, $parserOpt );
 				if ( $parserOutput->getCacheTime() != -1 ) {
 					$parserCache = ParserCache::singleton();
 					$parserCache->save( $parserOutput, $article, $wgUser );
@@ -573,7 +606,7 @@ class Wikilog {
 			}
 		} else {
 			$arttext = $article->fetchContent();
-			$parserOutput = $wgParser->parse( $arttext, $itemTitle, $parserOpt );
+			$parserOutput = $wgParser->parse( $arttext, $title, $parserOpt );
 		}
 
 		return array( $article, $parserOutput );

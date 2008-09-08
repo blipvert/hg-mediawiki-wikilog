@@ -48,7 +48,8 @@ $messages['en'] = array(
 
 	'wikilog-author-signature'	=> "[[{{ns:User}}:\$1|\$1]] ([[{{ns:User_talk}}:\$1|talk]])",
 	'wikilog-item-brief-header'	=> ": ''<small>by \$5, from [[\$1|\$2]], \$6.</small>''",
-	'wikilog-item-brief-footer'	=> "\n[[\$3|&rarr; continue reading...]]\n",
+	'wikilog-item-brief-footer'	=> "",
+	'wikilog-item-more'			=> "\n[[\$3|&rarr; continue reading...]]\n",
 	'wikilog-item-sub'			=> "",
 	'wikilog-item-header'		=> "",
 	'wikilog-item-footer'		=> ": ''&mdash; \$5 &#8226; \$6 &#8226; \$7''\n",
