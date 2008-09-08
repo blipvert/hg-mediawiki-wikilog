@@ -60,7 +60,7 @@ $wgAutoloadClasses += array(
 	'WikilogSummaryPager'	=> $dir . 'WikilogPager.php',
 	'WikilogArchivesPager'	=> $dir . 'WikilogPager.php',
 	'WikilogFeed'			=> $dir . 'WikilogFeed.php',
-// 	'SpecialWikilog'		=> $dir . 'SpecialWikilog.php',
+	'SpecialWikilog'		=> $dir . 'SpecialWikilog.php',
 	'WlSyndicationBase'		=> $dir . 'WlFeed.php',
 	'WlSyndicationFeed'		=> $dir . 'WlFeed.php',
 	'WlSyndicationEntry'	=> $dir . 'WlFeed.php',
@@ -72,7 +72,7 @@ $wgAutoloadClasses += array(
 /*
  * Special pages.
  */
-// $wgSpecialPages['Wikilog'] = 'SpecialWikilog';
+$wgSpecialPages['Wikilog'] = 'SpecialWikilog';
 
 /*
  * Hooks.
