@@ -105,6 +105,12 @@ $wgHooks['ParserAfterTidy'][] = 'WikilogParser::afterTidy';
  */
 
 /**
+ * A string in the format "example.org,date", according to RFC 4151, that will
+ * be used as taggingEntity in order to create feed item tags.
+ */
+$wgTaggingEntity = false;
+
+/**
  * Maximum number of items in wikilog front page.
  */
 $wgWikilogSummaryLimit = $wgFeedLimit;

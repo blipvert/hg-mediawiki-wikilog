@@ -145,10 +145,8 @@ class WikilogFeed {
 		$pubdate = $row->wlp_pubdate;
 
 		# Create new syndication entry.
-		$tagdate = gmdate( 'Y-m-d', wfTimestamp( TS_UNIX, $row->wlp_pubdate ) );
-		$qstr = wfArrayToCGI( array( 'wk' => wfWikiID(), 'id' => $row->page_id ) );
 		$entry = new WlSyndicationEntry(
-			"tag:{$wgServerName},{$tagdate}:wikilog?$qstr",
+			self::makeEntryId( $itemTitle ),
 			$itemName,
 			$article->getTimestamp(),	# or $article->getTouched()?
 			$itemTitle->getFullUrl()
@@ -202,4 +200,13 @@ class WikilogFeed {
 		return $this->mQuery->getQueryInfo( $this->mDb );
 	}
 
+	static function makeEntryId( $title ) {
+		global $wgTaggingEntity;
+		if ( $wgTaggingEntity ) {
+			$qstr = wfArrayToCGI( array( 'wk' => wfWikiID(), 'id' => $title->getArticleId() ) );
+			return "tag:{$wgTaggingEntity}:wikilog?{$qstr}";
+		} else {
+			return $title->getFullUrl();
+		}
+	}
 }
