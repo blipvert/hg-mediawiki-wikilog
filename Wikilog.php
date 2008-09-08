@@ -89,6 +89,7 @@ $wgHooks['GetFullURL'][] = 'Wikilog::GetFullURL';
 $wgHooks['PageRenderingHash'][] = 'Wikilog::PageRenderingHash';
 $wgHooks['LanguageGetSpecialPageAliases'][] = 'Wikilog::LanguageGetSpecialPageAliases';
 $wgHooks['LanguageGetMagic'][] = 'Wikilog::LanguageGetMagic';
+$wgHooks['LoadExtensionSchemaUpdates'][] = 'Wikilog::ExtensionSchemaUpdates';
 
 // WikilogLinksUpdate hooks
 $wgHooks['LinksUpdate'][] = 'WikilogLinksUpdate::LinksUpdate';
@@ -397,11 +398,32 @@ class Wikilog {
 	 * Adds language aliases for magic words.
 	 */
 	static function LanguageGetMagic( &$magicWords, $lang ) {
-		/* TODO */
+		/// TODO: Language magic.
 		$magicWords['wl-publish'] = array( 0, 'wl-publish' );
 		$magicWords['wl-tags'   ] = array( 0, 'wl-tags'    );
 		return true;
 	}
+
+
+	static function ExtensionSchemaUpdates() {
+		global $wgDBtype, $wgExtNewFields, $wgExtPGNewFields, $wgExtNewIndexes, $wgExtNewTables;
+
+		$dir = dirname(__FILE__) . '/';
+		if( $wgDBtype == 'mysql' ) {
+			$wgExtNewTables += array(
+				array( 'wikilog_posts',   $dir . 'wikilog-tables.sql' ),
+				array( 'wikilog_authors', $dir . 'wikilog-tables.sql' ),
+				array( 'wikilog_tags',    $dir . 'wikilog-tables.sql' )
+			);
+		} else if( $wgDBtype == 'postgres' ) {
+			/// TODO: PostgreSQL tables.
+			print "\n"
+				"Warning: There are no PostgreSQL table structures for the\n".
+				"Wikilog extension at this moment.\n\n"
+		}
+		return true;
+	}
+
 
 
 	###
