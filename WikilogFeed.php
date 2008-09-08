@@ -39,10 +39,6 @@ class WikilogFeed {
 
 	protected $mCopyright;
 
-	protected $mParserOptions;
-	protected $mParser;
-	protected $mFrame;
-
 	/**
 	 * WikilogFeed constructor.
 	 *
@@ -203,17 +199,4 @@ class WikilogFeed {
 		return $this->mQuery->getQueryInfo( $this->mDb );
 	}
 
-
-	function getParser() {
-		if ( $this->mParser === null ) {
-			global $wgParser;
-			$this->mParserOptions = new ParserOptions();
-			$this->mParserOptions->setEditSection( false );
-			$this->mParser = clone $wgParser;
-			$this->mParser->startExternalParse( $this->mTitle, $this->mParserOptions, Parser::OT_HTML );
-			$this->mFrame = $this->mParser->getPreprocessor()->newFrame();
-		}
-		return $this->mParser;
-	}
-	
 }
