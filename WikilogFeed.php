@@ -145,9 +145,10 @@ class WikilogFeed {
 		$pubdate = $row->wlp_pubdate;
 
 		# Create new syndication entry.
-		$wkid = wfWikiID();
+		$tagdate = gmdate( 'Y-m-d', wfTimestamp( TS_UNIX, $row->wlp_pubdate ) );
+		$qstr = wfArrayToCGI( array( 'wk' => wfWikiID(), 'id' => $row->page_id ) );
 		$entry = new WlSyndicationEntry(
-			"tag:$wgServerName,$wkid,{$row->page_id}",
+			"tag:{$wgServerName},{$tagdate}:wikilog?$qstr",
 			$itemName,
 			$article->getTimestamp(),	# or $article->getTouched()?
 			$itemTitle->getFullUrl()
@@ -169,7 +170,9 @@ class WikilogFeed {
 			$entry->addAuthor( $user, $usertitle->getFullUrl() );
 		}
 
-		$entry->setPublished( $pubdate );
+		if ( $row->wlp_pubdate ) {
+			$entry->setPublished( $row->wlp_pubdate );
+		}
 
 		return $entry;
 	}
