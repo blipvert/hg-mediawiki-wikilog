@@ -85,7 +85,7 @@ class WikilogFeed {
 			$descr = wfMsgForContent( 'wikilog-feed-description' );
 		} else {
 			$name = wfMsgForContent( 'wikilog-feed-title',
-				/* $1 */ wgMsgForContent( 'wikilog' ),
+				/* $1 */ wfMsgForContent( 'wikilog' ),
 				/* $2 */ $wgContLanguageCode
 			);
 			# Default description/subtitle.

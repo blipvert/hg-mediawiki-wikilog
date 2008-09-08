@@ -47,8 +47,8 @@ class SpecialWikilog extends IncludableSpecialPage {
 
 		# RSS or Atom feed requested. Ignore all other options.
 		if ( ( $feedType = $wgRequest->getVal( 'feed' ) ) ) {
-			global $wgWikilogNumArticles;
-			$feed = new WikilogFeed( $this->mTitle, $query );
+			global $wgWikilogNumArticles, $wgTitle;
+			$feed = new WikilogFeed( $wgTitle, $query );
 			$limit = $wgRequest->getInt( 'limit', $wgWikilogNumArticles );
 			return $feed->feed( $feedType, $limit );
 		}
