@@ -31,6 +31,12 @@
 if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
+/**
+ * This class holds the parser functions that hooks into the Parser in order
+ * to collect Wikilog metadata, and also stores such data. This class is
+ * first attached to the Parser as $parser->mExtWikilog, and then copied to
+ * the parser output $popt->mExtWikilog.
+ */
 class WikilogParser {
 	var $mSummary = false;
 	var $mPublish = false;
@@ -50,6 +56,10 @@ class WikilogParser {
 
 	static function clearState( &$parser ) {
 		$parser->mExtWikilog = new WikilogParser;
+
+		if ( Wikilog::$parsingWikilog ) {
+			$parser->mShowToc = false;
+		}
 		return true;
 	}
 
@@ -154,4 +164,32 @@ class WikilogParser {
 			$tested = true;
 		}
 	}
+}
+
+
+/**
+ * Since wikilog parses articles with specific options in order to be
+ * outputted in feeds, it is necessary to store these parsed outputs in
+ * the cache separatelly. This derived class from ParserCache overloads the
+ * getKey() function in order to provide a specific namespace for this
+ * purpose.
+ */
+class WikilogParserCache extends ParserCache {
+
+	public static function &singleton() {
+		static $instance;
+		if ( !isset( $instance ) ) {
+			global $parserMemc;
+			$instance = new WikilogParserCache( $parserMemc );
+		}
+		return $instance;
+	}
+
+	function getKey( &$article, &$user ) {
+		$pageid = intval( $article->getID() );
+		$hash = $user->getPageRenderingHash();
+		$key = wfMemcKey( 'wlcache', 'idhash', "$pageid-$hash" );
+		return $key;
+	}
+
 }
