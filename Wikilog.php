@@ -166,10 +166,10 @@ $wgWikilogNamespaces = array();
 class Wikilog {
 
 	/**
-	 * True if parsing articles with wikilog-specific options. This is an
-	 * horrible hack needed because of many MediaWiki misdesigns.
+	 * True if parsing articles with feed output specific settings.
+	 * This is an horrible hack needed because of many MediaWiki misdesigns.
 	 */
-	static public $parsingWikilog = false;
+	static public $feedParsing = false;
 
 	/**
 	 * True if we are expanding local URLs (in order to render stand-alone,
@@ -467,6 +467,28 @@ class Wikilog {
 	}
 
 	/**
+	 * Enable special wikilog feed parsing.
+	 *
+	 * This function changes the parser behavior in order to output
+	 *
+	 * The proper way to use this function is:
+	 * @code
+	 *   $saveFeedParse = Wikilog::enableFeedParsing();
+	 *   # ...code that uses $wgParser in order to parse articles...
+	 *   Wikilog::enableFeedParsing( $saveFeedParse );
+	 * @endcode
+	 *
+	 * @note Using this function changes the behavior of Parser. When enabled,
+	 *   parsed content should be cached under a different key than when
+	 *   disabled.
+	 */
+	static function enableFeedParsing( $enable = true ) {
+		$prev = self::$feedParsing;
+		self::$feedParsing = $enable;
+		return $prev;
+	}
+
+	/**
 	 * Enable expansion of local URLs.
 	 *
 	 * In order to output stand-alone content with all absolute links, it is
@@ -618,23 +640,34 @@ class Wikilog {
 	 * @param $title Article title object.
 	 * @return Two-element array containing the article and its parser output.
 	 */
-	static function parsedArticle( Title $title ) {
-		static $parserOpt = false;
+	static function parsedArticle( Title $title, $feed = false ) {
 		global $wgUser, $wgParser, $wgEnableParserCache;
 
-		// Enable some wikilog-specific behavior.
-		self::$parsingWikilog = true;
+		if ( $feed ) {
+			// Enable some feed-specific behavior.
+			$saveFeedParse = Wikilog::enableFeedParsing();
+			$saveExpUrls = Wikilog::expandLocalUrls();
 
-		if ( !$parserOpt ) {
+			// Select parser cache.
+			$parserCache = WikilogParserCache::singleton();
+
+			// Parser options.
 			$parserOpt = ParserOptions::newFromUser( $wgUser );
 			$parserOpt->setTidy( true );
 			$parserOpt->setEditSection( false );
+		} else {
+			// Select parser cache.
+			$parserCache = ParserCache::singleton();
+
+			// Parser options.
+			$parserOpt = ParserOptions::newFromUser( $wgUser );
+			$parserOpt->setTidy( true );
+			$parserOpt->enableLimitReport();
 		}
 
 		$article = new Article( $title );
 
 		if ( $wgEnableParserCache ) {
-			$parserCache = WikilogParserCache::singleton();
 			$parserOutput = $parserCache->get( $article, $wgUser );
 			if ( !$parserOutput ) {
 				$arttext = $article->fetchContent();
@@ -648,8 +681,11 @@ class Wikilog {
 			$parserOutput = $wgParser->parse( $arttext, $title, $parserOpt );
 		}
 
-		// Restore default behavior.
-		self::$parsingWikilog = false;
+		if ( $feed ) {
+			// Restore default behavior.
+			Wikilog::enableFeedParsing( $saveFeedParse );
+			Wikilog::expandLocalUrls( $saveExpUrls );
+		}
 
 		return array( $article, $parserOutput );
 	}

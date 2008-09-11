@@ -70,9 +70,6 @@ class WikilogFeed {
 			return;
 		}
 
-		# Expand URLs.
-		$saveExpUrls = Wikilog::expandLocalUrls();
-
 		# Feed title: default to "{{SITENAME}} - title [lang]",
 		# like Special:RecentChanges.
 		$title = $this->mQuery->getWikilogTitle();
@@ -124,9 +121,6 @@ class WikilogFeed {
 		}
 
 		$feed->outFooter();
-
-		# Revert state.
-		Wikilog::expandLocalUrls( $saveExpUrls );
 	}
 
 	function feedEntry( $row ) {
@@ -138,7 +132,7 @@ class WikilogFeed {
 		$itemTitle =& Title::makeTitle( $row->page_namespace, $row->page_title );
 
 		# Retrieve article parser output
-		list( $article, $parserOutput ) = Wikilog::parsedArticle( $itemTitle );
+		list( $article, $parserOutput ) = Wikilog::parsedArticle( $itemTitle, true );
 
 		# Generate some fixed bits
 		$authors = unserialize( $row->wlp_authors );

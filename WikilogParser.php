@@ -57,7 +57,8 @@ class WikilogParser {
 	static function clearState( &$parser ) {
 		$parser->mExtWikilog = new WikilogParser;
 
-		if ( Wikilog::$parsingWikilog ) {
+		// Disable TOC in feeds.
+		if ( Wikilog::$feedParsing ) {
 			$parser->mShowToc = false;
 		}
 		return true;
