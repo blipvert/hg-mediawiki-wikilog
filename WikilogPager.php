@@ -39,7 +39,6 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 
 	# Local variables.
 	protected $mQuery;			///< Wikilog item query data
-	protected $mParserOptions;	///< Parser options
 
 	function __construct( WikilogItemQuery $query ) {
 		# WikilogItemQuery object drives our queries.
@@ -58,12 +57,6 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		global $wgWikilogSummaryLimit;
 		if ( $this->mLimit > $wgWikilogSummaryLimit )
 			$this->mLimit = $wgWikilogSummaryLimit;
-
-		# Parser options
-		$this->mParserOptions = ParserOptions::newFromUser( $wgUser );
-		$this->mParserOptions->setTidy( true );
-		$this->mParserOptions->enableLimitReport();
-
 	}
 
 	function getQueryInfo() {
