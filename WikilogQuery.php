@@ -50,6 +50,7 @@ class WikilogItemQuery {
 	private $mAuthor = false;				///< Filter by author.
 	private $mTag = false;					///< Filter by tag.
 	private $mDate = false;					///< Filter by date.
+	private $mNeedWikilogParam = false;		///< Need wikilog param in queries.
 
 	/**
 	 * Constructor. Creates a new instance and optionally sets the Wikilog
@@ -58,6 +59,10 @@ class WikilogItemQuery {
 	 */
 	function __construct( $wikilogTitle = null ) {
 		$this->setWikilogTitle( $wikilogTitle );
+
+		# If constructed without a title (from Special:Wikilog), it means that
+		# the listing is global, and needs wikilog parameter to filter.
+		$this->mNeedWikilogParam = ($wikilogTitle == null);
 	}
 
 	/**
@@ -131,17 +136,16 @@ class WikilogItemQuery {
 	 *   during the whole month or year.
 	 */
 	function setDate( $year, $month = false, $day = false ) {
-		$year = ($year > 0 && $year <= 9999) ? $year : false;
+		$year  = ($year  > 0 && $year  <= 9999) ? $year  : false;
+		$month = ($month > 0 && $month <=   12) ? $month : false;
+		$day   = ($day   > 0 && $day   <=   31) ? $day   : false;
+
 		if ( $year ) {
 			$date_end = str_pad( $year+1, 4, '0', STR_PAD_LEFT );
 			$date_start = str_pad( $year, 4, '0', STR_PAD_LEFT );
-
-			$month = ($month > 0 && $month <= 12) ? $month : false;
 			if ( $month ) {
 				$date_end = $date_start . str_pad( $month+1, 2, '0', STR_PAD_LEFT );
 				$date_start = $date_start . str_pad( $month, 2, '0', STR_PAD_LEFT );
-
-				$day = ($day > 0 && $day <= 31) ? $day : false;
 				if ( $day ) {
 					$date_end = $date_start . str_pad( $day+1, 2, '0', STR_PAD_LEFT );
 					$date_start = $date_start . str_pad( $day, 2, '0', STR_PAD_LEFT );
@@ -149,6 +153,9 @@ class WikilogItemQuery {
 			}
 
 			$this->mDate = (object)array(
+				'year'  => $year,
+				'month' => $month,
+				'day'   => $day,
 				'start' => str_pad( $date_start, 14, '0', STR_PAD_RIGHT ),
 				'end'   => str_pad( $date_end,   14, '0', STR_PAD_RIGHT )
 			);
@@ -243,6 +250,40 @@ class WikilogItemQuery {
 			'conds' => $conds,
 			'options' => $options
 		);
+	}
+
+	function getDefaultQuery() {
+		$query = array();
+
+		if ( $this->mNeedWikilogParam && $this->mWikilogTitle ) {
+			$query['wikilog'] = $this->mWikilogTitle->getPrefixedDBKey();
+		}
+
+		if ( $this->mPubStatus == self::PS_ALL ) {
+			$query['show'] = 'all';
+		} else if ( $this->mPubStatus == self::PS_DRAFTS ) {
+			$query['show'] = 'drafts';
+		}
+
+		if ( $this->mCategory ) {
+			$query['category'] = $this->mCategory->getDBKey();
+		}
+
+		if ( $this->mAuthor ) {
+			$query['author'] = $this->mAuthor->getDBKey();
+		}
+
+		if ( $this->mTag ) {
+			$query['tag'] = $this->mTag;
+		}
+
+		if ( $this->mDate ) {
+			$query['year']  = $this->mDate->year;
+			$query['month'] = $this->mDate->month;
+			$query['day']   = $this->mDate->day;
+		}
+
+		return $query;
 	}
 
 	function isSingleWikilog() {

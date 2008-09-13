@@ -40,7 +40,7 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 	# Local variables.
 	protected $mQuery;			///< Wikilog item query data
 
-	function __construct( WikilogItemQuery $query ) {
+	function __construct( WikilogItemQuery $query, $limit = false ) {
 		# WikilogItemQuery object drives our queries.
 		$this->mQuery = $query;
 
@@ -50,8 +50,13 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		# Fix our limits, Pager's defaults are too high.
 		global $wgUser, $wgWikilogNumArticles;
 		$this->mDefaultLimit = intval( $wgUser->getOption( 'searchlimit' ) );
-		list( $this->mLimit, /* $offset */ ) =
-			$this->mRequest->getLimitOffset( $wgWikilogNumArticles, 'searchlimit' );
+
+		if ( $limit ) {
+			$this->mLimit = $limit;
+		} else {
+			list( $this->mLimit, /* $offset */ ) =
+				$this->mRequest->getLimitOffset( $wgWikilogNumArticles, 'searchlimit' );
+		}
 
 		# This is too expensive, limit listing.
 		global $wgWikilogSummaryLimit;
@@ -61,6 +66,10 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 
 	function getQueryInfo() {
 		return $this->mQuery->getQueryInfo( $this->mDb );
+	}
+
+	function getDefaultQuery() {
+		return parent::getDefaultQuery() + $this->mQuery->getDefaultQuery();
 	}
 
 	function getIndexField() {
@@ -198,6 +207,12 @@ class WikilogArchivesPager extends TablePager {
 
 	function getQueryInfo() {
 		return $this->mQuery->getQueryInfo( $this->mDb, true );
+	}
+
+	function getDefaultQuery() {
+		$query = parent::getDefaultQuery() + $this->mQuery->getDefaultQuery();
+		$query['list'] = 'archives';
+		return $query;
 	}
 
 	function getTableClass() {
