@@ -1,8 +1,8 @@
 <?php
 /**
  * MediaWiki Wikilog extension
- * Copyright © 2008 Juliano F. Ravasi < dev at juliano info >
- * http://juliano.info/en/Projects/MediaWiki_Wikilog
+ * Copyright © 2008 Juliano F. Ravasi
+ * http://www.mediawiki.org/wiki/Extension:Wikilog
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,13 +23,11 @@
 /**
  * @addtogroup Extensions
  * @author Juliano F. Ravasi < dev juliano info >
- *
- * Adds blogging features to MediaWiki, through a special namespace,
- * making it a wiki-blog hybrid, like a Bliki.
  */
 
 if ( !defined( 'MEDIAWIKI' ) )
 	die();
+
 
 class WikilogFeed {
 

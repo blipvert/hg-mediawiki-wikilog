@@ -28,6 +28,7 @@
 if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
+
 /*
  * General extension information.
  */
