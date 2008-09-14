@@ -76,6 +76,7 @@ $wgAutoloadClasses += array(
  * Special pages.
  */
 $wgSpecialPages['Wikilog'] = 'SpecialWikilog';
+$wgSpecialPageGroups['Wikilog'] = 'changes';
 
 /*
  * Hooks.
