@@ -123,6 +123,8 @@ class WikilogFeed {
 
 	function feedEntry( $row ) {
 		global $wgServerName, $wgParser, $wgUser, $wgEnableParserCache;
+		global $wgWikilogFeedSummary, $wgWikilogFeedContent;
+
 		
 		list( $wikilogTitleName, $itemName ) =
 			explode( '/', str_replace( '_', ' ', $row->page_title ), 2 );
@@ -147,10 +149,10 @@ class WikilogFeed {
 		# Retrieve summary and content.
 		list( $summary, $content ) = Wikilog::splitSummaryContent( $parserOutput );
 
-		if ( $summary ) {
+		if ( $wgWikilogFeedSummary && $summary ) {
 			$entry->setSummary( new WlTextConstruct( 'html', $summary ) );
 		}
-		if ( $content ) {
+		if ( $wgWikilogFeedContent && $content ) {
 			$entry->setContent( new WlTextConstruct( 'html', $content ) );
 		}
 

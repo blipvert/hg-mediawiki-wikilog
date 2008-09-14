@@ -157,6 +157,13 @@ $wgWikilogFeedClasses = array(
 );
 
 /**
+ * Enable or disable output of summary or content in wikilog feeds. At least
+ * one of them MUST be true.
+ */
+$wgWikilogFeedSummary = true;
+$wgWikilogFeedContent = true;
+
+/**
  * Namespaces used for wikilogs.
  */
 $wgWikilogNamespaces = array();
