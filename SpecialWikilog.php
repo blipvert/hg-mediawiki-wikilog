@@ -70,7 +70,7 @@ class SpecialWikilog extends IncludableSpecialPage {
 		global $wgRequest, $wgFeedLimit, $wgWikilogSummaryLimit;
 
 		$opts = $this->getDefaultOptions();
-		$opts->fetchValuesFromRequest( $wgRequest, array( 'limit' ) );
+		$opts->fetchValuesFromRequest( $wgRequest, array( 'show', 'limit' ) );
 		$opts->validateIntBounds( 'limit', 0, min( $wgFeedLimit, $wgWikilogSummaryLimit ) );
 		return $opts;
 	}
@@ -78,11 +78,11 @@ class SpecialWikilog extends IncludableSpecialPage {
 	public function execute( $parameters ) {
 		global $wgRequest;
 
-		$feedType = $wgRequest->getVal( 'feed' );
+		$feedFormat = $wgRequest->getVal( 'feed' );
 
-		if ( $feedType ) {
+		if ( $feedFormat ) {
 			$opts = $this->feedSetup();
-			return $this->feedOutput( $feedType, $opts );
+			return $this->feedOutput( $feedFormat, $opts );
 		} else {
 			$opts = $this->webSetup( $parameters );
 			return $this->webOutput( $opts );
@@ -132,11 +132,12 @@ class SpecialWikilog extends IncludableSpecialPage {
 		$wgOut->setSyndicated();
 	}
 
-	public function feedOutput( $feedType, FormOptions $opts ) {
+	public function feedOutput( $format, FormOptions $opts ) {
 		global $wgTitle;
 
-		$feed = new WikilogFeed( $wgTitle, self::getQuery( $opts ) );
-		return $feed->feed( $feedType, $opts['limit'] );
+		$feed = new WikilogFeed( $wgTitle, $format, self::getQuery( $opts ),
+			$opts['limit'] );
+		return $feed->execute();
 	}
 
 	public function parseInlineParams( $parameters, FormOptions $opts ) {

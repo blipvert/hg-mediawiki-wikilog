@@ -32,7 +32,9 @@ if ( !defined( 'MEDIAWIKI' ) )
 class WikilogFeed {
 
 	public $mTitle;
+	public $mFormat;
 	public $mQuery;
+	public $mLimit;
 	public $mDb;
 
 	protected $mCopyright;
@@ -43,63 +45,79 @@ class WikilogFeed {
 	 * @param $title Feed title and URL.
 	 * @param $query WikilogItemQuery options.
 	 */
-	function __construct( $title, WikilogItemQuery $query ) {
+	public function __construct( $title, $format, WikilogItemQuery $query,
+			$limit = false )
+	{
+		global $wgWikilogNumArticles, $wgUser;
+
 		$this->mTitle = $title;
+		$this->mFormat = $format;
 		$this->mQuery = $query;
+		$this->mLimit = $limit ? $limit : $wgWikilogNumArticles;
+
 		$this->mDb = wfGetDB( DB_SLAVE );
 
 		# Retrieve copyright notice.
-		global $wgUser;
 		$skin = $wgUser->getSkin();
 		$this->mCopyright = $skin->getCopyright( 'normal' );
 	}
 
-	function feed( $type, $limit ) {
-		global $wgFeed, $wgWikilogFeedClasses, $wgContLanguageCode, $wgOut;
-		global $wgFavicon;
+	public function getFeedObject( $title, $updated = false ) {
+		global $wgContLanguageCode, $wgWikilogFeedClasses;
 
-		if ( !$wgFeed ) {
-			$wgOut->addWikiMsg( 'feed-unavailable' );
-			return;
-		}
-
-		if( !isset( $wgWikilogFeedClasses[$type] ) ) {
-			wfHttpError( 500, "Internal Server Error", "Unsupported feed type." );
-			return;
-		}
-
-		# Feed title: default to "{{SITENAME}} - title [lang]",
-		# like Special:RecentChanges.
-		$title = $this->mQuery->getWikilogTitle();
-		if ( $title !== null ) {
-			$name = wfMsgForContent( 'wikilog-feed-title',
-				/* $1 */ $title->getPrefixedText(),
-				/* $2 */ $wgContLanguageCode
-			);
-			# !!TODO!! fetch description/subtitle from wikilog main page.
-			$descr = wfMsgForContent( 'wikilog-feed-description' );
-		} else {
-			$name = wfMsgForContent( 'wikilog-feed-title',
-				/* $1 */ wfMsgForContent( 'wikilog' ),
-				/* $2 */ $wgContLanguageCode
-			);
-			# Default description/subtitle.
-			$descr = wfMsgForContent( 'wikilog-feed-description' );
-		}
-
-		$feed = new $wgWikilogFeedClasses[$type](
+		return new $wgWikilogFeedClasses[$this->mFormat](
 			$this->mTitle->getFullUrl(),
-			$name,
-			wfTimestampNow(),
+			wfMsgForContent( 'wikilog-feed-title', $title, $wgContLanguageCode ),
+			( $updated ? $updated : wfTimestampNow() ),
 			$this->mTitle->getFullUrl()
 		);
+	}
 
-		if ( $wgFavicon !== false ) {
-			# !!TODO!! custom wikilog icon.
-			$feed->setIcon( wfExpandUrl( $wgFavicon ) );
+	public function execute() {
+		if ( !$this->checkFeedOutput() )
+			return;
+
+		$title = $this->mQuery->getWikilogTitle();
+		$feedTitle = $title ?
+			$title->getPrefixedText() :
+			wfMsgForContent( 'wikilog' );
+
+		$feed = $this->getFeedObject( $feedTitle );
+
+		list( $timekey, $feedkey ) = $this->getCacheKeys();
+		FeedUtils::checkPurge( $timekey, $feedkey );
+
+        $lastmod = $this->checkLastModified();
+		if ( $lastmod === false ) {
+			return;
 		}
 
+		$cached = $this->loadFromCache( $lastmod, $timekey, $feedkey );
+
+		if( is_string( $cached ) ) {
+			wfDebug( "Wikilog: Outputting cached feed\n" );
+			$feed->httpHeaders();
+			echo $cached;
+		} else {
+			wfDebug( "Wikilog: rendering new feed and caching it\n" );
+			ob_start();
+			$this->feed( $feed );
+			$cached = ob_get_contents();
+			ob_end_flush();
+			$this->saveToCache( $cached, $timekey, $feedkey );
+		}
+	}
+
+	public function feed( $feed ) {
+		global $wgOut, $wgFavicon;
+
+		/// TODO: fetch description/subtitle from wikilog main page.
+		$descr = wfMsgForContent( 'wikilog-feed-description' );
 		$feed->setSubtitle( $descr );
+
+		if ( $wgFavicon !== false ) {
+			$feed->setIcon( wfExpandUrl( $wgFavicon ) );
+		}
 
 		if ( $this->mCopyright ) {
 			$feed->setRights( new WlTextConstruct( 'html', $this->mCopyright ) );
@@ -108,7 +126,7 @@ class WikilogFeed {
 		$feed->outHeader();
 
 		$this->doQuery();
-		$numRows = min( $this->mResult->numRows(), $limit );
+		$numRows = min( $this->mResult->numRows(), $this->mLimit );
 
 		if ( $numRows ) {
 			$this->mResult->rewind();
@@ -125,7 +143,7 @@ class WikilogFeed {
 		global $wgServerName, $wgParser, $wgUser, $wgEnableParserCache;
 		global $wgWikilogFeedSummary, $wgWikilogFeedContent;
 
-		
+		# Make titles.
 		list( $wikilogTitleName, $itemName ) =
 			explode( '/', str_replace( '_', ' ', $row->page_title ), 2 );
 		$wikilogTitleTitle =& Title::makeTitle( $row->page_namespace, $wikilogTitleName );
@@ -169,12 +187,9 @@ class WikilogFeed {
 		return $entry;
 	}
 
-	function feedEmpty() {
-	}
-
 	function doQuery() {
 		$this->mIndexField = 'wlp_pubdate';
-		$this->mResult = $this->reallyDoQuery( 20 );
+		$this->mResult = $this->reallyDoQuery( $this->mLimit );
 	}
 
 	function reallyDoQuery( $limit ) {
@@ -194,7 +209,118 @@ class WikilogFeed {
 		return $this->mQuery->getQueryInfo( $this->mDb );
 	}
 
-	static function makeEntryId( $title ) {
+	/**
+	 * Checks if client cache is up-to-date.
+	 *
+	 * @return False if client cache is up-to-date, local data last change
+	 *   timestamp otherwise.
+	 */
+	public function checkLastModified() {
+		global $wgOut;
+		$dbr = wfGetDB( DB_SLAVE );
+		/**
+		 * @todo This causes the cache of all feeds to invalidate when any
+		 *   wikilog article is touched. This should be restricted to
+		 *   only the site feed and the wikilog feed, and nothing else.
+		 *   Also, this doesn't affect the main wikilog (summary) page.
+		 */
+		$lastmod = $dbr->selectField(
+			array( 'wikilog_posts', 'page' ),
+			'MAX(page_touched)',
+			'wlp_page = page_id',
+			__METHOD__
+		);
+		if( $lastmod && $wgOut->checkLastModified( $lastmod ) ) {
+			# Client cache fresh and headers sent, nothing more to do.
+			return false;
+		}
+		return $lastmod;
+	}
+
+	/**
+	 * Save feed output to cache.
+	 *
+	 * @param $feed Feed output.
+	 * @param $timekey Object cache key for the cached feed timestamp.
+	 * @param $feedkey Object cache key for the cached feed output.
+	 */
+	public function saveToCache( $feed, $timekey, $feedkey ) {
+		global $messageMemc;
+		$messageMemc->set( $feedkey, $feed );
+		$messageMemc->set( $timekey, wfTimestamp( TS_MW ), 24 * 3600 );
+	}
+
+	/**
+	 * Load feed output from cache.
+	 *
+	 * @param $tsData Timestamp of the last change of the local data.
+	 * @param $timekey Object cache key for the cached feed timestamp.
+	 * @param $feedkey Object cache key for the cached feed output.
+	 * @return The cached feed output if cache is good, false otherwise.
+	 */
+	public function loadFromCache( $tsData, $timekey, $feedkey ) {
+		global $messageMemc, $wgFeedCacheTimeout;
+		$tsCache = $messageMemc->get( $timekey );
+
+		if ( ( $wgFeedCacheTimeout > 0 ) && $tsCache ) {
+			$age = time() - wfTimestamp( TS_UNIX, $tsCache );
+
+			if ( $age < $wgFeedCacheTimeout ) {
+				wfDebug( "Wikilog: loading feed from cache -- ".
+					"too young: age ($age) < timeout ($wgFeedCacheTimeout) ".
+					"($feedkey; $tsCache; $tsData)\n" );
+				return $messageMemc->get( $feedkey );
+			} else if ( $tsCache >= $tsData ) {
+				wfDebug( "Wikilog: loading feed from cache -- ".
+					"not modified: cache ($tsCache) >= data ($tsData)".
+					"($feedkey)\n" );
+				return $messageMemc->get( $feedkey );
+			} else {
+				wfDebug( "Wikilog: cached feed timestamp check failed -- ".
+					"cache ($tsCache) < data ($tsData)\n" );
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns the keys for the timestamp and feed output in the object cache.
+	 */
+	function getCacheKeys() {
+		$title = $this->mQuery->getWikilogTitle();
+		$id = $title ? 'id:' . $title->getArticleId() : 'site';
+		$ft = 'show:' . $this->mQuery->getPubStatus() .
+			':limit:' . $this->mLimit;
+		return array(
+			wfMemcKey( 'wikilog', $this->mFormat, $id, 'timestamp' ),
+			wfMemcKey( 'wikilog', $this->mFormat, $id, $ft )
+		);
+	}
+
+	/**
+	 * Shadowed from FeedUtils::checkFeedOutput(). The difference is that
+	 * this version checks against $wgWikilogFeedClasses instead of
+	 * $wgFeedClasses.
+	 */
+	public function checkFeedOutput() {
+		global $wgFeed, $wgWikilogFeedClasses;
+		if ( !$wgFeed ) {
+			$wgOut->addWikiMsg( 'feed-unavailable' );
+			return false;
+		}
+		if( !isset( $wgWikilogFeedClasses[$this->mFormat] ) ) {
+			wfHttpError( 500, "Internal Server Error", "Unsupported feed type." );
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Creates an unique ID for a feed entry. Tries to use $wgTaggingEntity
+	 * if possible in order to create an RFC 4151 tag, otherwise, we use the
+	 * page URL.
+	 */
+	public static function makeEntryId( $title ) {
 		global $wgTaggingEntity;
 		if ( $wgTaggingEntity ) {
 			$qstr = wfArrayToCGI( array( 'wk' => wfWikiID(), 'id' => $title->getArticleId() ) );
@@ -203,4 +329,5 @@ class WikilogFeed {
 			return $title->getFullUrl();
 		}
 	}
+
 }

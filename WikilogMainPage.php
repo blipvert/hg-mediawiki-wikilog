@@ -43,11 +43,11 @@ class WikilogMainPage extends Article {
 		$query->setPubStatus( $wgRequest->getVal( 'show' ) );
 
 		# RSS or Atom feed requested. Ignore all other options.
-		if ( ( $feedType = $wgRequest->getVal( 'feed' ) ) ) {
+		if ( ( $feedFormat = $wgRequest->getVal( 'feed' ) ) ) {
 			global $wgWikilogNumArticles;
-			$feed = new WikilogFeed( $this->mTitle, $query );
-			$limit = $wgRequest->getInt( 'limit', $wgWikilogNumArticles );
-			return $feed->feed( $feedType, $limit );
+			$feed = new WikilogFeed( $this->mTitle, $feedFormat, $query,
+				$wgRequest->getInt( 'limit', $wgWikilogNumArticles ) );
+			return $feed->execute();
 		}
 
 		# Query filter options.
