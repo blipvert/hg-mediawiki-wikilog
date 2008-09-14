@@ -41,7 +41,7 @@ class WikilogItemQuery {
 	const PS_DRAFTS    = 2;		///< Return only drafts
 
 	# Local variables.
-	private $mWikilogTitle = null;			///< Filter by wikilog.
+	private $mWikilogTitle = NULL;			///< Filter by wikilog.
 	private $mPubStatus = self::PS_ALL;		///< Filter by published status.
 	private $mCategory = false;				///< Filter by category.
 	private $mAuthor = false;				///< Filter by author.
@@ -54,12 +54,12 @@ class WikilogItemQuery {
 	 * title to query.
 	 * @param $wikilogTitle Wikilog title object to query for.
 	 */
-	function __construct( $wikilogTitle = null ) {
+	function __construct( $wikilogTitle = NULL ) {
 		$this->setWikilogTitle( $wikilogTitle );
 
 		# If constructed without a title (from Special:Wikilog), it means that
 		# the listing is global, and needs wikilog parameter to filter.
-		$this->mNeedWikilogParam = ($wikilogTitle == null);
+		$this->mNeedWikilogParam = ($wikilogTitle == NULL);
 	}
 
 	/**
@@ -92,7 +92,7 @@ class WikilogItemQuery {
 			$this->mCategory = $category;
 		} else if ( is_string( $category ) ) {
 			$t = Title::makeTitleSafe( NS_CATEGORY, $category );
-			if ( $t !== null ) {
+			if ( $t !== NULL ) {
 				$this->mCategory = $t;
 			}
 		}
@@ -107,7 +107,7 @@ class WikilogItemQuery {
 			$this->mAuthor = $author;
 		} else if ( is_string( $author ) ) {
 			$t = Title::makeTitleSafe( NS_USER, $author );
-			if ( $t !== null ) {
+			if ( $t !== NULL ) {
 				$this->mAuthor = $t;
 			}
 		}
@@ -196,7 +196,7 @@ class WikilogItemQuery {
 		# Customizations.
 
 		## Filter by wikilog name.
-		if ( $this->mWikilogTitle !== null ) {
+		if ( $this->mWikilogTitle !== NULL ) {
 			$conds['page_namespace'] = $this->mWikilogTitle->getNamespace();
 			$conds[] = 'page_title LIKE \'' . $db->escapeLike( $this->mWikilogTitle->getDBkey() ) . '/%\'';
 		}
@@ -289,7 +289,7 @@ class WikilogItemQuery {
 	}
 
 	function isSingleWikilog() {
-		return $this->mWikilogTitle !== null;
+		return $this->mWikilogTitle !== NULL;
 	}
 
 	static function parsePubStatusText( $show = 'published' ) {

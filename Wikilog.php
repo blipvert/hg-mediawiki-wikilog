@@ -191,7 +191,7 @@ class Wikilog {
 	/**
 	 * Original paths before expansion.
 	 */
-	static public $originalPaths = null;
+	static public $originalPaths = NULL;
 
 	###
 	##  MediaWiki hooks.
@@ -472,7 +472,7 @@ class Wikilog {
 		if ( in_array( $ns, $wgWikilogNamespaces ) ) {
 			return new WikilogInfo( $title );
 		} else {
-			return null;
+			return NULL;
 		}
 	}
 
@@ -576,11 +576,11 @@ class Wikilog {
 				if ( preg_match_all( $pextr, $blocks[0], $m ) ) {
 					$summary = implode( "\n", $m[0] );
 				} else {
-					$summary = null;
+					$summary = NULL;
 				}
 			} else {
 				# Short article, no summary.
-				$summary = null;
+				$summary = NULL;
 			}
 		}
 
@@ -729,12 +729,12 @@ class WikilogInfo {
 		} else {
 			$this->mWikilogName = $title->getText();
 			$this->mWikilogTitle = Title::makeTitle( $ns, $this->mWikilogName );
-			$this->mItemName = null;
-			$this->mItemTitle = null;
+			$this->mItemName = NULL;
+			$this->mItemTitle = NULL;
 		}
 	}
 
-	function isItem() { return $this->mItemTitle !== null; }
+	function isItem() { return $this->mItemTitle !== NULL; }
 	function getName() { return $this->mWikilogName; }
 	function getTitle() { return $this->mWikilogTitle; }
 	function getItemName() { return $this->mItemName; }

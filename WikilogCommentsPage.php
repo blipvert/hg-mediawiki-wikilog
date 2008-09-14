@@ -45,8 +45,8 @@ class WikilogCommentsPage extends Article {
 			$this->mItemName = $wi->getItemName();
 			$this->mItemTitle = $wi->getItemTitle();
 		} else {
-			$this->mItemName = null;
-			$this->mItemTitle = null;
+			$this->mItemName = NULL;
+			$this->mItemTitle = NULL;
 		}
 	}
 
@@ -55,7 +55,7 @@ class WikilogCommentsPage extends Article {
 		wfLoadExtensionMessages( 'Wikilog' );
 
 		# Comments page header
-		if ( $this->mItemTitle !== null ) {
+		if ( $this->mItemTitle !== NULL ) {
 			$headerTxt = wfMsgExt( 'wikilog-comments-header',
 				array( 'parse', 'content' ),
 				/* $1 */ $this->mWikilogTitle->getPrefixedURL(),
@@ -71,7 +71,7 @@ class WikilogCommentsPage extends Article {
 		parent::view();
 
 		# Comments page footer
-		if ( $this->mItemTitle !== null ) {
+		if ( $this->mItemTitle !== NULL ) {
 			$footerTxt = wfMsgExt( 'wikilog-comments-footer',
 				array( 'parse', 'content' ),
 				/* $1 */ $this->mWikilogTitle->getPrefixedURL(),

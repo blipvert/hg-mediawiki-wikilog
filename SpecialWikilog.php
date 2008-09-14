@@ -159,7 +159,7 @@ class SpecialWikilog extends IncludableSpecialPage {
 					list( $opts['year'], $opts['month'], $opts['day'] ) = $date;
 				}
 			} else {
-				if ( ( $t = Title::newFromText( $par ) ) !== null ) {
+				if ( ( $t = Title::newFromText( $par ) ) !== NULL ) {
 					if ( in_array( $t->getNamespace(), $wgWikilogNamespaces ) ) {
 						$opts['wikilog'] = $t->getPrefixedDBkey();
 					} else if ( $t->getNamespace() == NS_CATEGORY ) {
@@ -210,7 +210,7 @@ class SpecialWikilog extends IncludableSpecialPage {
 				$out .= Xml::openElement( 'tr' );
 				if ( is_array( $row ) ) {
 					$out .= Xml::tags( 'td', array( 'align' => $align ), $row[0] );
-					$out .= Xml::tags( 'td', null, $row[1] );
+					$out .= Xml::tags( 'td', NULL, $row[1] );
 				} else {
 					$out .= Xml::tags( 'td', array( 'colspan' => 2 ), $row );
 				}
@@ -296,8 +296,8 @@ class SpecialWikilog extends IncludableSpecialPage {
 		if ( preg_match( '/^(\d+)(?:\/(\d+)(?:\/(\d+))?)?$/', $date, $m ) ) {
 			return array(
 				intval( $m[1] ),
-				( isset( $m[2] ) ? intval( $m[2] ) : null ),
-				( isset( $m[3] ) ? intval( $m[3] ) : null )
+				( isset( $m[2] ) ? intval( $m[2] ) : NULL ),
+				( isset( $m[3] ) ? intval( $m[3] ) : NULL )
 			);
 		} else {
 			return false;
