@@ -89,14 +89,15 @@ class SpecialWikilog extends IncludableSpecialPage {
 		}
 	}
 
-	public function webOutput( $opts ) {
+	public function webOutput( FormOptions $opts ) {
 		global $wgRequest, $wgOut;
-
-		$query = self::getQuery( $opts );
 
 		# Set page title, html title, nofollow, noindex, etc...
 		$this->setHeaders();
 		$this->outputHeader();
+
+		# Build query object.
+		$query = self::getQuery( $opts );
 
 		# If a wikilog is selected, set the title.
 		if ( !$this->including() && ( $title = $query->getWikilogTitle() ) ) {
@@ -107,9 +108,10 @@ class SpecialWikilog extends IncludableSpecialPage {
 			$wgOut->addWikiTextWithTitle( $content, $title );
 		}
 
-// 		$wgOut->addHTML( Xml::element( 'pre', null, var_export( $query, 1 ) ) );
+		# Display query options.
+		if ( !$this->including() ) $this->doHeader( $opts );
 
-		# Display list of wikilog posts
+		# Display the list of wikilog posts.
 		if ( $opts['list'] == 'archives' ) {
 			$pager = new WikilogArchivesPager( $query );
 		} else {
@@ -130,14 +132,14 @@ class SpecialWikilog extends IncludableSpecialPage {
 		$wgOut->setSyndicated();
 	}
 
-	public function feedOutput( $feedType, $opts ) {
+	public function feedOutput( $feedType, FormOptions $opts ) {
 		global $wgTitle;
 
 		$feed = new WikilogFeed( $wgTitle, self::getQuery( $opts ) );
 		return $feed->feed( $feedType, $opts['limit'] );
 	}
 
-	public function parseInlineParams( $parameters, $opts ) {
+	public function parseInlineParams( $parameters, FormOptions $opts ) {
 		global $wgWikilogNamespaces;
 
 		if ( empty( $parameters ) ) return;
@@ -169,7 +171,107 @@ class SpecialWikilog extends IncludableSpecialPage {
 		}
 	}
 
-	static public function getQuery( $opts ) {
+	protected function doHeader( FormOptions $opts ) {
+		global $wgScript, $wgOut;
+
+		$out = Xml::hidden( 'title', $this->getTitle()->getPrefixedText() );
+
+		$out .= self::queryForm( $opts );
+
+		$unconsumed = $opts->getUnconsumedValues();
+		foreach ( $unconsumed as $key => $value ) {
+			$out .= Xml::hidden( $key, $value );
+		}
+
+		$form = Xml::tags( 'form', array( 'action' => $wgScript ), $out );
+
+		$wgOut->addHTML(
+			Xml::fieldset( wfMsg( 'wikilog-form-legend' ), $form,
+				array( 'class' => 'wl-options' ) )
+		);
+	}
+
+	protected static function queryForm( FormOptions $opts ) {
+		global $wgContLang;
+
+		$align = $wgContLang->isRtl() ? 'left' : 'right';
+		$fields = self::getQueryFormFields( $opts );
+		$columns = array_chunk( $fields, (count( $fields ) + 1) / 2, true );
+
+		$out = Xml::openElement( 'table', array( 'width' => '100%' ) ) .
+				Xml::openElement( 'tr' );
+
+		foreach ( $columns as $fields ) {
+			$out .= Xml::openElement( 'td' );
+			$out .= Xml::openElement( 'table' );
+
+			foreach ( $fields as $row ) {
+				$out .= Xml::openElement( 'tr' );
+				if ( is_array( $row ) ) {
+					$out .= Xml::tags( 'td', array( 'align' => $align ), $row[0] );
+					$out .= Xml::tags( 'td', null, $row[1] );
+				} else {
+					$out .= Xml::tags( 'td', array( 'colspan' => 2 ), $row );
+				}
+				$out .= Xml::closeElement( 'tr' );
+			}
+
+			$out .= Xml::closeElement( 'table' );
+			$out .= Xml::closeElement( 'td' );
+		}
+
+		$out .= Xml::closeElement( 'tr' ) . Xml::closeElement( 'table' );
+		return $out;
+	}
+
+	protected static function getQueryFormFields( FormOptions $opts ) {
+		global $wgWikilogEnableTags;
+
+		$fields = array();
+
+		$fields['wikilog'] = Xml::inputLabelSep(
+			wfMsg( 'wikilog-form-wikilog' ), 'wikilog', 'wl-wikilog', 25,
+			$opts->consumeValue( 'wikilog' )
+		);
+
+		$fields['category'] = Xml::inputLabelSep(
+			wfMsg( 'wikilog-form-category' ), 'category', 'wl-category', 25,
+			$opts->consumeValue( 'category' )
+		);
+
+		$fields['author'] = Xml::inputLabelSep(
+			wfMsg( 'wikilog-form-author' ), 'author', 'wl-author', 25,
+			$opts->consumeValue( 'author' )
+		);
+
+		if ( $wgWikilogEnableTags ) {
+			$fields['tag'] = Xml::inputLabelSep(
+				wfMsg( 'wikilog-form-tag' ), 'tag', 'wl-tag', 25,
+				$opts->consumeValue( 'tag' )
+			);
+		}
+
+		$fields['date'] = array(
+			Xml::label( wfMsg( 'wikilog-form-date' ), 'wl-month' ),
+			Xml::monthSelector( $opts->consumeValue( 'month' ), '', 'wl-month' ) .
+				" " . Xml::input( 'year', 4, $opts->consumeValue( 'year' ), array( 'maxlength' => 4 ) )
+		);
+		$opts->consumeValue( 'day' );	// ignore day, not really useful
+
+		$statusSelect = new XmlSelect( 'show', 'wl-status', $opts->consumeValue( 'show' ) );
+		$statusSelect->addOption( wfMsg( 'wikilog-show-all' ), 'all' );
+		$statusSelect->addOption( wfMsg( 'wikilog-show-published' ), 'published' );
+		$statusSelect->addOption( wfMsg( 'wikilog-show-drafts' ), 'drafts' );
+		$fields['status'] = array(
+			Xml::label( wfMsg( 'wikilog-form-status' ), 'wl-status' ),
+			$statusSelect->getHTML()
+		);
+
+		$fields['submit'] = Xml::submitbutton( wfMsg( 'allpagessubmit' ) );
+		return $fields;
+	}
+
+	public static function getQuery( $opts ) {
 		$query = new WikilogItemQuery();
 		$query->setPubStatus( $opts['show'] );
 		if ( ( $t = $opts['wikilog'] ) ) {
@@ -188,7 +290,7 @@ class SpecialWikilog extends IncludableSpecialPage {
 		return $query;
 	}
 
-	static public function parseDateParam( $date ) {
+	public static function parseDateParam( $date ) {
 		$m = array();
 		if ( preg_match( '/^(\d+)(?:\/(\d+)(?:\/(\d+))?)?$/', $date, $m ) ) {
 			return array(

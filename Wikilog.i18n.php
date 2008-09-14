@@ -79,7 +79,19 @@ $messages['en'] = array(
 			"In order to publish a wikilog post, you have to add the ".
 			"<code><nowiki>{{wl-publish:...}}</nowiki></code> tag to the ".
 			"article text, optionally providing the publication date and ".
-			"one or more authors.\n</div>\n"
+			"one or more authors.\n</div>\n",
+
+	# Forms
+	'wikilog-form-legend'		=> 'Search for wikilog posts',
+	'wikilog-form-wikilog'		=> 'Wikilog:',
+	'wikilog-form-category'		=> 'Category:',
+	'wikilog-form-author'		=> 'Author:',
+	'wikilog-form-tag'			=> 'Tag:',
+	'wikilog-form-date'			=> 'Date:',
+	'wikilog-form-status'		=> 'Status:',
+	'wikilog-show-all'			=> 'All posts',
+	'wikilog-show-published'	=> 'Published',
+	'wikilog-show-drafts'		=> 'Drafts',
 );
 
 /** Portuguese (Português)
