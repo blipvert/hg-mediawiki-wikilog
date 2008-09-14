@@ -137,7 +137,12 @@ class WikilogItemQuery {
 		$month = ($month > 0 && $month <=   12) ? $month : false;
 		$day   = ($day   > 0 && $day   <=   31) ? $day   : false;
 
-		if ( $year ) {
+		if ( $year || $month ) {
+			if ( !$year ) {
+				$year = intval( gmdate( 'Y' ) );
+				if ( $month > intval( gmdate( 'n' ) ) ) $year--;
+			}
+
 			$date_end = str_pad( $year+1, 4, '0', STR_PAD_LEFT );
 			$date_start = str_pad( $year, 4, '0', STR_PAD_LEFT );
 			if ( $month ) {
