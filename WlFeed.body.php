@@ -142,7 +142,9 @@ abstract class WlSyndicationBase {
 	function getTitle() { return $this->mTitle; }
 
 	function setLinks( $value ) { $this->mLinks = $value; }
-	function getLinks() { return $this->mLinks; }
+	function getLinks( $rel = null ) {
+		return is_null( $rel ) ? $this->mLinks : $this->mLinks[$rel];
+	}
 	
 	function setAuthors( $value ) { $this->mAuthors = $value; }
 	function getAuthors() { return $this->mAuthors; }
@@ -308,10 +310,12 @@ abstract class WlSyndicationFeed extends WlSyndicationBase {
 	 * @param $title Feed title. Required. Text or HTML (Atom only).
 	 * @param $updated Last updated date/time. If omitted, the current
 	 *   date/time is assumed.
-	 * @param $url Feed URL, pointing back to the page it represents.
+	 * @param $url Wikilog URL, pointing back to the page it represents.
 	 *   Optional.
+	 * @param $self Feed URL, pointing to itself. Optional. If omitted,
+	 *   the URL is inferred from the request URL.
 	 */
-	function __construct( $id, $title, $updated = NULL, $url = NULL ) {
+	function __construct( $id, $title, $updated = NULL, $url = NULL, $self = NULL ) {
 		global $wgRequest;
 
 		parent::__construct( $id, $title, $updated );
@@ -322,10 +326,10 @@ abstract class WlSyndicationFeed extends WlSyndicationBase {
 		}
 
 		$this->addLinkRel( 'self', array(
-			'href' => $wgRequest->getFullRequestURL(),
+			'href' => !is_null( $self ) ? $self : $wgRequest->getFullRequestURL(),
 			'type' => $this->defaultContentType()
 		) );
-
+		
 		if ( ( $quirks = $wgRequest->getVal( 'quirks' ) ) ) {
 			$this->mQuirks = explode( ',', $quirks );
 		}
@@ -796,7 +800,7 @@ class WlAtomFeed extends WlSyndicationFeed {
 		$source = $entry->getSource();
 		if ( $source instanceof WlSyndicationFeed ) {
 			echo Xml::tags( 'source', array(
-				'xml:lang' => $source->getLanguage
+				'xml:lang' => $source->getLanguage()
 			), $source->formatFeedMetadata() );
 		}
 
@@ -928,13 +932,6 @@ class WlRSSFeed extends WlSyndicationFeed {
 					$link = array_shift( $links );
 					echo Xml::element( 'comments', NULL, $link['href'] ) . "\n";
 				}
-			} else if ( $rel == 'via' ) {
-				if ( !empty( $links ) ) {
-					# RSS only supports a single source element.
-					$link = array_shift( $links );
-					echo Xml::element( 'source', array( 'url' => $link['href'] ),
-						$link['title'] ) . "\n";
-				}
 			} else {
 				# For other links, we use the atom namespace.
 				foreach ( $links as $link ) {
@@ -960,6 +957,19 @@ class WlRSSFeed extends WlSyndicationFeed {
 		# Use either published or updated dates for the pubDate element.
 		$date = $entry->getPublished() ? $entry->getPublished() : $entry->getUpdated();
 		echo Xml::element( 'pubDate', NULL, $this->formatTime( $date ) ) . "\n";
+
+		# RSS source feed.
+		$source = $entry->getSource();
+		if ( $source instanceof WlSyndicationFeed ) {
+			$s_title = $source->getTitle();
+			$s_links = $source->getLinks( 'self' );
+			$s_url = array_shift( $s_links );
+			echo Xml::element( 'source', array( 'url' => $s_url['href'] ),
+				$s_title instanceof WlTextConstruct ?
+					$s_title->getText() : $s_title
+			) . "\n";
+		}
+
 
 		# If only summary or only content is provided, prefer the standard
 		# description element for either. If both are provided, put the

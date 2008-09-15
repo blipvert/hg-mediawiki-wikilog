@@ -31,12 +31,42 @@ if ( !defined( 'MEDIAWIKI' ) )
 
 class WikilogFeed {
 
-	public $mTitle;
-	public $mFormat;
-	public $mQuery;
-	public $mLimit;
-	public $mDb;
+	/**
+	 * Feed title (i.e., not Wikilog title). For Special:Wikilog, 'wikilog'
+	 * system message should be used.
+	 */
+	protected $mTitle;
 
+	/**
+	 * Feed format, either 'atom' or 'rss'.
+	 * @warning Insecure string, from query string. Shouldn't be displayed. 
+	 */
+	protected $mFormat;
+
+	/**
+	 * Wikilog query object. Contains the options that drives the database
+	 * queries.
+	 */
+	protected $mQuery;
+
+	/**
+	 * Number of feed items to output.
+	 */
+	protected $mLimit;
+
+	/**
+	 * Either if this is a site feed (Special:Wikilog) or not.
+	 */
+	protected $mSiteFeed;
+
+	/**
+	 * Database object.
+	 */
+	protected $mDb;
+
+	/**
+	 * Copyright notice.
+	 */
 	protected $mCopyright;
 
 	/**
@@ -56,6 +86,7 @@ class WikilogFeed {
 		$this->mFormat = $format;
 		$this->mQuery = $query;
 		$this->mLimit = $limit ? $limit : $wgWikilogNumArticles;
+		$this->mSiteFeed = $this->mQuery->getWikilogTitle() === NULL;
 
 		$this->mDb = wfGetDB( DB_SLAVE );
 
@@ -64,36 +95,36 @@ class WikilogFeed {
 		$this->mCopyright = $skin->getCopyright( 'normal' );
 	}
 
-	public function getFeedObject( $title, $updated = false ) {
-		global $wgContLanguageCode, $wgWikilogFeedClasses;
-
-		return new $wgWikilogFeedClasses[$this->mFormat](
-			$this->mTitle->getFullUrl(),
-			wfMsgForContent( 'wikilog-feed-title', $title, $wgContLanguageCode ),
-			( $updated ? $updated : wfTimestampNow() ),
-			$this->mTitle->getFullUrl()
-		);
-	}
-
 	public function execute() {
+		global $wgOut;
+
 		if ( !$this->checkFeedOutput() )
 			return;
 
-		$title = $this->mQuery->getWikilogTitle();
-		$feedTitle = $title ?
-			$title->getPrefixedText() :
-			wfMsgForContent( 'wikilog' );
+		$feed = $this->mSiteFeed
+			? $this->getSiteFeedObject()
+			: $this->getWikilogFeedObject( $this->mQuery->getWikilogTitle() );
 
-        $lastmod = $this->checkLastModified();
-		if ( $lastmod === false ) return;
+		if ( $feed === false ) {
+			wfHttpError( 404, "Not found",
+				"There is no such wikilog feed available from this site." );
+			return;
+		}
 
 		list( $timekey, $feedkey ) = $this->getCacheKeys();
 		FeedUtils::checkPurge( $timekey, $feedkey );
 
-		$feed = $this->getFeedObject( $feedTitle, $lastmod );
-
 		if ( $feed->isCacheable() ) {
-			$cached = $this->loadFromCache( $lastmod, $timekey, $feedkey );
+			# Check if client cache is ok.
+			if ( $wgOut->checkLastModified( $feed->getUpdated() ) ) {
+				# Client cache is fresh. OutputPage takes care of sending
+				# the appropriate headers, nothing else to do.
+				return;
+			}
+
+			# Try to load the feed from our cache.
+			$cached = $this->loadFromCache( $feed->getUpdated(), $timekey, $feedkey );
+
 			if( is_string( $cached ) ) {
 				wfDebug( "Wikilog: Outputting cached feed\n" );
 				$feed->httpHeaders();
@@ -107,24 +138,13 @@ class WikilogFeed {
 				$this->saveToCache( $cached, $timekey, $feedkey );
 			}
 		} else {
+			# This feed is not cacheable.
 			$this->feed( $feed );
 		}
 	}
 
 	public function feed( $feed ) {
 		global $wgOut, $wgFavicon;
-
-		/// TODO: fetch description/subtitle from wikilog main page.
-		$descr = wfMsgForContent( 'wikilog-feed-description' );
-		$feed->setSubtitle( $descr );
-
-		if ( $wgFavicon !== false ) {
-			$feed->setIcon( wfExpandUrl( $wgFavicon ) );
-		}
-
-		if ( $this->mCopyright ) {
-			$feed->setRights( new WlTextConstruct( 'html', $this->mCopyright ) );
-		}
 
 		$feed->outHeader();
 
@@ -148,8 +168,8 @@ class WikilogFeed {
 		global $wgParser, $wgUser;
 
 		# Make titles.
-// 		$wikilogName = str_replace( '_', ' ', $row->wlw_title );
-// 		$wikilogTitle =& Title::makeTitle( $row->wlw_namespace, $row->wlw_title );
+		$wikilogName = str_replace( '_', ' ', $row->wlw_title );
+		$wikilogTitle =& Title::makeTitle( $row->wlw_namespace, $row->wlw_title );
 		$itemName = str_replace( '_', ' ', $row->wlp_title );
 		$itemTitle =& Title::makeTitle( $row->page_namespace, $row->page_title );
 
@@ -172,6 +192,14 @@ class WikilogFeed {
 			'href' => $itemTitle->getTalkPage()->getFullUrl(),
 			'type' => $wgMimeType
 		) );
+
+		# Source feed.
+		if ( $this->mSiteFeed ) {
+			$privfeed = $this->getWikilogFeedObject( $wikilogTitle, true );
+			if ( $privfeed ) {
+				$entry->setSource( $privfeed );
+			}
+		}
 
 		# Retrieve summary and content.
 		list( $summary, $content ) = Wikilog::splitSummaryContent( $parserOutput );
@@ -220,26 +248,79 @@ class WikilogFeed {
 	}
 
 	/**
-	 * Checks if client cache is up-to-date.
+	 * Generates and populates a WlSyndicationFeed object for the site.
 	 *
-	 * @return False if client cache is up-to-date, local data last change
-	 *   timestamp otherwise.
+	 * @return Feed object.
 	 */
-	public function checkLastModified() {
-		global $wgOut;
-		$dbr = wfGetDB( DB_SLAVE );
-		if ( ( $t = $this->mQuery->getWikilogTitle() ) ) {
-			$lastmod = $dbr->selectField( 'wikilog_wikilogs', 'wlw_updated',
-				array( 'wlw_page' => $t->getArticleId() ), __METHOD__ );
-		} else {
-			$lastmod = $dbr->selectField( 'wikilog_wikilogs', 'MAX(wlw_updated)',
-				false, __METHOD__ );
+	public function getSiteFeedObject() {
+		global $wgContLanguageCode, $wgWikilogFeedClasses, $wgFavicon, $wgLogo;
+		$title = wfMsgForContent( 'wikilog' );
+
+		$updated = $this->mDb->selectField( 'wikilog_wikilogs',
+			'MAX(wlw_updated)', false, __METHOD__ );
+		if ( !$updated ) $updated = wfTimestampNow();
+
+		$feed = new $wgWikilogFeedClasses[$this->mFormat](
+			$this->mTitle->getFullUrl(),
+			wfMsgForContent( 'wikilog-feed-title', $title, $wgContLanguageCode ),
+			$updated,
+			$this->mTitle->getFullUrl()
+		);
+		$feed->setSubtitle( wfMsgForContent( 'wikilog-feed-description' ) );
+		$feed->setLogo( wfExpandUrl( $wgLogo ) );
+		if ( $wgFavicon !== false ) {
+			$feed->setIcon( wfExpandUrl( $wgFavicon ) );
 		}
-		if( $lastmod && $wgOut->checkLastModified( $lastmod ) ) {
-			# Client cache fresh and headers sent, nothing more to do.
-			return false;
+		if ( $this->mCopyright ) {
+			$feed->setRights( new WlTextConstruct( 'html', $this->mCopyright ) );
 		}
-		return $lastmod;
+		return $feed;
+	}
+
+	/**
+	 * Generates and populates a WlSyndicationFeed object for the given
+	 * wikilog. Caches objects whenever possible.
+	 *
+	 * @param $wikilogTitle Title object for the wikilog.
+	 * @return Feed object, or NULL if wikilog doesn't exist.
+	 */
+	public function getWikilogFeedObject( $wikilogTitle, $forsource = false ) {
+		static $wikilogCache = array();
+		global $wgContLanguageCode, $wgWikilogFeedClasses;
+		$title = $wikilogTitle->getPrefixedText();
+		if ( !isset( $wikilogCache[$title] ) ) {
+			$row = $this->mDb->selectRow( 'wikilog_wikilogs',
+				array(
+					'wlw_page', 'wlw_subtitle',
+					'wlw_icon', 'wlw_logo',
+					'wlw_updated'
+				),
+				array( 'wlw_page' => $wikilogTitle->getArticleId() ),
+				__METHOD__
+			);
+			if ( $row !== false ) {
+				$self = $forsource
+					 ? $wikilogTitle->getFullUrl( "feed={$this->mFormat}" )
+					 : NULL;
+				$feed = new $wgWikilogFeedClasses[$this->mFormat](
+					$wikilogTitle->getFullUrl(),
+					wfMsgForContent( 'wikilog-feed-title', $title, $wgContLanguageCode ),
+					$row->wlw_updated, $wikilogTitle->getFullUrl(), $self
+				);
+				if ( $row->wlw_subtitle ) {
+					$feed->setSubtitle( $row->wlw_subtitle );
+				}
+				if ( $this->mCopyright ) {
+					$feed->setRights( new WlTextConstruct( 'html', $this->mCopyright ) );
+				}
+				/// TODO: parse $row->wlw_icon and output.
+				/// TODO: parse $row->wlw_logo and output.
+			} else {
+				$feed = false;
+			}
+			$wikilogCache[$title] =& $feed;
+		}
+		return $wikilogCache[$title];
 	}
 
 	/**
