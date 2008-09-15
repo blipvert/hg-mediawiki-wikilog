@@ -63,12 +63,18 @@ class WikilogParser {
 	}
 
 	static function beforeInternalParse( &$parser, &$text, &$stripState ) {
-		$title = $parser->getTitle();
-		if ( ( $wi = Wikilog::getWikilogInfo( $title ) ) && $wi->isItem() ) {
+		global $wgUser;
+		$wi = Wikilog::getWikilogInfo( $parser->getTitle() );
+
+		# Do nothing if it is not a wikilog article.
+		if ( !$wi ) return true;
+
+		if ( $wi->isItem() ) {
 			# By default, use the item name as the default sort in categories.
 			# This can be overriden by {{DEFAULTSORT:...}} if the user wants.
 			$parser->setDefaultSort( $wi->getItemName() );
 		}
+
 		return true;
 	}
 

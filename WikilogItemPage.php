@@ -142,6 +142,42 @@ class WikilogItemPage extends Article {
 		return $this->mItemPubDate;
 	}
 
+	/**
+	 * Override for preSaveTransform. Enables quick post publish by signing
+	 * the article using the standard --~~~~ marker. This causes the signature
+	 * marker to be replaced by a {{wl-publish:...}} parser function call,
+	 * that is then saved to the database and causes the post to be published.
+	 */
+	function preSaveTransform( $text ) {
+		global $wgParser, $wgUser, $wgLocaltimezone;
+
+		$user = $wgUser->getName();
+		$popt = ParserOptions::newFromUser( $wgUser );
+
+		$unixts = wfTimestamp( TS_UNIX, $popt->getTimestamp() );
+		if ( isset( $wgLocaltimezone ) ) {
+			$oldtz = getenv( 'TZ' );
+			putenv( "TZ={$wgLocaltimezone}" );
+			$date = date( 'Y-m-d H:i:s O', $unixts );
+			putenv( "TZ={$oldtz}" );
+		} else {
+			$date = date( 'Y-m-d H:i:s O', $unixts );
+		}
+
+		$sigs = array(
+			'/\n?(--)?~~~~~\n?/m' => "\n{{wl-publish: {$date} }}\n",
+			'/\n?(--)?~~~~\n?/m' => "\n{{wl-publish: {$date} | {$user} }}\n"
+		);
+
+		$wgParser->startExternalParse( $this->mTitle, $popt, Parser::OT_WIKI );
+
+		$text = $wgParser->replaceVariables( $text );
+		$text = preg_replace( array_keys( $sigs ), array_values( $sigs ), $text );
+		$text = $wgParser->mStripState->unstripBoth( $text );
+
+		return parent::preSaveTransform( $text );
+	}
+
 	private function itemData( $dbr, $conditions ) {
 		$row = $dbr->selectRow(
 			'wikilog_posts',
