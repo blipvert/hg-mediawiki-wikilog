@@ -91,19 +91,23 @@ class WikilogFeed {
 		FeedUtils::checkPurge( $timekey, $feedkey );
 
 		$feed = $this->getFeedObject( $feedTitle, $lastmod );
-		$cached = $this->loadFromCache( $lastmod, $timekey, $feedkey );
 
-		if( is_string( $cached ) ) {
-			wfDebug( "Wikilog: Outputting cached feed\n" );
-			$feed->httpHeaders();
-			echo $cached;
+		if ( $feed->isCacheable() ) {
+			$cached = $this->loadFromCache( $lastmod, $timekey, $feedkey );
+			if( is_string( $cached ) ) {
+				wfDebug( "Wikilog: Outputting cached feed\n" );
+				$feed->httpHeaders();
+				echo $cached;
+			} else {
+				wfDebug( "Wikilog: rendering new feed and caching it\n" );
+				ob_start();
+				$this->feed( $feed );
+				$cached = ob_get_contents();
+				ob_end_flush();
+				$this->saveToCache( $cached, $timekey, $feedkey );
+			}
 		} else {
-			wfDebug( "Wikilog: rendering new feed and caching it\n" );
-			ob_start();
 			$this->feed( $feed );
-			$cached = ob_get_contents();
-			ob_end_flush();
-			$this->saveToCache( $cached, $timekey, $feedkey );
 		}
 	}
 

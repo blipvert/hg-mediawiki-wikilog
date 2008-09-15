@@ -312,18 +312,23 @@ abstract class WlSyndicationFeed extends WlSyndicationBase {
 	 *   Optional.
 	 */
 	function __construct( $id, $title, $updated = NULL, $url = NULL ) {
-		parent::__construct( $id, $title, $updated );
+		global $wgRequest;
 
+		parent::__construct( $id, $title, $updated );
+	
 		if ( $url ) {
 			global $wgMimeType;
 			$this->addLink( $url, $wgMimeType );
 		}
 
-		global $wgRequest;
 		$this->addLinkRel( 'self', array(
 			'href' => $wgRequest->getFullRequestURL(),
 			'type' => $this->defaultContentType()
 		) );
+
+		if ( ( $quirks = $wgRequest->getVal( 'quirks' ) ) ) {
+			$this->mQuirks = explode( ',', $quirks );
+		}
 	}
 
 	/**
@@ -341,6 +346,14 @@ abstract class WlSyndicationFeed extends WlSyndicationBase {
 	function getLogo() { return $this->mLogo; }
 
 	/*@}*/
+
+	/**
+	 * Is the output of this feed cacheable? The feed is not cacheable if any
+	 * quirk is requested.
+	 */
+	public function isCacheable() {
+		return empty( $this->mQuirks );
+	}
 
 	/**
 	 * Returns information about the feed generator (yes, MediaWiki), for
@@ -401,9 +414,6 @@ abstract class WlSyndicationFeed extends WlSyndicationBase {
 	 */
 	function outXmlHeader() {
 		global $wgStylePath, $wgStyleVersion;
-		global $wgRequest;
-
-		$this->mQuirks = explode( ',', $wgRequest->getVal( 'quirks' ) );
 
 		$this->httpHeaders();
 		echo '<?xml version="1.0" encoding="utf-8"?>' . "\n";
