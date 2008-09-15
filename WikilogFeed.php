@@ -143,8 +143,9 @@ class WikilogFeed {
 	}
 
 	function feedEntry( $row ) {
-		global $wgServerName, $wgParser, $wgUser, $wgEnableParserCache;
+		global $wgServerName, $wgEnableParserCache, $wgMimeType;
 		global $wgWikilogFeedSummary, $wgWikilogFeedContent;
+		global $wgParser, $wgUser;
 
 		# Make titles.
 // 		$wikilogName = str_replace( '_', ' ', $row->wlw_title );
@@ -165,6 +166,12 @@ class WikilogFeed {
 			$row->wlp_updated,
 			$itemTitle->getFullUrl()
 		);
+
+		# Comments link.
+		$entry->addLinkRel( 'replies', array(
+			'href' => $itemTitle->getTalkPage()->getFullUrl(),
+			'type' => $wgMimeType
+		) );
 
 		# Retrieve summary and content.
 		list( $summary, $content ) = Wikilog::splitSummaryContent( $parserOutput );
