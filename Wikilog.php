@@ -101,6 +101,7 @@ $wgHooks['LinksUpdate'][] = 'WikilogLinksUpdate::LinksUpdate';
 // WikilogParser hooks
 $wgHooks['ParserFirstCallInit'][] = 'WikilogParser::registerParser';
 $wgHooks['ParserClearState'][] = 'WikilogParser::clearState';
+$wgHooks['ParserBeforeInternalParse'][] = 'WikilogParser::beforeInternalParse';
 $wgHooks['ParserAfterTidy'][] = 'WikilogParser::afterTidy';
 
 

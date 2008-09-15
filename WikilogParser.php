@@ -62,6 +62,16 @@ class WikilogParser {
 		return true;
 	}
 
+	static function beforeInternalParse( &$parser, &$text, &$stripState ) {
+		$title = $parser->getTitle();
+		if ( ( $wi = Wikilog::getWikilogInfo( $title ) ) && $wi->isItem() ) {
+			# By default, use the item name as the default sort in categories.
+			# This can be overriden by {{DEFAULTSORT:...}} if the user wants.
+			$parser->setDefaultSort( $wi->getItemName() );
+		}
+		return true;
+	}
+
 	static function afterTidy( &$parser, &$text ) {
 		$parser->mOutput->mExtWikilog = $parser->mExtWikilog;
 		return true;
