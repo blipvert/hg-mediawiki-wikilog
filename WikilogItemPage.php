@@ -145,7 +145,15 @@ class WikilogItemPage extends Article {
 	private function itemData( $dbr, $conditions ) {
 		$row = $dbr->selectRow(
 			'wikilog_posts',
-			array( 'wlp_page', 'wlp_publish', 'wlp_pubdate', 'wlp_authors', 'wlp_tags' ),
+			array(
+				'wlp_page',
+				'wlp_parent',
+				'wlp_publish',
+				'wlp_pubdate',
+				'wlp_updated',
+				'wlp_authors',
+				'wlp_tags'
+			),
 			$conditions,
 			__METHOD__
 		);
@@ -162,8 +170,11 @@ class WikilogItemPage extends Article {
 			$data = $this->itemDataFromId( $dbr, $this->getId() );
 
 			if ( $data ) {
+				$this->mItemParent = $data->wlp_parent;
 				$this->mItemPublish = $data->wlp_publish;
-				$this->mItemPubDate = wfTimestamp( TS_MW, $data->wlp_pubdate );
+				$this->mItemPubDate = $data->wlp_pubdate ?
+					wfTimestamp( TS_MW, $data->wlp_pubdate ) : null;
+				$this->mItemUpdated = wfTimestamp( TS_MW, $data->wlp_updated );
 
 				$this->mItemAuthors = unserialize( $data->wlp_authors );
 				if ( !is_array( $this->mItemAuthors ) ) {

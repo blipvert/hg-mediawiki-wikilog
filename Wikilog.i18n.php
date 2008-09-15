@@ -20,6 +20,7 @@ $messages['en'] = array(
 
 	# Generic strings
 	'wikilog-published'			=> 'Published',
+	'wikilog-updated'			=> 'Updated',
 	'wikilog-draft'				=> 'Draft',
 	'wikilog-authors'			=> 'Authors',
 	'wikilog-wikilog'			=> 'Wikilog',
@@ -110,6 +111,7 @@ $messages['pt'] = array(
 
 	# Generic strings
 	'wikilog-published'			=> 'Publicado',
+	'wikilog-updated'			=> 'Atualizado',
 	'wikilog-draft'				=> 'Rascunho',
 	'wikilog-authors'			=> 'Autores',
 	'wikilog-wikilog'			=> 'Wikilog',

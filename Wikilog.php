@@ -242,59 +242,71 @@ class Wikilog {
 	 * Performs post-edit updates if article is a wikilog article.
 	 */
 	static function ArticleEditUpdates( &$article ) {
-		$wi = self::getWikilogInfo( $article->getTitle() );
+		$title = $article->getTitle();
+		$wi = self::getWikilogInfo( $title );
 
-		if ( $wi && $wi->isItem() ) {
-			if ( $article->getTitle()->isTalkPage() ) {
-				# ::WikilogCommentsPage::
-				# Invalidate cache of wikilog item page.
-				if ( $wi->getItemTitle()->exists() ) {
-					$wi->getItemTitle()->invalidateCache();
-					$wi->getItemTitle()->purgeSquid();
-				}
-			} else {
-				# ::WikilogItemPage::
-				$dbw = wfGetDB( DB_MASTER );
-				$editInfo = $article->mPreparedEdit;
+		# Do nothing if not a wikilog article.
+		if ( !$wi ) return true;
 
-				# Check if we have any wikilog metadata available.
-				if ( isset( $editInfo->output->mExtWikilog ) ) {
-					$output = $editInfo->output->mExtWikilog;
-
-					# If no date was provided, use date of current revision.
-					if ( !$output->mPubDate ) {
-						$revision = Revision::newFromId( $article->getLatest() );
-						$output->mPubDate = $revision->getTimestamp();
-					}
-
-					# Update entry in wikilog_posts table.
-					$dbw->replace(
-						'wikilog_posts',
-						'wlp_page',
-						array(
-							'wlp_page' => $article->getId(),
-							'wlp_publish' => $output->mPublish,
-							'wlp_pubdate' => $output->mPubDate,
-							'wlp_authors' => serialize( $output->mAuthors ),
-							'wlp_tags' => serialize( $output->mTags )
-						),
-						__METHOD__
-					);
-				} else {
-					# Remove entry in wikilog_posts table.
-					$dbw->delete(
-						'wikilog_posts',
-						array( 'wlp_page' => $article->getId() ),
-						__METHOD__
-					);
-				}
-
-				# Invalidate cache of parent wikilog page.
-				if ( $wi->getTitle()->exists() ) {
-					$wi->getTitle()->invalidateCache();
-					$wi->getTitle()->purgeSquid();
-				}
+		if ( $title->isTalkPage() ) {
+			# ::WikilogCommentsPage::
+			# Invalidate cache of wikilog item page.
+			if ( $wi->getItemTitle()->exists() ) {
+				$wi->getItemTitle()->invalidateCache();
+				$wi->getItemTitle()->purgeSquid();
 			}
+		} else if ( $wi->isItem() ) {
+			# ::WikilogItemPage::
+			$dbw = wfGetDB( DB_MASTER );
+			$editInfo = $article->mPreparedEdit;
+
+			# Check if we have any wikilog metadata available.
+			if ( isset( $editInfo->output->mExtWikilog ) ) {
+				$output = $editInfo->output->mExtWikilog;
+
+				# Update entry in wikilog_posts table.
+				# Entries in wikilog_authors and wikilog_tags are updated
+				# during LinksUpdate process.
+				$updated = $dbw->timestamp();
+				$pubdate = $output->mPublish ? $output->mPubDate : $updated;
+				$dbw->replace(
+					'wikilog_posts',
+					'wlp_page',
+					array(
+						'wlp_page' => $article->getId(),
+						'wlp_parent' => $wi->getTitle()->getArticleId(),
+						'wlp_title' => $wi->getItemName(),
+						'wlp_publish' => $output->mPublish,
+						'wlp_pubdate' => $pubdate,
+						'wlp_authors' => serialize( $output->mAuthors ),
+						'wlp_tags' => serialize( $output->mTags ),
+						'wlp_updated' => $updated
+					),
+					__METHOD__
+				);
+			} else {
+				# Remove entry from tables. Entries in wikilog_authors and
+				# wikilog_tags are removed during LinksUpdate process.
+				$id = $article->getId();
+				$dbw->delete( 'wikilog_posts',   array( 'wlp_page' => $id ), __METHOD__ );
+			}
+
+			# Invalidate cache of parent wikilog page.
+			self::updateWikilog( $wi->getTitle() );
+		} else {
+			# ::WikilogMainPage::
+			$dbw = wfGetDB( DB_MASTER );
+
+			# Update entry in wikilog_wikilogs table.
+			$dbw->replace(
+				'wikilog_wikilogs',
+				'wlw_page',
+				array(
+					'wlw_page' => $article->getId(),
+					'wlw_updated' => $dbw->timestamp()
+				),
+				__METHOD__
+			);
 		}
 
 		return true;
@@ -310,20 +322,24 @@ class Wikilog {
 		# Retrieve wikilog information.
 		$wi = self::getWikilogInfo( $article->getTitle() );
 
-		# Take special procedures if it is a wikilog item page.
-		if ( $wi && $wi->isItem() ) {
+		# Take special procedures if it is a wikilog page.
+		if ( $wi ) {
 			$dbw = wfGetDB( DB_MASTER );
 
-			# Delete table entries.
-			$dbw->delete( 'wikilog_posts', array( 'wlp_page' => $id ) );
-			$dbw->delete( 'wikilog_authors', array( 'wla_page' => $id ) );
-			$dbw->delete( 'wikilog_tags', array( 'wlt_page' => $id ) );
+			if ( $wi->isItem() ) {
+				# Delete table entries.
+				$dbw->delete( 'wikilog_posts',   array( 'wlp_page' => $id ) );
+				$dbw->delete( 'wikilog_authors', array( 'wla_page' => $id ) );
+				$dbw->delete( 'wikilog_tags',    array( 'wlt_page' => $id ) );
 
-			# Invalidate cache of parent wikilog page.
-			$wl = $wi->getTitle();
-			if ( $wl->exists() ) {
-				$wl->invalidateCache();
-				$wl->purgeSquid();
+				# Invalidate cache of parent wikilog page.
+				self::updateWikilog( $wi->getTitle() );
+			} else {
+				# Delete table entries.
+				$dbw->delete( 'wikilog_wikilogs', array( 'wlw_page' => $id ) );
+				$dbw->delete( 'wikilog_posts',    array( 'wlp_parent' => $id ) );
+				$dbw->delete( 'wikilog_authors',  array( 'wla_page' => $id ) );
+				$dbw->delete( 'wikilog_tags',     array( 'wlt_page' => $id ) );
 			}
 		}
 
@@ -353,9 +369,11 @@ class Wikilog {
 			wfDebug( __METHOD__ . ": Moving from wikilog namespace to other ".
 				"namespace ($oldns, $newns). Purging wikilog data." );
 			$dbw = wfGetDB( DB_MASTER );
-			$dbw->delete( 'wikilog_posts', array( 'wlp_page' => $pageid ) );
-			$dbw->delete( 'wikilog_authors', array( 'wla_page' => $pageid ) );
-			$dbw->delete( 'wikilog_tags', array( 'wlt_page' => $pageid ) );
+			$dbw->delete( 'wikilog_wikilogs', array( 'wlw_page' => $pageid ) );
+			$dbw->delete( 'wikilog_posts',    array( 'wlp_page' => $pageid ) );
+			$dbw->delete( 'wikilog_posts',    array( 'wlp_parent' => $pageid ) );
+			$dbw->delete( 'wikilog_authors',  array( 'wla_page' => $pageid ) );
+			$dbw->delete( 'wikilog_tags',     array( 'wlt_page' => $pageid ) );
 		} else if ( $newwl ) {
 			# Moving from normal namespace to wikilog namespace.
 			# Create wikilog data.
@@ -431,26 +449,35 @@ class Wikilog {
 		return true;
 	}
 
-
+	/**
+	 * LoadExtensionSchemaUpdates hook handler function.
+	 * Updates wikilog database tables.
+	 *
+	 * @todo Add support for PostgreSQL and SQLite databases.
+	 */
 	static function ExtensionSchemaUpdates() {
 		global $wgDBtype, $wgExtNewFields, $wgExtPGNewFields, $wgExtNewIndexes, $wgExtNewTables;
 
 		$dir = dirname(__FILE__) . '/';
 		if( $wgDBtype == 'mysql' ) {
 			$wgExtNewTables += array(
-				array( 'wikilog_posts',   $dir . 'wikilog-tables.sql' ),
-				array( 'wikilog_authors', $dir . 'wikilog-tables.sql' ),
-				array( 'wikilog_tags',    $dir . 'wikilog-tables.sql' )
+				array( 'wikilog_wikilogs', $dir . 'wikilog-tables.sql' ),
+				array( 'wikilog_posts',    $dir . 'wikilog-tables.sql' ),
+				array( 'wikilog_authors',  $dir . 'wikilog-tables.sql' ),
+				array( 'wikilog_tags',     $dir . 'wikilog-tables.sql' )
 			);
-		} else if( $wgDBtype == 'postgres' ) {
-			/// TODO: PostgreSQL tables.
+			$wgExtNewFields += array(
+				array( 'wikilog_posts', 'wlp_parent', $dir . 'archives/patch-post-titles.sql' ),
+				array( 'wikilog_posts', 'wlp_title',  $dir . 'archives/patch-post-titles.sql' )
+			);
+		} else {
+			/// TODO: PostgreSQL, SQLite, etc...
 			print "\n".
-				"Warning: There are no PostgreSQL table structures for the\n".
-				"Wikilog extension at this moment.\n\n";
+				"Warning: There are no table structures for the Wikilog\n".
+				"extension other than for MySQL at this moment.\n\n";
 		}
 		return true;
 	}
-
 
 
 	###
@@ -473,6 +500,24 @@ class Wikilog {
 			return new WikilogInfo( $title );
 		} else {
 			return NULL;
+		}
+	}
+
+	/**
+	 * Causes an update to the given Wikilog main page.
+	 */
+	static function updateWikilog( $title ) {
+		if ( $title->exists() ) {
+			$title->invalidateCache();
+			$title->purgeSquid();
+
+			$dbw = wfGetDB( DB_MASTER );
+			$dbw->update(
+				'wikilog_wikilogs',
+				array( 'wlw_updated' => $dbw->timestamp() ),
+				array( 'wlw_page' => $title->getArticleId(), ),
+				__METHOD__
+			);
 		}
 	}
 

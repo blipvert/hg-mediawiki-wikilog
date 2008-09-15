@@ -38,7 +38,7 @@ if ( !defined( 'MEDIAWIKI' ) )
 class WikilogParser {
 	var $mSummary = false;
 	var $mPublish = false;
-	var $mPubDate = false;
+	var $mPubDate = null;
 	var $mAuthors = array();
 	var $mTags = array();
 
@@ -55,7 +55,7 @@ class WikilogParser {
 	static function clearState( &$parser ) {
 		$parser->mExtWikilog = new WikilogParser;
 
-		// Disable TOC in feeds.
+		# Disable TOC in feeds.
 		if ( Wikilog::$feedParsing ) {
 			$parser->mShowToc = false;
 		}
@@ -69,6 +69,9 @@ class WikilogParser {
 
 	static function summary( $text, $params, $parser ) {
 		global $wgParser;
+
+		# Remove extra space to make block rendering easier.
+		$text = trim( $text );
 
 		if ( !$wgParser->mExtWikilog->mSummary ) {
 			$output = $parser->parse( $text, $parser->getTitle(),

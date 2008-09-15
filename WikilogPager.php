@@ -115,15 +115,15 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		$skin = $this->getSkin();
 
 		# Get titles.
-		list( $wikilogTitleName, $itemName ) =
-			explode( '/', str_replace( '_', ' ', $row->page_title ), 2 );
-		$wikilogTitleTitle =& Title::makeTitle( $row->page_namespace, $wikilogTitleName );
+		$wikilogName = str_replace( '_', ' ', $row->wlw_title );
+		$wikilogTitle =& Title::makeTitle( $row->wlw_namespace, $row->wlw_title );
+		$itemName = str_replace( '_', ' ', $row->wlp_title );
 		$itemTitle =& Title::makeTitle( $row->page_namespace, $row->page_title );
 
 		# Retrieve article parser output and other data.
 		list( $article, $parserOutput ) = Wikilog::parsedArticle( $itemTitle );
 		list( $summary, $content ) = Wikilog::splitSummaryContent( $parserOutput );
-		$authors = unserialize( $row->wlp_authors );
+		$authors = (array)unserialize( $row->wlp_authors );
 		$authors = Wikilog::authorList( array_keys( $authors ) );
 		$pubdate = $wgContLang->timeanddate( $row->wlp_pubdate, true );
 
@@ -144,8 +144,8 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		# Item header.
 		$result .= wfMsgExt( 'wikilog-item-brief-header',
 			array( 'parse', 'content' ),
-			/* $1 */ $wikilogTitleTitle->getPrefixedURL(),
-			/* $2 */ $wikilogTitleName,
+			/* $1 */ $wikilogTitle->getPrefixedURL(),
+			/* $2 */ $wikilogName,
 			/* $3 */ $itemTitle->getPrefixedURL(),
 			/* $4 */ $itemName,
 			/* $5 */ $authors,
@@ -155,8 +155,8 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		if ( $summary ) {
 			$more = wfMsgExt( 'wikilog-item-more',
 				array( 'parse', 'content' ),
-				/* $1 */ $wikilogTitleTitle->getPrefixedURL(),
-				/* $2 */ $wikilogTitleName,
+				/* $1 */ $wikilogTitle->getPrefixedURL(),
+				/* $2 */ $wikilogName,
 				/* $3 */ $itemTitle->getPrefixedURL(),
 				/* $4 */ $itemName
 			);
@@ -168,8 +168,8 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		# Item footer.
 		$result .= wfMsgExt( 'wikilog-item-brief-footer',
 			array( 'parse', 'content' ),
-			/* $1 */ $wikilogTitleTitle->getPrefixedURL(),
-			/* $2 */ $wikilogTitleName,
+			/* $1 */ $wikilogTitle->getPrefixedURL(),
+			/* $2 */ $wikilogName,
 			/* $3 */ $itemTitle->getPrefixedURL(),
 			/* $4 */ $itemName,
 			/* $5 */ $authors,
@@ -203,7 +203,7 @@ class WikilogArchivesPager extends TablePager {
 	}
 
 	function getQueryInfo() {
-		return $this->mQuery->getQueryInfo( $this->mDb, true );
+		return $this->mQuery->getQueryInfo( $this->mDb );
 	}
 
 	function getDefaultQuery() {
@@ -217,11 +217,13 @@ class WikilogArchivesPager extends TablePager {
 	}
 
 	function isFieldSortable( $field ) {
-		return in_array( $field, array(
-			'_wl_wikilog',
-			'_wl_title',
-			'wlp_pubdate'
-		) );
+		static $sortableFields = array(
+			'wlp_pubdate',
+			'wlp_updated',
+			'wlw_title',
+			'wlp_title',
+		);
+		return in_array( $field, $sortableFields );
 	}
 
 	function getNavigationBar( $pos = false ) {
@@ -249,37 +251,45 @@ class WikilogArchivesPager extends TablePager {
 	}
 
 	function formatRow( $row ) {
-		list( $this->mCurrentBlogName, $this->mCurrentItemName ) =
-			explode( '/', str_replace( '_', ' ', $row->page_title ), 2 );
-		$this->mCurrentBlogTitle =& Title::makeTitle( $row->page_namespace, $this->mCurrentBlogName );
-		$this->mCurrentItemTitle =& Title::makeTitle( $row->page_namespace, $row->page_title );
-
+		$this->mCurrWikilogTitle =& Title::makeTitle( $row->wlw_namespace, $row->wlw_title );
+		$this->mCurrItemTitle =& Title::makeTitle( $row->page_namespace, $row->page_title );
 		return parent::formatRow( $row );
 	}
 
 	function formatValue( $name, $value ) {
+		global $wgContLang;
+
 		switch ( $name ) {
 			case 'wlp_pubdate':
-				global $wgContLang;
-				return $value ? $wgContLang->timeanddate( $value, true ) : '';
+				$s = $wgContLang->timeanddate( $value, true );
+				if ( !$this->mCurrentRow->wlp_publish ) {
+					$s = Xml::wrapClass( $s, 'wl-draft-inline' );
+				}
+				return $s;
+
+			case 'wlp_updated':
+				return $value;
 
 			case 'wlp_authors':
-				return $this->authorList( unserialize( $value ) );
+				@$value = (array)unserialize( $value );
+				return $this->authorList( $value );
 
-			case '_wl_wikilog':
-				return $this->getSkin()->makeKnownLinkObj( $this->mCurrentBlogTitle, $this->mCurrentBlogName );
+			case 'wlw_title':
+				$value = str_replace( '_', ' ', $value );
+				return $this->getSkin()->makeKnownLinkObj( $this->mCurrWikilogTitle, $value );
 
-			case '_wl_title':
-				$s = $this->getSkin()->makeKnownLinkObj( $this->mCurrentItemTitle, $this->mCurrentItemName );
+			case 'wlp_title':
+				$value = str_replace( '_', ' ', $value );
+				$s = $this->getSkin()->makeKnownLinkObj( $this->mCurrItemTitle, $value );
 				if ( !$this->mCurrentRow->wlp_publish ) {
 					$draft = wfMsg( 'wikilog-draft-title-mark' );
-					$s = "<i>$s $draft</i>";
+					$s = Xml::wrapClass( "$s $draft", 'wl-draft-inline' );
 				}
 				return $s;
 
 			case '_wl_actions':
-				if ( $this->mCurrentItemTitle->userCanEdit() ) {
-					return $this->editLink( $this->mCurrentItemTitle );
+				if ( $this->mCurrItemTitle->userCanEdit() ) {
+					return $this->editLink( $this->mCurrItemTitle );
 				} else {
 					return '';
 				}
@@ -297,12 +307,13 @@ class WikilogArchivesPager extends TablePager {
 		$fields = array();
 
 		$fields['wlp_pubdate']	= wfMsgHtml( 'wikilog-published' );
+// 		$fields['wlp_updated']	= wfMsgHtml( 'wikilog-updated' );
 		$fields['wlp_authors']	= wfMsgHtml( 'wikilog-authors' );
 
 		if ( !$this->mQuery->isSingleWikilog() )
-			$fields['_wl_wikilog'] = wfMsgHtml( 'wikilog-wikilog' );
+			$fields['wlw_title'] = wfMsgHtml( 'wikilog-wikilog' );
 
-		$fields['_wl_title']	= wfMsgHtml( 'wikilog-title' );
+		$fields['wlp_title']	= wfMsgHtml( 'wikilog-title' );
 		$fields['_wl_actions']	= wfMsgHtml( 'wikilog-actions' );
 		return $fields;
 	}

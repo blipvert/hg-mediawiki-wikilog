@@ -171,34 +171,46 @@ class WikilogItemQuery {
 	function getTag()			{ return $this->mTag; }
 	function getDate()			{ return $this->mDate; }
 
-	function getQueryInfo( $db, $extraFields = false ) {
+	function getQueryInfo( $db ) {
+		list( $page ) = $db->tableNamesN( 'page' );
+
 		# Basic defaults.
 
 		$tables = array(
-			'page',
-			'wikilog_posts'
+			'wikilog_posts',
+			"{$page} AS w",
+			"{$page} AS p",
 		);
 		$fields = array(
-			'page_id',
-			'page_namespace',
-			'page_title',
+			'wlp_page',
+			'wlp_parent',
+			'w.page_namespace AS wlw_namespace',
+			'w.page_title AS wlw_title',
+			'p.page_namespace AS page_namespace',
+			'p.page_title AS page_title',
+			'wlp_title',
 			'wlp_publish',
 			'wlp_pubdate',
 			'wlp_authors',
 			'wlp_tags',
+			'wlp_updated',
 		);
 		$conds = array(
-			'page_is_redirect' => 0,
-			'page_id = wlp_page',
+			'p.page_is_redirect' => 0
 		);
-		$options = array( );
+		$options = array(
+			'USE INDEX' => array()
+		);
+		$joins = array(
+			"{$page} AS p" => array( 'LEFT JOIN', 'p.page_id = wlp_page' ),
+			"{$page} AS w" => array( 'LEFT JOIN', 'w.page_id = wlp_parent' ),
+		);
 
 		# Customizations.
 
 		## Filter by wikilog name.
 		if ( $this->mWikilogTitle !== NULL ) {
-			$conds['page_namespace'] = $this->mWikilogTitle->getNamespace();
-			$conds[] = 'page_title LIKE \'' . $db->escapeLike( $this->mWikilogTitle->getDBkey() ) . '/%\'';
+			$conds['wlp_parent'] = $this->mWikilogTitle->getArticleId();
 		}
 
 		## Filter by published status.
@@ -211,21 +223,21 @@ class WikilogItemQuery {
 		## Filter by category.
 		if ( $this->mCategory ) {
 			$tables[] = 'categorylinks';
-			$conds[] = 'page_id = cl_from';
+			$joins['categorylinks'] = array( 'JOIN', 'wlp_page = cl_from' );
 			$conds['cl_to'] = $this->mCategory->getDBkey();
 		}
 
 		## Filter by author.
 		if ( $this->mAuthor ) {
 			$tables[] = 'wikilog_authors';
-			$conds[] = 'page_id = wla_page';
+			$joins['wikilog_authors'] = array( 'JOIN', 'wlp_page = wla_page' );
 			$conds['wla_author_text'] = $this->mAuthor->getDBkey();
 		}
 
 		## Filter by tag.
 		if ( $this->mTag ) {
 			$tables[] = 'wikilog_tags';
-			$conds[] = 'page_id = wlt_page';
+			$joins['wikilog_tags'] = array( 'JOIN', 'wlp_page = wlt_page' );
 			$conds['wlt_tag'] = $this->mTag;
 		}
 
@@ -235,22 +247,14 @@ class WikilogItemQuery {
 			$conds[] = 'wlp_pubdate < ' . $db->addQuotes( $this->mDate->end );
 		}
 
-		## Add some expensive extra fields, only if requested.
-		if ( $extraFields ) {
-			# These fields are necessary to browse the archives.
-			## XXX: They make queries slower, specially when ordering results
-			## XXX: using them... some better solution must be found.
-			$fields[] = "SUBSTRING(page_title FROM 1 FOR POSITION('/' IN page_title)-1) AS _wl_wikilog";
-			$fields[] = "SUBSTRING(page_title FROM POSITION('/' IN page_title)+1) AS _wl_title";
-		}
-
 // 		$tables[] = 'x';	// DEBUG
 
 		return array(
 			'tables' => $tables,
 			'fields' => $fields,
 			'conds' => $conds,
-			'options' => $options
+			'options' => $options,
+			'join_conds' => $joins
 		);
 	}
 

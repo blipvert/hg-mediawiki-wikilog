@@ -1,0 +1,12 @@
+/*
+ * Wikilog extension styles.
+ * Copyright © 2008 Juliano F. Ravasi
+ * http://www.mediawiki.org/wiki/Extension:Wikilog
+ *
+ * Lincensed under the GNU General Public License version 2.
+ */
+
+.wl-draft-inline {
+    font-style: italic;
+}
+

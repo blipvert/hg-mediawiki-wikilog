@@ -43,7 +43,9 @@ class WikilogFeed {
 	 * WikilogFeed constructor.
 	 *
 	 * @param $title Feed title and URL.
+	 * @param $format Feed format ('atom' or 'rss').
 	 * @param $query WikilogItemQuery options.
+	 * @param $limit Number of items to generate.
 	 */
 	public function __construct( $title, $format, WikilogItemQuery $query,
 			$limit = false )
@@ -82,16 +84,13 @@ class WikilogFeed {
 			$title->getPrefixedText() :
 			wfMsgForContent( 'wikilog' );
 
-		$feed = $this->getFeedObject( $feedTitle );
+        $lastmod = $this->checkLastModified();
+		if ( $lastmod === false ) return;
 
 		list( $timekey, $feedkey ) = $this->getCacheKeys();
 		FeedUtils::checkPurge( $timekey, $feedkey );
 
-        $lastmod = $this->checkLastModified();
-		if ( $lastmod === false ) {
-			return;
-		}
-
+		$feed = $this->getFeedObject( $feedTitle, $lastmod );
 		$cached = $this->loadFromCache( $lastmod, $timekey, $feedkey );
 
 		if( is_string( $cached ) ) {
@@ -144,9 +143,9 @@ class WikilogFeed {
 		global $wgWikilogFeedSummary, $wgWikilogFeedContent;
 
 		# Make titles.
-		list( $wikilogTitleName, $itemName ) =
-			explode( '/', str_replace( '_', ' ', $row->page_title ), 2 );
-		$wikilogTitleTitle =& Title::makeTitle( $row->page_namespace, $wikilogTitleName );
+// 		$wikilogName = str_replace( '_', ' ', $row->wlw_title );
+// 		$wikilogTitle =& Title::makeTitle( $row->wlw_namespace, $row->wlw_title );
+		$itemName = str_replace( '_', ' ', $row->wlp_title );
 		$itemTitle =& Title::makeTitle( $row->page_namespace, $row->page_title );
 
 		# Retrieve article parser output
@@ -154,13 +153,12 @@ class WikilogFeed {
 
 		# Generate some fixed bits
 		$authors = unserialize( $row->wlp_authors );
-		$pubdate = $row->wlp_pubdate;
 
 		# Create new syndication entry.
 		$entry = new WlSyndicationEntry(
 			self::makeEntryId( $itemTitle ),
 			$itemName,
-			$article->getTimestamp(),	# or $article->getTouched()?
+			$row->wlp_updated,
 			$itemTitle->getFullUrl()
 		);
 
@@ -180,7 +178,7 @@ class WikilogFeed {
 			$entry->addAuthor( $user, $usertitle->getFullUrl() );
 		}
 
-		if ( $row->wlp_pubdate ) {
+		if ( $row->wlp_publish ) {
 			$entry->setPublished( $row->wlp_pubdate );
 		}
 
@@ -199,9 +197,10 @@ class WikilogFeed {
 		$fields = $info['fields'];
 		$conds = $info['conds'];
 		$options = $info['options'];
+		$joins = $info['join_conds'];
 		$options['ORDER BY'] = $this->mIndexField . ' DESC';
 		$options['LIMIT'] = intval( $limit );
-		$res = $this->mDb->select( $tables, $fields, $conds, $fname, $options );
+		$res = $this->mDb->select( $tables, $fields, $conds, $fname, $options, $joins );
 		return new ResultWrapper( $this->mDb, $res );
 	}
 
@@ -218,18 +217,13 @@ class WikilogFeed {
 	public function checkLastModified() {
 		global $wgOut;
 		$dbr = wfGetDB( DB_SLAVE );
-		/**
-		 * @todo This causes the cache of all feeds to invalidate when any
-		 *   wikilog article is touched. This should be restricted to
-		 *   only the site feed and the wikilog feed, and nothing else.
-		 *   Also, this doesn't affect the main wikilog (summary) page.
-		 */
-		$lastmod = $dbr->selectField(
-			array( 'wikilog_posts', 'page' ),
-			'MAX(page_touched)',
-			'wlp_page = page_id',
-			__METHOD__
-		);
+		if ( ( $t = $this->mQuery->getWikilogTitle() ) ) {
+			$lastmod = $dbr->selectField( 'wikilog_wikilogs', 'wlw_updated',
+				array( 'wlw_page' => $t->getArticleId() ), __METHOD__ );
+		} else {
+			$lastmod = $dbr->selectField( 'wikilog_wikilogs', 'MAX(wlw_updated)',
+				false, __METHOD__ );
+		}
 		if( $lastmod && $wgOut->checkLastModified( $lastmod ) ) {
 			# Client cache fresh and headers sent, nothing more to do.
 			return false;
