@@ -81,7 +81,7 @@ $wgSpecialPageGroups['Wikilog'] = 'changes';
 /*
  * Hooks.
  */
-$wgExtensionFunctions[] = "Wikilog::Setup";
+$wgExtensionFunctions[] = 'Wikilog::Setup';
 
 // Main Wikilog hooks
 $wgHooks['ArticleFromTitle'][] = 'Wikilog::ArticleFromTitle';
@@ -658,7 +658,7 @@ class Wikilog {
 				return self::authorSig( $list[0] );
 			}
 			else {
-				$first = implode( ', ', array_map( 'Wikilog::authorSig',
+				$first = implode( ', ', array_map( array( 'Wikilog', 'authorSig' ),
 					array_slice( $list, 0, $count - 1 ) ) );
 				$last = self::authorSig( $list[$count-1] );
 				$and = wfMsgForContent( 'and' );

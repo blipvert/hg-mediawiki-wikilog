@@ -46,9 +46,9 @@ class WikilogParser {
 	function getTags() { return $this->mTags; }
 
 	static function registerParser( &$parser ) {
-		$parser->setHook( 'summary', 'WikilogParser::summary' );
-		$parser->setFunctionHook( 'wl-publish', 'WikilogParser::publish', SFH_NO_HASH );
-		$parser->setFunctionHook( 'wl-tags',    'WikilogParser::tags',    SFH_NO_HASH );
+		$parser->setHook( 'summary', array( 'WikilogParser', 'summary' ) );
+		$parser->setFunctionHook( 'wl-publish', array( 'WikilogParser', 'publish' ), SFH_NO_HASH );
+		$parser->setFunctionHook( 'wl-tags', array( 'WikilogParser', 'tags' ), SFH_NO_HASH );
 		return true;
 	}
 
