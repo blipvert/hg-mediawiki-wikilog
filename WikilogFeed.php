@@ -70,6 +70,13 @@ class WikilogFeed {
 	protected $mCopyright;
 
 	/**
+	 * List of query parameters that are allowed for feeds. Note that adding
+	 * to this list means that feed caching should be revisited. Parameters
+	 * must be listed as keys.
+	 */
+	public static $paramWhitelist = array( 'show' => true );
+
+	/**
 	 * WikilogFeed constructor.
 	 *
 	 * @param $title Feed title and URL.

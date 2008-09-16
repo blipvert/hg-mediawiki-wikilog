@@ -91,11 +91,17 @@ class WikilogMainPage extends Article {
 		$wgOut->addHTML( $pager->getNavigationBar() );
 		$wgOut->addHTML( wfCloseElement( 'div' ) );
 
+		# Get query parameter array, for the following links.
+		$qarr = $query->getDefaultQuery();
+		
 		# Add feed links.
 		$wgOut->setSyndicated();
+		if ( isset( $qarr['show'] ) ) {
+			$altquery = wfArrayToCGI( array_intersect_key( $qarr, WikilogFeed::$paramWhitelist ) );
+			$wgOut->setFeedAppendQuery( $altquery );
+		}
 
 		# Add links for alternate views.
-		$qarr = $query->getDefaultQuery();
 		foreach ( self::$views as $alt ) {
 			if ( $alt != $view ) {
 				$altquery = wfArrayToCGI( array( 'view' => $alt ), $qarr );

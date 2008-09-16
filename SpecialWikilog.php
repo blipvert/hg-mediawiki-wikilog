@@ -133,11 +133,17 @@ class SpecialWikilog extends IncludableSpecialPage {
 		}
 		$wgOut->addHTML( wfCloseElement( 'div' ) );
 
+		# Get query parameter array, for the following links.
+		$qarr = $query->getDefaultQuery();
+		
 		# Add feed links.
 		$wgOut->setSyndicated();
+		if ( isset( $qarr['show'] ) ) {
+			$altquery = wfArrayToCGI( array_intersect_key( $qarr, WikilogFeed::$paramWhitelist ) );
+			$wgOut->setFeedAppendQuery( $altquery );
+		}
 
 		# Add links for alternate views.
-		$qarr = $query->getDefaultQuery();
 		foreach ( self::$views as $alt ) {
 			if ( $alt != $opts['view'] ) {
 				$altquery = wfArrayToCGI( array( 'view' => $alt ), $qarr );
