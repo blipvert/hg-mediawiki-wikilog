@@ -64,7 +64,7 @@ class WikilogItemPage extends Article {
 	}
 
 	function view() {
-		global $wgOut, $wgUser, $wgContLang;
+		global $wgOut, $wgUser, $wgContLang, $wgFeed, $wgWikilogFeedClasses;
 
 		# Load data
 		$this->loadItemData();
@@ -129,6 +129,23 @@ class WikilogItemPage extends Article {
 		);
 		if ( !empty( $footerTxt ) ) {
 			$wgOut->addHtml( $footerTxt );
+		}
+
+		# Add feed links.
+		$links = array();
+		if ( $wgFeed ) {
+			foreach( $wgWikilogFeedClasses as $format => $class ) {
+				$wgOut->addLink( array(
+					'rel' => 'alternate',
+					'type' => "application/{$format}+xml",
+					'title' => wfMsgExt(
+						"page-{$format}-feed",
+						array( 'content', 'parsemag' ),
+						$this->mWikilogTitle->getPrefixedText()
+					),
+					'href' => $this->mWikilogTitle->getLocalUrl( "feed={$format}" )
+				) );
+			}
 		}
 	}
 
