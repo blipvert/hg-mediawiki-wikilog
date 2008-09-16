@@ -208,7 +208,7 @@ class WikilogArchivesPager extends TablePager {
 
 	function getDefaultQuery() {
 		$query = parent::getDefaultQuery() + $this->mQuery->getDefaultQuery();
-		$query['list'] = 'archives';
+		$query['view'] = 'archives';
 		return $query;
 	}
 

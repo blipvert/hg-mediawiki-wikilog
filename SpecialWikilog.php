@@ -31,6 +31,11 @@ if ( !defined( 'MEDIAWIKI' ) )
 
 class SpecialWikilog extends IncludableSpecialPage {
 
+	/**
+	 * Alternate views.
+	 */
+	protected static $views = array( 'summary', 'archives' );
+
 	function __construct( ) {
 		parent::__construct( 'Wikilog' );
 		wfLoadExtensionMessages('Wikilog');
@@ -40,7 +45,7 @@ class SpecialWikilog extends IncludableSpecialPage {
 		global $wgWikilogNumArticles;
 
 		$opts = new FormOptions();
-		$opts->add( 'list',     'summary' );
+		$opts->add( 'view',     'summary' );
 		$opts->add( 'show',     'published' );
 		$opts->add( 'wikilog',  '' );
 		$opts->add( 'category', '' );
@@ -90,7 +95,7 @@ class SpecialWikilog extends IncludableSpecialPage {
 	}
 
 	public function webOutput( FormOptions $opts ) {
-		global $wgRequest, $wgOut;
+		global $wgRequest, $wgOut, $wgMimeType, $wgTitle;
 
 		# Set page title, html title, nofollow, noindex, etc...
 		$this->setHeaders();
@@ -112,7 +117,7 @@ class SpecialWikilog extends IncludableSpecialPage {
 		if ( !$this->including() ) $this->doHeader( $opts );
 
 		# Display the list of wikilog posts.
-		if ( $opts['list'] == 'archives' ) {
+		if ( $opts['view'] == 'archives' ) {
 			$pager = new WikilogArchivesPager( $query );
 		} else {
 			$pager = new WikilogSummaryPager( $query, $opts['limit'] );
@@ -130,6 +135,21 @@ class SpecialWikilog extends IncludableSpecialPage {
 
 		# Add feed links.
 		$wgOut->setSyndicated();
+
+		# Add links for alternate views.
+		$qarr = $query->getDefaultQuery();
+		foreach ( self::$views as $alt ) {
+			if ( $alt != $opts['view'] ) {
+				$altquery = wfArrayToCGI( array( 'view' => $alt ), $qarr );
+				$wgOut->addLink( array(
+					'rel' => 'alternate',
+					'href' => $wgTitle->getLocalURL( $altquery ),
+					'type' => $wgMimeType,
+					'title' => wfMsgExt( "wikilog-view-{$alt}",
+						array( 'content', 'parsemag' ) )
+				) );
+			}
+		}
 	}
 
 	public function feedOutput( $format, FormOptions $opts ) {
@@ -150,8 +170,8 @@ class SpecialWikilog extends IncludableSpecialPage {
 				$opts['limit'] = intval( $par );
 			} else if ( $par == 'all' || $par == 'published' || $par == 'drafts' ) {
 				$opts['show'] = $par;
-			} else if ( $par == 'summary' || $par == 'archives' ) {
-				$opts['list'] = $par;
+			} else if ( in_array( $par, self::$views ) ) {
+				$opts['view'] = $par;
 			} else if ( preg_match( '/^tag=(.+)$/', $par, $m ) ) {
 				$opts['tag'] = $m[1];
 			} else if ( preg_match( '/^date=(.+)$/', $par, $m ) ) {

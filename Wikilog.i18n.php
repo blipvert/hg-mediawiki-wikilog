@@ -26,6 +26,8 @@ $messages['en'] = array(
 	'wikilog-wikilog'			=> 'Wikilog',
 	'wikilog-title'				=> 'Title',
 	'wikilog-actions'			=> 'Actions',
+	'wikilog-view-archives'		=> 'Archives',
+	'wikilog-view-summary'		=> 'Summary',
 
 	# Pager strings
 	'wikilog-pager-newer-n'		=> '← newer $1',
@@ -117,6 +119,8 @@ $messages['pt'] = array(
 	'wikilog-wikilog'			=> 'Wikilog',
 	'wikilog-title'				=> 'Título',
 	'wikilog-actions'			=> 'Ações',
+	'wikilog-view-archives'		=> 'Arquivos',
+	'wikilog-view-summary'		=> 'Resumo',
 
 	# Pager strings
 	'wikilog-pager-newer-n'		=> '← $1 próximos',

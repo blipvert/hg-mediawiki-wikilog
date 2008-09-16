@@ -31,13 +31,24 @@ if ( !defined( 'MEDIAWIKI' ) )
 
 class WikilogMainPage extends Article {
 
+	/**
+	 * Alternate views.
+	 */
+	protected static $views = array( 'summary', 'archives' );
+
+	/**
+	 * Constructor.
+	 */
 	function __construct( &$title, &$wi ) {
 		parent::__construct( $title );
 		wfLoadExtensionMessages( 'Wikilog' );
 	}
 
+	/**
+	 * View action handler.
+	 */
 	function view() {
-		global $wgRequest, $wgOut;
+		global $wgRequest, $wgOut, $wgMimeType;
 
 		$query = new WikilogItemQuery( $this->mTitle );
 		$query->setPubStatus( $wgRequest->getVal( 'show' ) );
@@ -49,6 +60,9 @@ class WikilogMainPage extends Article {
 				$wgRequest->getInt( 'limit', $wgWikilogNumArticles ) );
 			return $feed->execute();
 		}
+
+		# View selection.
+		$view = $wgRequest->getVal( 'view', 'summary' );
 
 		# Query filter options.
 		$query->setCategory( $wgRequest->getVal( 'category' ) );
@@ -64,7 +78,7 @@ class WikilogMainPage extends Article {
 		parent::view();
 
 		# Create pager object, according to the type of listing.
-		if ( $wgRequest->getVal( 'list' ) == 'archives' ) {
+		if ( $view == 'archives' ) {
 			$pager = new WikilogArchivesPager( $query );
 		} else {
 			$pager = new WikilogSummaryPager( $query );
@@ -79,6 +93,21 @@ class WikilogMainPage extends Article {
 
 		# Add feed links.
 		$wgOut->setSyndicated();
+
+		# Add links for alternate views.
+		$qarr = $query->getDefaultQuery();
+		foreach ( self::$views as $alt ) {
+			if ( $alt != $view ) {
+				$altquery = wfArrayToCGI( array( 'view' => $alt ), $qarr );
+				$wgOut->addLink( array(
+					'rel' => 'alternate',
+					'href' => $this->mTitle->getLocalURL( $altquery ),
+					'type' => $wgMimeType,
+					'title' => wfMsgExt( "wikilog-view-{$alt}",
+						array( 'content', 'parsemag' ) )
+				) );
+			}
+		}
 	}
 }
 
