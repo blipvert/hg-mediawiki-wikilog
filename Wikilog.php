@@ -81,7 +81,7 @@ $wgSpecialPageGroups['Wikilog'] = 'changes';
 /*
  * Hooks.
  */
-$wgExtensionFunctions[] = 'Wikilog::Setup';
+$wgExtensionFunctions[] = 'Wikilog::ExtensionInit';
 
 // Main Wikilog hooks
 $wgHooks['ArticleFromTitle'][] = 'Wikilog::ArticleFromTitle';
@@ -90,7 +90,6 @@ $wgHooks['ArticleDeleteComplete'][] = 'Wikilog::ArticleDeleteComplete';
 $wgHooks['TitleMoveComplete'][] = 'Wikilog::TitleMoveComplete';
 $wgHooks['GetLocalURL'][] = 'Wikilog::GetLocalURL';
 $wgHooks['GetFullURL'][] = 'Wikilog::GetFullURL';
-$wgHooks['PageRenderingHash'][] = 'Wikilog::PageRenderingHash';
 $wgHooks['LanguageGetSpecialPageAliases'][] = 'Wikilog::LanguageGetSpecialPageAliases';
 $wgHooks['LanguageGetMagic'][] = 'Wikilog::LanguageGetMagic';
 $wgHooks['LoadExtensionSchemaUpdates'][] = 'Wikilog::ExtensionSchemaUpdates';
@@ -195,13 +194,49 @@ class Wikilog {
 	static public $originalPaths = NULL;
 
 	###
+	##  Setup functions.
+	#
+
+	/**
+	 * Create a namespace, associating wikilog features to it.
+	 *
+	 * @param $ns Subject namespace number, must even and greater than 100.
+	 * @param $name Subject namespace name.
+	 * @param $talk Talk namespace name.
+	 */
+	static function setupNamespace( $ns, $name, $talk ) {
+		global $wgExtraNamespaces, $wgWikilogNamespaces;
+
+		if ( $ns < 100 ) {
+			echo "Wikilog setup: custom namespaces should start ".
+				 "at 100 to avoid conflict with standard namespaces.\n";
+			die( 1 );
+		}
+		if ( ($ns % 2) != 0 ) {
+			echo "Wikilog setup: given namespace ($ns) is not a ".
+				 "subject namespace (even number).\n";
+			die( 1 );
+		}
+		if ( is_array( $wgExtraNamespaces ) && isset( $wgExtraNamespaces[$ns] ) ) {
+			$nsname = $wgExtraNamespaces[$ns];
+			echo "Wikilog setup: given namespace ($ns) is already " .
+				 "set to '$nsname'.\n";
+			die( 1 );
+		}
+
+		$wgExtraNamespaces[$ns  ] = $name;
+		$wgExtraNamespaces[$ns^1] = $talk;
+		$wgWikilogNamespaces[] = $ns;
+	}
+
+	###
 	##  MediaWiki hooks.
 	#
 
 	/**
 	 * Extension setup function.
 	 */
-	static function Setup() {
+	static function ExtensionInit() {
 		global $wgWikilogNamespaces, $wgNamespacesWithSubpages;
 
 		# Find assigned namespaces and make sure they have subpages
@@ -411,20 +446,6 @@ class Wikilog {
 				$url = substr( $url, $l );
 			}
 		}
-		return true;
-	}
-
-	/**
-	 * PageRenderingHash hook handler function.
-	 * Add a tag to page rendering hash if self::$expandingUrls is true.
-	 */
-	static function PageRenderingHash( &$confstr ) {
-		# This doesn't work as expected. This value is cached upon the first
-		# call. So if the first cache hit has different settings than the
-		# following ones, those will hit the wrong entries in the cache.
-// 		if ( self::$expandingUrls ) {
-// 			$confstr .= '!wl-expurls';
-// 		}
 		return true;
 	}
 
