@@ -46,7 +46,6 @@ class WikilogItemPage extends Article {
 
 	function __construct( &$title, &$wi ) {
 		parent::__construct( $title );
-
 		wfLoadExtensionMessages( 'Wikilog' );
 
 		$this->mWikilogName = $wi->getName();
@@ -183,7 +182,8 @@ class WikilogItemPage extends Article {
 
 		$sigs = array(
 			'/\n?(--)?~~~~~\n?/m' => "\n{{wl-publish: {$date} }}\n",
-			'/\n?(--)?~~~~\n?/m' => "\n{{wl-publish: {$date} | {$user} }}\n"
+			'/\n?(--)?~~~~\n?/m' => "\n{{wl-publish: {$date} | {$user} }}\n",
+			'/\n?(--)?~~~\n?/m' => "\n{{wl-author: {$user} }}\n"
 		);
 
 		$wgParser->startExternalParse( $this->mTitle, $popt, Parser::OT_WIKI );

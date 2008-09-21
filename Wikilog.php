@@ -294,6 +294,7 @@ class Wikilog {
 		} else if ( $wi->isItem() ) {
 			# ::WikilogItemPage::
 			$dbw = wfGetDB( DB_MASTER );
+			$id = $article->getId();
 			$editInfo = $article->mPreparedEdit;
 
 			# Check if we have any wikilog metadata available.
@@ -309,7 +310,7 @@ class Wikilog {
 					'wikilog_posts',
 					'wlp_page',
 					array(
-						'wlp_page' => $article->getId(),
+						'wlp_page' => $id,
 						'wlp_parent' => $wi->getTitle()->getArticleId(),
 						'wlp_title' => $wi->getItemName(),
 						'wlp_publish' => $output->mPublish,
@@ -323,8 +324,7 @@ class Wikilog {
 			} else {
 				# Remove entry from tables. Entries in wikilog_authors and
 				# wikilog_tags are removed during LinksUpdate process.
-				$id = $article->getId();
-				$dbw->delete( 'wikilog_posts',   array( 'wlp_page' => $id ), __METHOD__ );
+				$dbw->delete( 'wikilog_posts', array( 'wlp_page' => $id ), __METHOD__ );
 			}
 
 			# Invalidate cache of parent wikilog page.
@@ -332,17 +332,37 @@ class Wikilog {
 		} else {
 			# ::WikilogMainPage::
 			$dbw = wfGetDB( DB_MASTER );
+			$id = $article->getId();
+			$editInfo = $article->mPreparedEdit;
 
-			# Update entry in wikilog_wikilogs table.
-			$dbw->replace(
-				'wikilog_wikilogs',
-				'wlw_page',
-				array(
-					'wlw_page' => $article->getId(),
-					'wlw_updated' => $dbw->timestamp()
-				),
-				__METHOD__
-			);
+			# Check if we have any wikilog metadata available.
+			if ( isset( $editInfo->output->mExtWikilog ) ) {
+				$output = $editInfo->output->mExtWikilog;
+				$subtitle = $output->mSummary
+					? array( 'html', $output->mSummary )
+					: '';
+
+				# Update entry in wikilog_wikilogs table. Entries in
+				# wikilog_authors and wikilog_tags are updated during
+				# LinksUpdate process.
+				$dbw->replace(
+					'wikilog_wikilogs',
+					'wlw_page',
+					array(
+						'wlw_page' => $id,
+						'wlw_subtitle' => serialize( $subtitle ),
+						'wlw_icon' => $output->mIcon ? $output->mIcon->getDBKey() : '',
+						'wlw_logo' => $output->mLogo ? $output->mLogo->getDBKey() : '',
+						'wlw_authors' => serialize( $output->mAuthors ),
+						'wlw_updated' => $dbw->timestamp()
+					),
+					__METHOD__
+				);
+			} else {
+				# Remove entry from tables. Entries in wikilog_authors and
+				# wikilog_tags are removed during LinksUpdate process.
+				$dbw->delete( 'wikilog_wikilogs', array( 'wlw_page' => $id ), __METHOD__ );
+			}
 		}
 
 		return true;
@@ -466,8 +486,10 @@ class Wikilog {
 	 */
 	static function LanguageGetMagic( &$magicWords, $lang ) {
 		/// TODO: Language magic.
-		$magicWords['wl-publish'] = array( 0, 'wl-publish' );
-		$magicWords['wl-tags'   ] = array( 0, 'wl-tags'    );
+		$magicWords['wl-settings'] = array( 0, 'wl-settings' );
+		$magicWords['wl-publish' ] = array( 0, 'wl-publish'  );
+		$magicWords['wl-author'  ] = array( 0, 'wl-author'   );
+		$magicWords['wl-tags'    ] = array( 0, 'wl-tags'     );
 		return true;
 	}
 
@@ -490,7 +512,8 @@ class Wikilog {
 			);
 			$wgExtNewFields += array(
 				array( 'wikilog_posts', 'wlp_parent', $dir . 'archives/patch-post-titles.sql' ),
-				array( 'wikilog_posts', 'wlp_title',  $dir . 'archives/patch-post-titles.sql' )
+				array( 'wikilog_posts', 'wlp_title',  $dir . 'archives/patch-post-titles.sql' ),
+				array( 'wikilog_wikilogs', 'wlw_authors', $dir . 'archives/patch-wikilog-authors.sql' )
 			);
 		} else {
 			/// TODO: PostgreSQL, SQLite, etc...

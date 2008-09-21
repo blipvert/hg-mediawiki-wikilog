@@ -302,7 +302,7 @@ class WikilogFeed {
 			$row = $this->mDb->selectRow( 'wikilog_wikilogs',
 				array(
 					'wlw_page', 'wlw_subtitle',
-					'wlw_icon', 'wlw_logo',
+					'wlw_icon', 'wlw_logo', 'wlw_authors',
 					'wlw_updated'
 				),
 				array( 'wlw_page' => $wikilogTitle->getArticleId() ),
@@ -332,6 +332,13 @@ class WikilogFeed {
 				if ( $row->wlw_logo ) {
 					$t = Title::makeTitle( NS_IMAGE, $row->wlw_logo );
 					$feed->setLogo( wfFindFile( $t ) );
+				}
+				if ( $row->wlw_authors ) {
+					$authors = unserialize( $row->wlw_authors );
+					foreach( $authors as $user => $userid ) {
+						$usertitle = Title::makeTitle( NS_USER, $user );
+						$feed->addAuthor( $user, $usertitle->getFullUrl() );
+					}
 				}
 				if ( $this->mCopyright ) {
 					$feed->setRights( new WlTextConstruct( 'html', $this->mCopyright ) );

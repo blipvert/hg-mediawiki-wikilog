@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS /*$wgDBprefix*/wikilog_wikilogs (
   -- Primary key, reference to wikilog front page article.
   wlw_page INTEGER UNSIGNED NOT NULL,
 
-  -- Wikilog description/subtitle.
+  -- Serialized PHP object representing the wikilog description or subtitle.
   wlw_subtitle BLOB NOT NULL,
 
   -- Image that provides iconic visual identification of the feed.
@@ -21,6 +21,9 @@ CREATE TABLE IF NOT EXISTS /*$wgDBprefix*/wikilog_wikilogs (
 
   -- Image that provides visual identification of the feed.
   wlw_logo VARCHAR(255) BINARY NOT NULL,
+
+  -- Serialized PHP array of authors.
+  wlw_authors BLOB NOT NULL,
 
   -- Last time the wikilog (including posts) was updated.
   wlw_updated BINARY(14) NOT NULL,

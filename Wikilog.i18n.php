@@ -63,6 +63,10 @@ $messages['en'] = array(
 	'wikilog-invalid-author'	=> "Wikilog: Invalid author: \$1.",
 	'wikilog-invalid-date'		=> "Wikilog: Invalid date: \$1.",
 	'wikilog-invalid-tag'		=> "Wikilog: Invalid tag: \$1.",
+	'wikilog-invalid-param'		=> "Wikilog: Invalid parameter: \$1.",
+	'wikilog-invalid-file'		=> "Wikilog: Invalid file: \$1.",
+	'wikilog-file-not-found'	=> "Wikilog: Non-existing file: \$1.",
+	'wikilog-not-an-image'		=> "Wikilog: File is not an image: \$1.",
 	'wikilog-draft-title-mark'	=> "(draft)",
 	'wikilog-out-of-context'	=>
 			"Warning: Wikilog tags are being used out of context. " .
@@ -156,6 +160,10 @@ $messages['pt'] = array(
 	'wikilog-invalid-author'	=> "Wikilog: Autor inválido: \$1.",
 	'wikilog-invalid-date'		=> "Wikilog: Data inválida: \$1.",
 	'wikilog-invalid-tag'		=> "Wikilog: Rótulo inválido: \$1.",
+	'wikilog-invalid-param'		=> "Wikilog: Parâmetro inválido: \$1.",
+	'wikilog-invalid-file'		=> "Wikilog: Arquivo inválido: \$1.",
+	'wikilog-file-not-found'	=> "Wikilog: Arquivo não-existente: \$1.",
+	'wikilog-not-an-image'		=> "Wikilog: Arquivo não é uma imagem: \$1.",
 	'wikilog-draft-title-mark'	=> "(rascunho)",
 	'wikilog-out-of-context'	=>
 			"Aviso: Rótulos wikilog estão sendo utilizados fora de contexto. " .
