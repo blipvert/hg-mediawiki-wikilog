@@ -174,6 +174,7 @@ class WikilogFeed {
 	function feedEntry( $row ) {
 		global $wgServerName, $wgEnableParserCache, $wgMimeType;
 		global $wgWikilogFeedSummary, $wgWikilogFeedContent;
+		global $wgWikilogFeedCategories, $wgWikilogFeedRelated;
 		global $wgParser, $wgUser;
 
 		# Make titles.
@@ -224,6 +225,19 @@ class WikilogFeed {
 		foreach ( $authors as $user => $userid ) {
 			$usertitle = Title::makeTitle( NS_USER, $user );
 			$entry->addAuthor( $user, $usertitle->getFullUrl() );
+		}
+
+		# Automatic list of categories.
+		if ( $wgWikilogFeedCategories ) {
+			$this->addCategories( $entry, $row->wlp_page );
+		}
+
+		# Automatic list of related links.
+		if ( $wgWikilogFeedRelated ) {
+			$externals = array_keys( $parserOutput->getExternalLinks() );
+			foreach ( $externals as $ext ) {
+				$entry->addLinkRel( 'related', array( 'href' => $ext ) );
+			}
 		}
 
 		if ( $row->wlp_publish ) {
@@ -297,6 +311,8 @@ class WikilogFeed {
 	public function getWikilogFeedObject( $wikilogTitle, $forsource = false ) {
 		static $wikilogCache = array();
 		global $wgContLanguageCode, $wgWikilogFeedClasses;
+		global $wgWikilogFeedCategories;
+
 		$title = $wikilogTitle->getPrefixedText();
 		if ( !isset( $wikilogCache[$title] ) ) {
 			$row = $this->mDb->selectRow( 'wikilog_wikilogs',
@@ -332,6 +348,9 @@ class WikilogFeed {
 				if ( $row->wlw_logo ) {
 					$t = Title::makeTitle( NS_IMAGE, $row->wlw_logo );
 					$feed->setLogo( wfFindFile( $t ) );
+				}
+				if ( $wgWikilogFeedCategories ) {
+					$this->addCategories( $feed, $row->wlw_page );
 				}
 				if ( $row->wlw_authors ) {
 					$authors = unserialize( $row->wlw_authors );
@@ -430,6 +449,39 @@ class WikilogFeed {
 	}
 
 	/**
+	 * Find and add categories for the given feed or entry.
+	 */
+	private function addCategories( WlSyndicationBase $obj, $pageid ) {
+		$scheme = SpecialPage::getTitleFor( 'Categories' )->getFullUrl();
+		$res = $this->mDb->select(
+			array( 'categorylinks', 'page', 'page_props' ),
+			array( 'page_title' ),
+			array( /* conds */
+				'cl_from' => $pageid,
+				'page_title IS NOT NULL',
+				'pp_value IS NULL'
+			), __METHOD__,
+			array( /* options */ ),
+			array( /* joins */
+				'page' => array( 'LEFT JOIN', array(
+					'page_namespace' => NS_CATEGORY,
+					'page_title = cl_to'
+				) ),
+				'page_props' => array( 'LEFT JOIN', array(
+					'pp_propname' => 'hiddencat',
+					'pp_page = page_id'
+				) )
+			)
+		);
+		foreach ( $res as $row ) {
+			$term = $row->page_title;
+			$label = preg_replace( '/(?:.*\/)?(.+?)(?:\s*\(.*\))?/', '$1', $term );
+			$label = str_replace( '_', ' ', $label );
+			$obj->addCategory( $term, $scheme, $label );
+		}
+	}
+
+	/**
 	 * Creates an unique ID for a feed entry. Tries to use $wgTaggingEntity
 	 * if possible in order to create an RFC 4151 tag, otherwise, we use the
 	 * page URL.
@@ -438,7 +490,7 @@ class WikilogFeed {
 		global $wgTaggingEntity;
 		if ( $wgTaggingEntity ) {
 			$qstr = wfArrayToCGI( array( 'wk' => wfWikiID(), 'id' => $title->getArticleId() ) );
-			return "tag:{$wgTaggingEntity}:wikilog?{$qstr}";
+			return "tag:{$wgTaggingEntity}:/MediaWiki/Wikilog?{$qstr}";
 		} else {
 			return $title->getFullUrl();
 		}

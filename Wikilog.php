@@ -164,6 +164,16 @@ $wgWikilogFeedSummary = true;
 $wgWikilogFeedContent = true;
 
 /**
+ * Enable output of article categories in wikilog feeds.
+ */
+$wgWikilogFeedCategories = true;
+
+/**
+ * Enable output of external references in wikilog feeds.
+ */
+$wgWikilogFeedRelated = false;
+
+/**
  * Navigation bars to show in listing pages.
  */
 $wgWikilogNavTop = false;
