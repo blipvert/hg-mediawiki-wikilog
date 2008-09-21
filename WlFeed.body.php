@@ -251,11 +251,14 @@ abstract class WlSyndicationBase {
 	 *   optional.
 	 */
 	function addCategory( $term, $scheme = NULL, $label = NULL ) {
-		$this->mCategories[] = array(
-			'term'   => $term,
-			'scheme' => $scheme,
-			'label'  => $label
-		);
+		$cat = array( 'term' => $term );
+		if ( $scheme ) {
+			$cat['scheme'] = $scheme;
+		}
+		if ( $label ) {
+			$cat['label'] = $label;
+		}
+		$this->mCategories[] = $cat;
 	}
 
 }
