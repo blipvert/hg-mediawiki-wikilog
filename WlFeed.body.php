@@ -319,7 +319,7 @@ abstract class WlSyndicationFeed extends WlSyndicationBase {
 		global $wgRequest;
 
 		parent::__construct( $id, $title, $updated );
-	
+
 		if ( $url ) {
 			global $wgMimeType;
 			$this->addLink( $url, $wgMimeType );
@@ -329,7 +329,7 @@ abstract class WlSyndicationFeed extends WlSyndicationBase {
 			'href' => !is_null( $self ) ? $self : $wgRequest->getFullRequestURL(),
 			'type' => $this->defaultContentType()
 		) );
-		
+
 		if ( ( $quirks = $wgRequest->getVal( 'quirks' ) ) ) {
 			$this->mQuirks = explode( ',', $quirks );
 		}
@@ -343,10 +343,10 @@ abstract class WlSyndicationFeed extends WlSyndicationBase {
 	function setSubtitle( $value ) { $this->mSubtitle = $value; }
 	function getSubtitle() { return $this->mSubtitle; }
 
-	function setIcon( $value ) { $this->mIcon = $value; }
+	function setIcon( File $value ) { $this->mIcon = $value; }
 	function getIcon() { return $this->mIcon; }
 
-	function setLogo( $value ) { $this->mLogo = $value; }
+	function setLogo( File $value ) { $this->mLogo = $value; }
 	function getLogo() { return $this->mLogo; }
 
 	/*@}*/
@@ -731,10 +731,10 @@ class WlAtomFeed extends WlSyndicationFeed {
 			$content .= Xml::element( 'category', $category ) . "\n";
 		}
 		if ( $this->getIcon() ) {
-			$content .= Xml::element( 'icon', NULL, $this->getIcon() ) . "\n";
+			$content .= Xml::element( 'icon', NULL, $this->getIcon()->getFullUrl() ) . "\n";
 		}
 		if ( $this->getLogo() ) {
-			$content .= Xml::element( 'logo', NULL, $this->getLogo() ) . "\n";
+			$content .= Xml::element( 'logo', NULL, $this->getLogo()->getFullUrl() ) . "\n";
 		}
 		$content .= Xml::element( 'updated', NULL,
 					$this->formatTime( $this->getUpdated() ) ) . "\n";
@@ -861,6 +861,7 @@ class WlRSSFeed extends WlSyndicationFeed {
 	 */
 	function outHeader() {
 		$this->outXmlHeader();
+		$mlink = false;
 
 		echo Xml::openElement( 'rss',
 			array(
@@ -878,8 +879,8 @@ class WlRSSFeed extends WlSyndicationFeed {
 		foreach ( $this->getLinks() as $rel => $links ) {
 			if ( $rel == 'alternate' ) {
 				# RSS only supports (and requires) a single link element.
-				$link = array_shift( $links );
-				echo Xml::element( 'link', NULL, $link['href'] ) . "\n";
+				$mlink = array_shift( $links );
+				echo Xml::element( 'link', NULL, $mlink['href'] ) . "\n";
 			} else {
 				# For other links, we use the atom namespace.
 				foreach ( $links as $link ) {
@@ -890,6 +891,16 @@ class WlRSSFeed extends WlSyndicationFeed {
 
 		foreach ( $this->getAuthors() as $author ) {
 			echo Xml::element( 'dc:creator', NULL, $author['name'] ) . "\n";
+		}
+
+		if ( $this->getLogo() && $mlink ) {
+			$title = $this->getTitle();
+			if ( $title instanceof WlTextConstruct ) $title = $title->getText();
+			echo Xml::openElement( 'image' ) .
+				 Xml::element( 'url', NULL, $this->getLogo()->getFullUrl() ) .
+				 Xml::element( 'title', NULL, $title ) .
+				 Xml::element( 'link', NULL, $mlink['href'] ) .
+				 Xml::closeElement( 'image' ) . "\n";
 		}
 
 		echo Xml::element( 'language', NULL, $this->getLanguage() ) . "\n";
@@ -969,7 +980,6 @@ class WlRSSFeed extends WlSyndicationFeed {
 					$s_title->getText() : $s_title
 			) . "\n";
 		}
-
 
 		# If only summary or only content is provided, prefer the standard
 		# description element for either. If both are provided, put the
