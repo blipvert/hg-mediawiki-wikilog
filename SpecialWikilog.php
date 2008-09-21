@@ -96,6 +96,7 @@ class SpecialWikilog extends IncludableSpecialPage {
 
 	public function webOutput( FormOptions $opts ) {
 		global $wgRequest, $wgOut, $wgMimeType, $wgTitle;
+		global $wgWikilogNavTop, $wgWikilogNavBottom;
 
 		# Set page title, html title, nofollow, noindex, etc...
 		$this->setHeaders();
@@ -127,9 +128,10 @@ class SpecialWikilog extends IncludableSpecialPage {
 		if ( $this->including() ) {
 			$wgOut->addHTML( $pager->getBody() );
 		} else {
-			$wgOut->addHTML( $pager->getNavigationBar() );
-			$wgOut->addHTML( $pager->getBody() );
-			$wgOut->addHTML( $pager->getNavigationBar() );
+			$body = $pager->getBody();
+			if ( $wgWikilogNavTop ) $body = $pager->getNavigationBar() . $body;
+			if ( $wgWikilogNavBottom ) $body = $body . $pager->getNavigationBar();
+			$wgOut->addHTML( $body );
 		}
 		$wgOut->addHTML( wfCloseElement( 'div' ) );
 

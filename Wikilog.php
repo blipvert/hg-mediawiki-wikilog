@@ -164,6 +164,12 @@ $wgWikilogFeedSummary = true;
 $wgWikilogFeedContent = true;
 
 /**
+ * Navigation bars to show in listing pages.
+ */
+$wgWikilogNavTop = false;
+$wgWikilogNavBottom = true;
+
+/**
  * Namespaces used for wikilogs.
  */
 $wgWikilogNamespaces = array();

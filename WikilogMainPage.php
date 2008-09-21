@@ -49,6 +49,7 @@ class WikilogMainPage extends Article {
 	 */
 	function view() {
 		global $wgRequest, $wgOut, $wgMimeType;
+		global $wgWikilogNavTop, $wgWikilogNavBottom;
 
 		$query = new WikilogItemQuery( $this->mTitle );
 		$query->setPubStatus( $wgRequest->getVal( 'show' ) );
@@ -85,10 +86,11 @@ class WikilogMainPage extends Article {
 		}
 
 		# Display list of wikilog posts.
+		$body = $pager->getBody();
+		if ( $wgWikilogNavTop ) $body = $pager->getNavigationBar() . $body;
+		if ( $wgWikilogNavBottom ) $body = $body . $pager->getNavigationBar();
 		$wgOut->addHTML( wfOpenElement( 'div', array( 'class' => 'wl-wrapper' ) ) );
-		$wgOut->addHTML( $pager->getNavigationBar() );
-		$wgOut->addHTML( $pager->getBody() );
-		$wgOut->addHTML( $pager->getNavigationBar() );
+		$wgOut->addHTML( $body );
 		$wgOut->addHTML( wfCloseElement( 'div' ) );
 
 		# Get query parameter array, for the following links.
