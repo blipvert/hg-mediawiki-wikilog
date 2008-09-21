@@ -99,7 +99,9 @@ class WikilogFeed {
 
 		# Retrieve copyright notice.
 		$skin = $wgUser->getSkin();
+		$saveExpUrls = Wikilog::expandLocalUrls();
 		$this->mCopyright = $skin->getCopyright( 'normal' );
+		Wikilog::expandLocalUrls( $saveExpUrls );
 	}
 
 	public function execute() {
@@ -262,6 +264,7 @@ class WikilogFeed {
 	public function getSiteFeedObject() {
 		global $wgContLanguageCode, $wgWikilogFeedClasses, $wgFavicon, $wgLogo;
 		$title = wfMsgForContent( 'wikilog' );
+		$subtitle = wfMsgExt( 'wikilog-feed-description', array( 'parse', 'content' ) );
 
 		$updated = $this->mDb->selectField( 'wikilog_wikilogs',
 			'MAX(wlw_updated)', false, __METHOD__ );
@@ -273,7 +276,7 @@ class WikilogFeed {
 			$updated,
 			$this->mTitle->getFullUrl()
 		);
-		$feed->setSubtitle( wfMsgForContent( 'wikilog-feed-description' ) );
+		$feed->setSubtitle( new WlTextConstruct( 'html', $subtitle ) );
 		$feed->setLogo( wfExpandUrl( $wgLogo ) );
 		if ( $wgFavicon !== false ) {
 			$feed->setIcon( wfExpandUrl( $wgFavicon ) );
@@ -315,13 +318,24 @@ class WikilogFeed {
 					$row->wlw_updated, $wikilogTitle->getFullUrl(), $self
 				);
 				if ( $row->wlw_subtitle ) {
-					$feed->setSubtitle( $row->wlw_subtitle );
+					$st = @ unserialize( $row->wlw_subtitle );
+					if ( is_array( $st ) ) {
+						$feed->setSubtitle( new WlTextConstruct( $st[0], $st[1] ) );
+					} else if ( is_string( $st ) ) {
+						$feed->setSubtitle( $st );
+					}
+				}
+				if ( $row->wlw_icon ) {
+					$t = Title::makeTitle( NS_IMAGE, $row->wlw_icon );
+					$feed->setIcon( wfFindFile( $t ) );
+				}
+				if ( $row->wlw_logo ) {
+					$t = Title::makeTitle( NS_IMAGE, $row->wlw_logo );
+					$feed->setLogo( wfFindFile( $t ) );
 				}
 				if ( $this->mCopyright ) {
 					$feed->setRights( new WlTextConstruct( 'html', $this->mCopyright ) );
 				}
-				/// TODO: parse $row->wlw_icon and output.
-				/// TODO: parse $row->wlw_logo and output.
 			} else {
 				$feed = false;
 			}
