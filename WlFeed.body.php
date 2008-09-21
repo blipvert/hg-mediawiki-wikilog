@@ -973,14 +973,13 @@ class WlRSSFeed extends WlSyndicationFeed {
 			echo Xml::element( 'dc:creator', NULL, $author['name'] ) . "\n";
 		}
 
-		/**
-		 * @note As everything in RSS, its categories system is a mess that
-		 * conveys very little in practice. There doesn't seem to be any
-		 * sane way to translate Atom categories to RSS <category> elements.
-		 * So, we use the Atom namespace for this purpose.
-		 */
 		foreach ( $entry->getCategories() as $category ) {
-			echo Xml::element( 'atom:category', $category ) . "\n";
+			$content = str_replace( '_', ' ', $category['term'] );
+			$attribs = array();
+			if ( isset( $category['scheme'] ) ) {
+				$attribs['domain'] = $category['scheme'];
+			}
+			echo Xml::element( 'category', $attribs, $content ) . "\n";
 		}
 
 		# Use either published or updated dates for the pubDate element.
