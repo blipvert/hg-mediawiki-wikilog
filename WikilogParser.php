@@ -93,16 +93,15 @@ class WikilogParser {
 		return true;
 	}
 
-	static function summary( $text, $params, $parser ) {
-		global $wgParser;
-
+	static function summary( $text, $params, &$parser ) {
 		# Remove extra space to make block rendering easier.
 		$text = trim( $text );
 
-		if ( !$wgParser->mExtWikilog->mSummary ) {
-			$output = $parser->parse( $text, $parser->getTitle(),
-				$parser->getOptions(), true, false );
-			$wgParser->mExtWikilog->mSummary = $output->getText();
+		if ( !$parser->mExtWikilog->mSummary ) {
+			$popt = $parser->getOptions();
+			$popt->enableLimitReport( false );
+			$output = $parser->parse( $text, $parser->getTitle(), $popt, true, false );
+			$parser->mExtWikilog->mSummary = $output->getText();
 		}
 		return isset( $params['hidden'] ) ? '' : $parser->recursiveTagParse( $text );
 	}
