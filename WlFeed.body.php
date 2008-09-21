@@ -343,11 +343,13 @@ abstract class WlSyndicationFeed extends WlSyndicationBase {
 	function setSubtitle( $value ) { $this->mSubtitle = $value; }
 	function getSubtitle() { return $this->mSubtitle; }
 
-	function setIcon( File $value ) { $this->mIcon = $value; }
+	function setIcon( $value ) { $this->mIcon = $value; }
 	function getIcon() { return $this->mIcon; }
+	function getIconUrl() { return self::getFileUrl( $this->mIcon ); }
 
-	function setLogo( File $value ) { $this->mLogo = $value; }
+	function setLogo( $value ) { $this->mLogo = $value; }
 	function getLogo() { return $this->mLogo; }
+	function getLogoUrl() { return self::getFileUrl( $this->mLogo ); }
 
 	/*@}*/
 
@@ -465,6 +467,19 @@ abstract class WlSyndicationFeed extends WlSyndicationBase {
 	 * from outHeader().
 	 */
 	abstract function outFooter();
+
+	/**
+	 * Easy handler for getIconUrl() and getLogoUrl().
+	 */
+	private static function getFileUrl( $file ) {
+		if ( $file instanceof File ) {
+			return $file->getFullUrl();
+		} else if ( is_string( $file ) ) {
+			return $file;
+		} else {
+			return NULL;
+		}
+	}
 
 }
 
@@ -731,10 +746,10 @@ class WlAtomFeed extends WlSyndicationFeed {
 			$content .= Xml::element( 'category', $category ) . "\n";
 		}
 		if ( $this->getIcon() ) {
-			$content .= Xml::element( 'icon', NULL, $this->getIcon()->getFullUrl() ) . "\n";
+			$content .= Xml::element( 'icon', NULL, $this->getIconUrl() ) . "\n";
 		}
 		if ( $this->getLogo() ) {
-			$content .= Xml::element( 'logo', NULL, $this->getLogo()->getFullUrl() ) . "\n";
+			$content .= Xml::element( 'logo', NULL, $this->getLogoUrl() ) . "\n";
 		}
 		$content .= Xml::element( 'updated', NULL,
 					$this->formatTime( $this->getUpdated() ) ) . "\n";
@@ -897,7 +912,7 @@ class WlRSSFeed extends WlSyndicationFeed {
 			$title = $this->getTitle();
 			if ( $title instanceof WlTextConstruct ) $title = $title->getText();
 			echo Xml::openElement( 'image' ) .
-				 Xml::element( 'url', NULL, $this->getLogo()->getFullUrl() ) .
+				 Xml::element( 'url', NULL, $this->getLogoUrl() ) .
 				 Xml::element( 'title', NULL, $title ) .
 				 Xml::element( 'link', NULL, $mlink['href'] ) .
 				 Xml::closeElement( 'image' ) . "\n";
