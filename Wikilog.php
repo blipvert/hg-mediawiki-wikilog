@@ -646,6 +646,9 @@ class Wikilog {
 				$wgStylePath  = wfExpandUrl( $wgStylePath  );
 				$wgMathPath   = wfExpandUrl( $wgMathPath   );
 				$wgLocalFileRepo['url'] = wfExpandUrl( $wgLocalFileRepo['url'] );
+
+				# Destroy existing RepoGroup, if any.
+				RepoGroup::destroySingleton();
 			}
 		} else {
 			if ( self::$expandingUrls ) {
@@ -654,6 +657,9 @@ class Wikilog {
 				# Restore original values.
 				list( $wgScriptPath, $wgUploadPath, $wgStylePath, $wgMathPath,
 					$wgLocalFileRepo['url'] ) = self::$originalPaths;
+
+				# Destroy existing RepoGroup, if any.
+				RepoGroup::destroySingleton();
 			}
 		}
 
