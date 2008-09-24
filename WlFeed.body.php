@@ -700,7 +700,7 @@ class WlAtomFeed extends WlSyndicationFeed {
 	 * @return An XML fragment.
 	 */
 	static function formatTextData( $element, $contents ) {
-		if ( is_null( $contents ) ) {
+		if ( is_null( $contents ) || empty( $contents ) ) {
 			return NULL;
 		} else if ( $contents instanceof WlTextConstruct ) {
 			return $contents->getXML( $element ) . "\n";
