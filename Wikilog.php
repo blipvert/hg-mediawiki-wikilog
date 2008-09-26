@@ -765,12 +765,6 @@ class Wikilog {
 	static function parsedArticle( Title $title, $feed = false, &$parser = null ) {
 		global $wgUser, $wgEnableParserCache;
 
-		if ( is_null( $parser ) ) {
-			global $wgParser;
-			$parser = clone $wgParser;
-			$parser->startExternalParse( $title, $parserOpt, Parser::OT_HTML );
-		}
-
 		if ( $feed ) {
 			// Enable some feed-specific behavior.
 			$saveFeedParse = Wikilog::enableFeedParsing();
@@ -791,6 +785,12 @@ class Wikilog {
 			$parserOpt = ParserOptions::newFromUser( $wgUser );
 			$parserOpt->setTidy( true );
 			$parserOpt->enableLimitReport();
+		}
+
+		if ( is_null( $parser ) ) {
+			global $wgParser;
+			$parser = clone $wgParser;
+			$parser->startExternalParse( $title, $parserOpt, Parser::OT_HTML );
 		}
 
 		$article = new Article( $title );
