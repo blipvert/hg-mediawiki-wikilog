@@ -762,8 +762,14 @@ class Wikilog {
 	 * @param $title Article title object.
 	 * @return Two-element array containing the article and its parser output.
 	 */
-	static function parsedArticle( Title $title, $feed = false ) {
-		global $wgUser, $wgParser, $wgEnableParserCache;
+	static function parsedArticle( Title $title, $feed = false, &$parser = null ) {
+		global $wgUser, $wgEnableParserCache;
+
+		if ( is_null( $parser ) ) {
+			global $wgParser;
+			$parser = clone $wgParser;
+			$parser->startExternalParse( $title, $parserOpt, Parser::OT_HTML );
+		}
 
 		if ( $feed ) {
 			// Enable some feed-specific behavior.
@@ -793,14 +799,14 @@ class Wikilog {
 			$parserOutput = $parserCache->get( $article, $wgUser );
 			if ( !$parserOutput ) {
 				$arttext = $article->fetchContent();
-				$parserOutput = $wgParser->parse( $arttext, $title, $parserOpt );
+				$parserOutput = $parser->parse( $arttext, $title, $parserOpt );
 				if ( $parserOutput->getCacheTime() != -1 ) {
 					$parserCache->save( $parserOutput, $article, $wgUser );
 				}
 			}
 		} else {
 			$arttext = $article->fetchContent();
-			$parserOutput = $wgParser->parse( $arttext, $title, $parserOpt );
+			$parserOutput = $parser->parse( $arttext, $title, $parserOpt );
 		}
 
 		if ( $feed ) {
