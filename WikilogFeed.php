@@ -172,10 +172,9 @@ class WikilogFeed {
 	}
 
 	function feedEntry( $row ) {
-		global $wgServerName, $wgEnableParserCache, $wgMimeType;
+		global $wgMimeType;
 		global $wgWikilogFeedSummary, $wgWikilogFeedContent;
 		global $wgWikilogFeedCategories, $wgWikilogFeedRelated;
-		global $wgParser, $wgUser;
 
 		# Make titles.
 		$wikilogName = str_replace( '_', ' ', $row->wlw_title );
