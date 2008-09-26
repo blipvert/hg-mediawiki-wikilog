@@ -55,6 +55,7 @@ class SpecialWikilog extends IncludableSpecialPage {
 		$opts->add( 'month',    '', FormOptions::INTNULL );
 		$opts->add( 'day',      '', FormOptions::INTNULL );
 		$opts->add( 'limit',    $wgWikilogNumArticles );
+		$opts->add( 'template', '' );
 		return $opts;
 	}
 
@@ -120,6 +121,9 @@ class SpecialWikilog extends IncludableSpecialPage {
 		# Display the list of wikilog posts.
 		if ( $opts['view'] == 'archives' ) {
 			$pager = new WikilogArchivesPager( $query );
+		} else if ( $opts['template'] ) {
+			$t = Title::makeTitle( NS_TEMPLATE, $opts['template'] );
+			$pager = new WikilogTemplatePager( $query, $t, $opts['limit'] );
 		} else {
 			$pager = new WikilogSummaryPager( $query, $opts['limit'] );
 		}
@@ -188,12 +192,15 @@ class SpecialWikilog extends IncludableSpecialPage {
 				}
 			} else {
 				if ( ( $t = Title::newFromText( $par ) ) !== NULL ) {
-					if ( in_array( $t->getNamespace(), $wgWikilogNamespaces ) ) {
+					$ns = $t->getNamespace();
+					if ( in_array( $ns, $wgWikilogNamespaces ) ) {
 						$opts['wikilog'] = $t->getPrefixedDBkey();
-					} else if ( $t->getNamespace() == NS_CATEGORY ) {
+					} else if ( $ns == NS_CATEGORY ) {
 						$opts['category'] = $t->getDBkey();
-					} else if ( $t->getNamespace() == NS_USER ) {
+					} else if ( $ns == NS_USER ) {
 						$opts['author'] = $t->getDBkey();
+					} else if ( $ns == NS_TEMPLATE ) {
+						$opts['template'] = $t->getDBkey();
 					}
 				}
 			}

@@ -67,6 +67,7 @@ $wgAutoloadClasses += array(
 	'WikilogLinksUpdate'	=> $dir . 'WikilogLinksUpdate.php',
 	'WikilogItemQuery'		=> $dir . 'WikilogQuery.php',
 	'WikilogSummaryPager'	=> $dir . 'WikilogPager.php',
+	'WikilogTemplatePager'	=> $dir . 'WikilogPager.php',
 	'WikilogArchivesPager'	=> $dir . 'WikilogPager.php',
 	'WikilogFeed'			=> $dir . 'WikilogFeed.php',
 	'SpecialWikilog'		=> $dir . 'SpecialWikilog.php',

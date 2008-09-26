@@ -110,7 +110,7 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 	}
 
 	function formatRow( $row ) {
-		global $wgParser, $wgEnableParserCache, $wgUser, $wgContLang;
+		global $wgParser, $wgUser, $wgContLang;
 
 		$skin = $this->getSkin();
 
@@ -185,6 +185,90 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		$url = $skin->makeKnownLinkObj( $title, wfMsg('editsection'), 'action=edit' );
 		$result = wfMsg( 'editsection-brackets', $url );
 		return "<span class=\"editsection\">$result</span>";
+	}
+
+}
+
+
+class WikilogTemplatePager extends WikilogSummaryPager {
+
+	protected $mTemplate, $mTemplateTitle;
+	protected $mParser, $mParserOpt;
+
+	function __construct( WikilogItemQuery $query, Title $template, $limit = false ) {
+		global $wgParser, $wgUser, $wgTitle;
+
+		# Parent constructor.
+		parent::__construct( $query, $limit );
+
+		# Private parser.
+		$this->mParserOpt = ParserOptions::newFromUser( $wgUser );
+		$this->mParser = clone $wgParser;
+		$this->mParser->startExternalParse( $wgTitle, $this->mParserOpt, Parser::OT_HTML );
+
+		# Load template
+		list( $this->mTemplate, $this->mTemplateTitle ) =
+			$this->mParser->getTemplateDom( $template );
+	}
+
+	function getDefaultQuery() {
+		$query = parent::getDefaultQuery();
+		$query['template'] = $this->mTemplateTitle->getPartialURL();
+		return $query;
+	}
+
+	function getStartBody() {
+		return "<div class=\"wl-tpl-roll\">\n";
+	}
+
+	function getEndBody() {
+		return "</div>\n";
+	}
+
+	function formatRow( $row ) {
+		global $wgTitle, $wgContLang;
+
+		# Clear parser state.
+		$this->mParser->startExternalParse( $wgTitle, $this->mParserOpt, Parser::OT_HTML );
+
+		# Get titles.
+		$wikilogName = str_replace( '_', ' ', $row->wlw_title );
+		$wikilogTitle =& Title::makeTitle( $row->wlw_namespace, $row->wlw_title );
+		$itemName = str_replace( '_', ' ', $row->wlp_title );
+		$itemTitle =& Title::makeTitle( $row->page_namespace, $row->page_title );
+
+		# Retrieve article parser output and other data.
+		list( $article, $parserOutput ) = Wikilog::parsedArticle( $itemTitle, false, $this->mParser );
+		list( $summary, $content ) = Wikilog::splitSummaryContent( $parserOutput );
+		if ( !$summary ) $summary = $content;
+
+		$authors = (array)unserialize( $row->wlp_authors );
+		$tags = (array)unserialize( $row->wlp_tags );
+		$pubdate = $wgContLang->timeanddate( $row->wlp_pubdate, true );
+		$updated = $wgContLang->timeanddate( $row->wlp_updated, true );
+		$divclass = 'wl-entry' . ( $row->wlp_publish ? '' : ' wl-draft' );
+
+		# Template parameters.
+		$vars = array(
+			'class'         => $divclass,
+			'wikilogTitle'  => $wikilogName,
+			'wikilogPage'   => $wikilogTitle->getPrefixedText(),
+			'title'         => $itemName,
+			'page'          => $itemTitle->getPrefixedText(),
+			'authors'       => Wikilog::authorList( array_keys( $authors ) ),
+			'tags'          => implode( ', ', array_keys( $tags ) ),
+			'published'     => $row->wlp_publish,
+			'pubdate'       => $pubdate,
+			'updated'       => $updated,
+			'summary'       => $this->mParser->insertStripItem( $summary ),
+// 			'comments'      => /* TODO: number of comments */,
+		);
+
+		$frame = $this->mParser->getPreprocessor()->newCustomFrame( $vars );
+		$text = $frame->expand( $this->mTemplate );
+
+		$pout = $this->mParser->parse( $text, $wgTitle, $this->mParserOpt, true, false );
+		return $pout->getText();
 	}
 
 }
