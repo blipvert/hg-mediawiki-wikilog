@@ -142,7 +142,7 @@ $messages['pt'] = array(
 	'wikilog-no-comments'		=> "não há comentários",
 	'wikilog-has-comments'		=> "{{PLURAL:\$1|um comentário|\$1 comentários}}",
 
-	'wikilog-author-signature'	=> "[[{{ns:User}}:\$1|\$1]] ([[{{ns:User_talk}}:\$1|talk]])",
+	'wikilog-author-signature'	=> "[[{{ns:User}}:\$1|\$1]] ([[{{ns:User_talk}}:\$1|discussão]])",
 	'wikilog-item-brief-header'	=> ": ''<small>por \$5, em [[\$1|\$2]], \$6.</small>''",
 	'wikilog-item-brief-footer'	=> "",
 	'wikilog-item-more'			=> "\n[[\$3|&rarr; continuar lendo...]]\n",
