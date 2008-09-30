@@ -335,9 +335,24 @@ class WikilogArchivesPager extends TablePager {
 	}
 
 	function formatRow( $row ) {
+		$attribs = array();
+		$columns = array();
+		$this->mCurrentRow = $row;
 		$this->mCurrWikilogTitle =& Title::makeTitle( $row->wlw_namespace, $row->wlw_title );
 		$this->mCurrItemTitle =& Title::makeTitle( $row->page_namespace, $row->page_title );
-		return parent::formatRow( $row );
+		if ( !$row->wlp_publish ) {
+			$attribs['class'] = 'wl-draft';
+		}
+		foreach ( $this->getFieldNames() as $field => $name ) {
+			$value = isset( $row->$field ) ? $row->$field : null;
+			$formatted = strval( $this->formatValue( $field, $value ) );
+			if ( $formatted == '' ) {
+				$formatted = '&nbsp;';
+			}
+			$class = 'TablePager_col_' . htmlspecialchars( $field );
+			$columns[] = "<td class=\"$class\">$formatted</td>";
+		}
+		return Xml::tags( 'tr', $attribs, implode( "\n", $columns ) ) . "\n";
 	}
 
 	function formatValue( $name, $value ) {

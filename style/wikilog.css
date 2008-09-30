@@ -6,7 +6,22 @@
  * Lincensed under the GNU General Public License version 2.
  */
 
-.wl-draft-inline {
-    font-style: italic;
+tr.wl-draft {
+	font-style: italic;
 }
 
+div.wl-draft {
+	border: 1px solid #CCCC99;
+	background-color: #FFFFEE;
+	color: #999999;
+	padding: 0.25em 0.75em;
+}
+
+.wl-navbar {
+	background-color: #EEEEEE;
+	border-top: 1px solid #CCCCCC;
+	border-bottom: 1px solid #CCCCCC;
+	color: black;
+	margin: 0.5em 0;
+	padding: 0.25em 0.75em;
+}
