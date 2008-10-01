@@ -94,6 +94,8 @@ $wgHooks['GetFullURL'][] = 'Wikilog::GetFullURL';
 $wgHooks['LanguageGetSpecialPageAliases'][] = 'Wikilog::LanguageGetSpecialPageAliases';
 $wgHooks['LanguageGetMagic'][] = 'Wikilog::LanguageGetMagic';
 $wgHooks['LoadExtensionSchemaUpdates'][] = 'Wikilog::ExtensionSchemaUpdates';
+$wgHooks['SkinTemplateTabs'][] = 'Wikilog::SkinTemplateTabs';
+$wgHooks['UnknownAction'][] = 'Wikilog::UnknownAction';
 
 // WikilogLinksUpdate hooks
 $wgHooks['LinksUpdate'][] = 'WikilogLinksUpdate::LinksUpdate';
@@ -114,6 +116,12 @@ $wgHooks['ParserAfterTidy'][] = 'WikilogParser::afterTidy';
  * be used as taggingEntity in order to create feed item tags.
  */
 $wgTaggingEntity = false;
+
+/**
+ * Path of Wikilog style and image files.
+ * Defaults to "$wgScriptPath/extensions/Wikilog/style".
+ */
+$wgWikilogStylePath = false;
 
 /**
  * Maximum number of items in wikilog front page.
@@ -254,7 +262,14 @@ class Wikilog {
 	 * Extension setup function.
 	 */
 	static function ExtensionInit() {
-		global $wgWikilogNamespaces, $wgNamespacesWithSubpages;
+		global $wgWikilogStylePath, $wgWikilogNamespaces;
+		global $wgNamespacesWithSubpages;
+
+		# Set default style path, if not set.
+		if ( !$wgWikilogStylePath ) {
+			global $wgScriptPath;
+			$wgWikilogStylePath = "$wgScriptPath/extensions/Wikilog/style";
+		}
 
 		# Find assigned namespaces and make sure they have subpages
 		foreach ( $wgWikilogNamespaces as $ns ) {
@@ -423,9 +438,7 @@ class Wikilog {
 	 * TitleMoveComplete hook handler function.
 	 * Handles moving articles to and from wikilog namespaces.
 	 */
-	static function TitleMoveComplete( &$oldtitle, &$newtitle, &$user, $pageid,
-			$redirid )
-	{
+	static function TitleMoveComplete( &$oldtitle, &$newtitle, &$user, $pageid, $redirid ) {
 		global $wgWikilogNamespaces;
 
 		$oldwl = in_array( ( $oldns = $oldtitle->getNamespace() ), $wgWikilogNamespaces );
@@ -537,6 +550,39 @@ class Wikilog {
 			print "\n".
 				"Warning: There are no table structures for the Wikilog\n".
 				"extension other than for MySQL at this moment.\n\n";
+		}
+		return true;
+	}
+
+	/**
+	 * SkinTemplateTabs hook handler function.
+	 * Adds a wikilog tab to articles in Wikilog namespaces.
+	 */
+	static function SkinTemplateTabs( &$skin, &$contentActions ) {
+		global $wgRequest;
+
+		$wi = Wikilog::getWikilogInfo( $skin->mTitle );
+		if ( $wi ) {
+			$action = $wgRequest->getText( 'action' );
+			if ( $wi->isMain() && $skin->mTitle->quickUserCan( 'edit' ) ) {
+				$contentActions['wikilog'] = array(
+					'class' => ($action == 'wikilog') ? 'selected' : false,
+					'text' => wfMsg('wikilog-tab'),
+					'href' => $skin->mTitle->getLocalUrl( 'action=wikilog' )
+				);
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * UnknownAction hook handler function.
+	 * Handles action=wikilog requests.
+	 */
+	static function UnknownAction( $action, &$article ) {
+		if ( $action == 'wikilog' && $article instanceof WikilogMainPage ) {
+			$article->wikilog();
+			return false;
 		}
 		return true;
 	}
@@ -763,7 +809,7 @@ class Wikilog {
 	 * @param $title Article title object.
 	 * @return Two-element array containing the article and its parser output.
 	 */
-	static function parsedArticle( Title $title, $feed = false, &$parser = null ) {
+	static function parsedArticle( Title $title, $feed = false, &$parser = NULL ) {
 		global $wgUser, $wgEnableParserCache;
 
 		if ( $feed ) {
@@ -853,6 +899,7 @@ class WikilogInfo {
 		}
 	}
 
+	function isMain() { return $this->mItemTitle === NULL; }
 	function isItem() { return $this->mItemTitle !== NULL; }
 	function getName() { return $this->mWikilogName; }
 	function getTitle() { return $this->mWikilogTitle; }

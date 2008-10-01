@@ -37,9 +37,19 @@ class WikilogMainPage extends Article {
 	protected static $views = array( 'summary', 'archives' );
 
 	/**
+	 * Wikilog data.
+	 */
+	private   $mWikilogDataLoaded = false;
+	public    $mWikilogSubtitle   = false;
+	public    $mWikilogIcon       = false;
+	public    $mWikilogLogo       = false;
+	public    $mWikilogAuthors    = false;
+	public    $mWikilogPubdate    = false;
+
+	/**
 	 * Constructor.
 	 */
-	function __construct( &$title, &$wi ) {
+	public function __construct( &$title, &$wi ) {
 		parent::__construct( $title );
 		wfLoadExtensionMessages( 'Wikilog' );
 	}
@@ -47,7 +57,7 @@ class WikilogMainPage extends Article {
 	/**
 	 * View action handler.
 	 */
-	function view() {
+	public function view() {
 		global $wgRequest, $wgOut, $wgMimeType;
 		global $wgWikilogNavTop, $wgWikilogNavBottom;
 
@@ -117,5 +127,205 @@ class WikilogMainPage extends Article {
 			}
 		}
 	}
+
+	/**
+	 * Wikilog action handler.
+	 */
+	public function wikilog() {
+		global $wgUser, $wgOut, $wgRequest;
+		global $wgWikilogStylePath, $wgStyleVersion;
+
+		if ( $wgRequest->getBool( 'wlActionNewItem' ) )
+			return $this->actionNewItem();
+
+		$skin = $wgUser->getSkin();
+		$wgOut->setPageTitle( wfMsg( 'wikilog-tab-title' ) );
+		$wgOut->setRobotpolicy( 'noindex,nofollow' );
+
+		$wgOut->addLink( array(
+			'rel' => 'stylesheet',
+			'href' => $wgWikilogStylePath . '/wikilog.css?' . $wgStyleVersion,
+			'type' => 'text/css'
+		) );
+
+		$wgOut->addHTML( $this->formatWikilogDescription( $skin ) );
+		$wgOut->addHTML( $this->formatWikilogInformation( $skin ) );
+
+		if ( $this->mTitle->quickUserCan( 'edit' ) ) {
+			$wgOut->addHTML( $this->formNewItem() );
+		}
+	}
+
+	/**
+	 * Returns wikilog description as formatted HTML.
+	 */
+	protected function formatWikilogDescription( Linker $skin ) {
+		$this->loadWikilogData();
+
+		$s = '';
+		if ( $this->mWikilogIcon ) {
+			$title = Title::makeTitle( NS_IMAGE, $this->mWikilogIcon );
+			$file = wfFindFile( $title );
+			$s .= $skin->makeImageLink2( $title, $file,
+				array( 'align' => 'left' ),
+				array( 'width' => '32' )
+			);
+		}
+		$s .= Xml::tags( 'div', array( 'class' => 'wl-title' ),
+			$skin->makeKnownLinkObj( $this->mTitle ) );
+
+		$st =& $this->mWikilogSubtitle;
+		if ( is_array( $st ) ) {
+			$tc = new WlTextConstruct( $st[0], $st[1] );
+			$s .= Xml::tags( 'div', array( 'class' => 'wl-subtitle' ), $tc->getHTML() );
+		} else if ( is_string( $st ) && !empty( $st ) ) {
+			$s .= Xml::element( 'div', array( 'class' => 'wl-subtitle' ), $st );
+		}
+
+		return Xml::tags( 'div', array( 'class' => 'wl-description' ), $s );
+	}
+
+	/**
+	 * Returns wikilog information as formatted HTML.
+	 */
+	protected function formatWikilogInformation( Linker $skin ) {
+		$dbr = wfGetDB( DB_SLAVE );
+
+		$n_total = $dbr->selectField( 'wikilog_posts', 'COUNT(*)', array(
+			'wlp_parent' => $this->mTitle->getArticleId()
+		), __METHOD__ );
+		$n_published = $dbr->selectField( 'wikilog_posts', 'COUNT(*)', array(
+			'wlp_parent' => $this->mTitle->getArticleId(),
+			'wlp_publish' => 1
+		), __METHOD__ );
+		$n_drafts = $n_total - $n_published;
+
+		$cont = $this->formatPostCount( $skin, 'p', 'all', $n_total );
+		$cont .= Xml::openElement( 'ul' );
+		$cont .= $this->formatPostCount( $skin, 'li', 'published', $n_published );
+		$cont .= $this->formatPostCount( $skin, 'li', 'drafts', $n_drafts );
+		$cont .= Xml::closeElement( 'ul' );
+
+		return Xml::fieldset( wfMsg( 'wikilog-information' ), $cont ) . "\n";
+	}
+
+	/**
+	 * Used by formatWikilogInformation(), formats a post count link.
+	 */
+	private function formatPostCount( $skin, $elem, $type, $num ) {
+		global $wgWikilogFeedClasses;
+		$s = $skin->makeKnownLinkObj( $this->mTitle,
+			wfMsgExt( "wikilog-post-count-{$type}", array( 'parsemag' ), $num ),
+			"view=archives&show={$type}"
+		);
+		if ( !empty( $wgWikilogFeedClasses ) ) {
+			$f = array();
+			foreach ( $wgWikilogFeedClasses as $format => $class ) {
+				$f[] = $skin->makeKnownLinkObj( $this->mTitle,
+					wfMsg( "feed-{$format}" ),
+					"view=archives&show={$type}&feed={$format}",
+					'', '', 'class="feed"'
+				);
+			}
+			$s .= ' (' . implode( ', ', $f ) . ')';
+		}
+		return Xml::tags( $elem, NULL, $s );
+	}
+
+	/**
+	 * Returns a form for new item creation.
+	 */
+	protected function formNewItem() {
+		global $wgScript;
+
+		$fields = array();
+		$fields[] = Xml::hidden( 'title', $this->mTitle->getPrefixedText() );
+		$fields[] = Xml::hidden( 'action', 'wikilog' );
+		$fields[] = Xml::inputLabel( wfMsg( 'wikilog-item-name' ),
+			'wlItemName', 'wl-item-name', 25 );
+		$fields[] = Xml::submitButton( wfMsg( 'wikilog-new-item-go' ),
+			array( 'name' => 'wlActionNewItem' ) );
+
+		$form = Xml::tags( 'form',
+			array( 'action' => $wgScript ),
+			implode( "\n", $fields )
+		);
+
+		return Xml::fieldset( wfMsg( 'wikilog-new-item' ), $form ) . "\n";
+	}
+
+	/**
+	 * Wikilog "new item" action handler.
+	 */
+	protected function actionNewItem() {
+		global $wgOut, $wgRequest;
+
+		if ( !$this->mTitle->quickUserCan( 'edit' ) ) {
+			$wgOut->loginToUse();
+			$wgOut->output();
+			exit;
+		}
+
+		$itemname = $wgRequest->getText( 'wlItemName' );
+		$title = Title::makeTitle( $this->mTitle->getNamespace(),
+			$this->mTitle->getText() . '/' . $itemname );
+
+		if ( $itemname == '' || !$title )
+			throw new ErrorPageError( 'badtitle', 'badtitletext' );
+
+		if ( $title->exists() )
+			throw new ErrorPageError( 'errorpagetitle', 'articleexists' );
+
+		$wgOut->redirect( $title->getFullURL( 'action=edit' ) );
+	}
+
+	/**
+	 * Load current article wikilog data.
+	 */
+	private function loadWikilogData() {
+		if ( !$this->mWikilogDataLoaded ) {
+			$dbr = $this->getDB();
+			$data = $this->getWikilogDataFromId( $dbr, $this->getId() );
+			if ( $data ) {
+				$this->mWikilogSubtitle = unserialize( $data->wlw_subtitle );
+				$this->mWikilogIcon = $data->wlw_icon;
+				$this->mWikilogLogo = $data->wlw_logo;
+				$this->mWikilogUpdated = wfTimestamp( TS_MW, $data->wlw_updated );
+				$this->mWikilogAuthors = unserialize( $data->wlw_authors );
+				if ( !is_array( $this->mWikilogAuthors ) ) {
+					$this->mWikilogAuthors = array();
+				}
+			}
+			$this->mWikilogDataLoaded = true;
+		}
+	}
+
+	/**
+	 * Return wikilog data from the database, matching a set of conditions.
+	 */
+	public static function getWikilogData( $dbr, $conditions ) {
+		$row = $dbr->selectRow(
+			'wikilog_wikilogs',
+			array(
+				'wlw_page',
+				'wlw_subtitle',
+				'wlw_icon',
+				'wlw_logo',
+				'wlw_authors',
+				'wlw_updated'
+			),
+			$conditions,
+			__METHOD__
+		);
+		return $row;
+	}
+
+	/**
+	 * Return wikilog data from the database, matching the given page ID.
+	 */
+	public static function getWikilogDataFromId( $dbr, $id ) {
+		return self::getWikilogData( $dbr, array( 'wlw_page' => $id ) );
+	}
+
 }
 

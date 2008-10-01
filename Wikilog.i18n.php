@@ -15,6 +15,20 @@ $messages['en'] = array(
 	'wikilog'					=> 'Wikilogs',	# Page title
 	'wikilog-specialwikilog'	=> 'Wikilog',	# Special page name
 
+	# Wikilog tab
+	'wikilog-tab'				=> 'Wikilog',
+	'wikilog-tab-title'			=> 'Wikilog actions',
+	'wikilog-information'		=> 'Wikilog information',
+	'wikilog-post-count-all'	=>
+		'{{PLURAL:$1|There is one article|There are $1 articles}} in this wikilog.',
+	'wikilog-post-count-published'	=>
+		'{{PLURAL:$1|One article is|$1 articles are}} published.',
+	'wikilog-post-count-drafts'	=>
+		'{{PLURAL:$1|One article is a draft|$1 articles are drafts}}.',
+	'wikilog-new-item'			=> 'Create new wikilog article',
+	'wikilog-new-item-go'		=> 'Create',
+	'wikilog-item-name'			=> 'Article name:',
+
 	# Extension description
 	'wikilog-desc'				=> 'Adds blogging features, creating a wiki-blog hybrid.',
 
@@ -76,13 +90,13 @@ $messages['en'] = array(
 	'wikilog-too-many-tags'	=>
 			"Warning: Too many tags listed in this wikilog post.",
 	'wikilog-reading-draft'		=>
-			"<div class='mw-warning'>\n".
-			"<center>'''This article is a draft.'''</center>\n\n".
-			"This wikilog post is a draft, and is not published yet. ".
-			"In order to publish a wikilog post, you have to add the ".
-			"<code><nowiki>{{wl-publish:...}}</nowiki></code> tag to the ".
-			"article text, optionally providing the publication date and ".
-			"one or more authors.\n</div>\n",
+			"<div class=\"mw-warning\">\n".
+			"<p><strong>This article is a draft.</strong></p>\n".
+			"<p>This wikilog post is a draft, and is not published yet.</p>\n".
+			"<p>In order to publish a wikilog post, you must sign it using ".
+			"<code><nowiki>--~~~~</nowiki></code> or the ".
+			"<code><nowiki>{{wl-publish:...}}</nowiki></code> tag.</p>\n".
+			"</div>\n",
 
 	# Forms
 	'wikilog-form-legend'		=> 'Search for wikilog posts',
@@ -98,6 +112,7 @@ $messages['en'] = array(
 
 	# Untranslatable strings
 	'wikilog-summary'			=> '',			# Special page summary
+	'wikilog-backlink'			=> '← $1',
 	'wikilog-navigation-bar'	=>
 		'<div class="wl-navbar visualClear"><div style="float:left">$1 • $2</div>'.
 		'<div style="float:right">$3 • $4</div>'.
@@ -111,6 +126,20 @@ $messages['pt'] = array(
 	# Special:Wikilog
 	'wikilog'					=> 'Wikilogs',
 	'wikilog-specialwikilog'	=> 'Wikilog',
+
+	# Wikilog tab
+	'wikilog-tab'				=> 'Wikilog',
+	'wikilog-tab-title'			=> 'Ações wikilog',
+	'wikilog-information'		=> 'Informações do wikilog',
+	'wikilog-post-count-all'	=>
+		'{{PLURAL:$1|Há um artigo|Há $1 artigos}} neste wikilog.',
+	'wikilog-post-count-published'	=>
+		'{{PLURAL:$1|Um artigo está publicado|$1 artigos estão publicados}}.',
+	'wikilog-post-count-drafts'	=>
+		'{{PLURAL:$1|Um artigo é um rascunho|$1 artigos são rascunhos}}.',
+	'wikilog-new-item'			=> 'Criar novo artigo wikilog',
+	'wikilog-new-item-go'		=> 'Criar',
+	'wikilog-item-name'			=> 'Nome do artigo:',
 
 	# Extension description
 	'wikilog-desc'				=> 'Adiciona recursos de blog, criando um híbrido wiki-blog.',
@@ -173,13 +202,13 @@ $messages['pt'] = array(
 	'wikilog-too-many-tags'	=>
 			"Aviso: Rótulos demais listados nesta postagem wikilog.",
 	'wikilog-reading-draft'		=>
-			"<div class='mw-warning'>\n".
-			"<center>'''Este artigo é um rascunho.'''</center>\n\n".
-			"Esta postagem wikilog é um rascunho, e ainda não foi publicado. ".
-			"Para publicar uma postagem wikilog, você deve adicionar a tag ".
-			"<code><nowiki>{{wl-publish:...}}</nowiki></code> ao texto do ".
-			"artigo, fornecendo opcionalmente a data de publicação e um ou ".
-			"mais autores.\n</div>\n",
+			"<div class=\"mw-warning\">\n".
+			"<p><strong>Este artigo é um rascunho.</strong></p>\n".
+			"<p>Esta postagem wikilog é um rascunho, e ainda não foi publicada.</p>".
+			"<p>Para publicar uma postagem wikilog, você deve assiná-la usando ".
+			"<code><nowiki>--~~~~</nowiki></code> ou a marcação ".
+			"<code><nowiki>{{wl-publish:...}}</nowiki></code></p>.\n".
+			"</div>\n",
 
 	# Forms
 	'wikilog-form-legend'		=> 'Procurar por postagens wikilog',

@@ -6,6 +6,23 @@
  * Lincensed under the GNU General Public License version 2.
  */
 
+div.wl-description {
+	border: 1px solid #CCCCCC;
+	background-color: #EEEEEE;
+	color: #000000;
+	padding: 0.25em;
+}
+
+div.wl-description div.wl-title {
+	font-size: 110%;
+	font-weight: bold;
+}
+
+div.wl-description div.wl-subtitle p {
+	line-height: inherit;
+	margin: 0;
+}
+
 tr.wl-draft {
 	font-style: italic;
 }
@@ -24,4 +41,9 @@ div.wl-draft {
 	color: black;
 	margin: 0.5em 0;
 	padding: 0.25em 0.75em;
+}
+
+a.feed {
+	background: transparent url(images/feed-icon-12x12.png) center left no-repeat;
+	padding: 0 0 0 15px;
 }
