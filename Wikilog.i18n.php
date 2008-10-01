@@ -132,11 +132,11 @@ $messages['pt'] = array(
 	'wikilog-tab-title'			=> 'Ações wikilog',
 	'wikilog-information'		=> 'Informações do wikilog',
 	'wikilog-post-count-all'	=>
-		'{{PLURAL:$1|Há um artigo|Há $1 artigos}} neste wikilog.',
+		'{{PLURAL:$1|Há $1 artigo|Há $1 artigos}} neste wikilog.',
 	'wikilog-post-count-published'	=>
-		'{{PLURAL:$1|Um artigo está publicado|$1 artigos estão publicados}}.',
+		'{{PLURAL:$1|$1 artigo está publicado|$1 artigos estão publicados}}.',
 	'wikilog-post-count-drafts'	=>
-		'{{PLURAL:$1|Um artigo é um rascunho|$1 artigos são rascunhos}}.',
+		'{{PLURAL:$1|$1 artigo é rascunho|$1 artigos são rascunhos}}.',
 	'wikilog-new-item'			=> 'Criar novo artigo wikilog',
 	'wikilog-new-item-go'		=> 'Criar',
 	'wikilog-item-name'			=> 'Nome do artigo:',
