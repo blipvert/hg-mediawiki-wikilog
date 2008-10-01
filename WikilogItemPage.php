@@ -87,7 +87,7 @@ class WikilogItemPage extends Article {
 		}
 
 		# Generate some fixed bits.
-		$authors = Wikilog::authorList( array_keys( $this->mItemAuthors ) );
+		$authors = WikilogUtils::authorList( array_keys( $this->mItemAuthors ) );
 		$pubdate = $wgContLang->timeanddate( $this->mItemPubDate, true );
 		$commentsLink = $this->mCmtsTitle->getPrefixedURL();
 		$comments = "[[{$commentsLink}|{$this->mNumCommentsTxt}]]";

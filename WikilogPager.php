@@ -121,10 +121,10 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		$itemTitle =& Title::makeTitle( $row->page_namespace, $row->page_title );
 
 		# Retrieve article parser output and other data.
-		list( $article, $parserOutput ) = Wikilog::parsedArticle( $itemTitle );
-		list( $summary, $content ) = Wikilog::splitSummaryContent( $parserOutput );
+		list( $article, $parserOutput ) = WikilogUtils::parsedArticle( $itemTitle );
+		list( $summary, $content ) = WikilogUtils::splitSummaryContent( $parserOutput );
 		$authors = (array)unserialize( $row->wlp_authors );
-		$authors = Wikilog::authorList( array_keys( $authors ) );
+		$authors = WikilogUtils::authorList( array_keys( $authors ) );
 		$pubdate = $wgContLang->timeanddate( $row->wlp_pubdate, true );
 
 		# Entry div class.
@@ -238,8 +238,8 @@ class WikilogTemplatePager extends WikilogSummaryPager {
 		$itemTitle =& Title::makeTitle( $row->page_namespace, $row->page_title );
 
 		# Retrieve article parser output and other data.
-		list( $article, $parserOutput ) = Wikilog::parsedArticle( $itemTitle, false, $this->mParser );
-		list( $summary, $content ) = Wikilog::splitSummaryContent( $parserOutput );
+		list( $article, $parserOutput ) = WikilogUtils::parsedArticle( $itemTitle, false, $this->mParser );
+		list( $summary, $content ) = WikilogUtils::splitSummaryContent( $parserOutput );
 		if ( !$summary ) $summary = $content;
 
 		$authors = (array)unserialize( $row->wlp_authors );
@@ -255,7 +255,7 @@ class WikilogTemplatePager extends WikilogSummaryPager {
 			'wikilogPage'   => $wikilogTitle->getPrefixedText(),
 			'title'         => $itemName,
 			'page'          => $itemTitle->getPrefixedText(),
-			'authors'       => Wikilog::authorList( array_keys( $authors ) ),
+			'authors'       => WikilogUtils::authorList( array_keys( $authors ) ),
 			'tags'          => implode( ', ', array_keys( $tags ) ),
 			'published'     => $row->wlp_publish,
 			'pubdate'       => $pubdate,

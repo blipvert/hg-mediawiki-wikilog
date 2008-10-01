@@ -31,48 +31,57 @@ if ( !defined( 'MEDIAWIKI' ) )
 
 /**
  * This class holds the parser functions that hooks into the Parser in order
- * to collect Wikilog metadata, and also stores such data. This class is
- * first attached to the Parser as $parser->mExtWikilog, and then copied to
- * the parser output $popt->mExtWikilog.
+ * to collect Wikilog metadata.
  */
 class WikilogParser {
 
-	/* Item and Wikilog metadata */
-	var $mSummary = false;
-	var $mAuthors = array();
-	var $mTags = array();
+	/**
+	 * True if parsing articles with feed output specific settings.
+	 * This is an horrible hack needed because of many MediaWiki misdesigns.
+	 */
+	static private $feedParsing = false;
 
-	/* Item metadata */
-	var $mPublish = false;
-	var $mPubDate = NULL;
+	/**
+	 * True if we are expanding local URLs (in order to render stand-alone,
+	 * base-less feeds). This is an horrible hack needed because of many
+	 * MediaWiki misdesigns.
+	 */
+	static private $expandingUrls = false;
 
-	/* Wikilog settings */
-	var $mIcon = NULL;
-	var $mLogo = NULL;
 
-	function getAuthors() { return $this->mAuthors; }
-	function getTags() { return $this->mTags; }
+	###
+	## Parser hooks
+	#
 
-	static function registerParser( &$parser ) {
+	/**
+	 * ParserFirstCallInit hook handler function.
+	 */
+	public static function FirstCallInit( &$parser ) {
 		$parser->setHook( 'summary', array( 'WikilogParser', 'summary' ) );
 		$parser->setFunctionHook( 'wl-settings', array( 'WikilogParser', 'settings' ), SFH_NO_HASH );
-		$parser->setFunctionHook( 'wl-publish', array( 'WikilogParser', 'publish' ), SFH_NO_HASH );
-		$parser->setFunctionHook( 'wl-author', array( 'WikilogParser', 'author' ), SFH_NO_HASH );
-		$parser->setFunctionHook( 'wl-tags', array( 'WikilogParser', 'tags' ), SFH_NO_HASH );
+		$parser->setFunctionHook( 'wl-publish',  array( 'WikilogParser', 'publish'  ), SFH_NO_HASH );
+		$parser->setFunctionHook( 'wl-author',   array( 'WikilogParser', 'author'   ), SFH_NO_HASH );
+		$parser->setFunctionHook( 'wl-tags',     array( 'WikilogParser', 'tags'     ), SFH_NO_HASH );
 		return true;
 	}
 
-	static function clearState( &$parser ) {
-		$parser->mExtWikilog = new WikilogParser;
+	/**
+	 * ParserClearState hook handler function.
+	 */
+	public static function ClearState( &$parser ) {
+		$parser->mExtWikilog = new WikilogParserOutput;
 
 		# Disable TOC in feeds.
-		if ( Wikilog::$feedParsing ) {
+		if ( self::$feedParsing ) {
 			$parser->mShowToc = false;
 		}
 		return true;
 	}
 
-	static function beforeInternalParse( &$parser, &$text, &$stripState ) {
+	/**
+	 * ParserBeforeInternalParse hook handler function.
+	 */
+	public static function BeforeInternalParse( &$parser, &$text, &$stripState ) {
 		global $wgUser;
 		$wi = Wikilog::getWikilogInfo( $parser->getTitle() );
 
@@ -88,12 +97,53 @@ class WikilogParser {
 		return true;
 	}
 
-	static function afterTidy( &$parser, &$text ) {
+	/**
+	 * ParserAfterTidy hook handler function.
+	 */
+	public static function AfterTidy( &$parser, &$text ) {
 		$parser->mOutput->mExtWikilog = $parser->mExtWikilog;
 		return true;
 	}
 
-	static function summary( $text, $params, &$parser ) {
+	/**
+	 * GetLocalURL hook handler function.
+	 * Expands local URL @a $url if self::$expandingUrls is true.
+	 */
+	static function GetLocalURL( &$title, &$url, $query ) {
+		if ( self::$expandingUrls ) {
+			$url = wfExpandUrl( $url );
+		}
+		return true;
+	}
+
+	/**
+	 * GetFullURL hook handler function.
+	 * Fix some brain-damage in Title::getFullURL() (as of MW 1.13) that
+	 * prepends $wgServer to URL without using wfExpandUrl(), in part because
+	 * we want (above in Wikilog::GetLocalURL()) to return an absolute URL
+	 * from Title::getLocalURL() in situations where action != 'render'.
+	 * @todo Report this bug to MediaWiki bugzilla.
+	 */
+	static function GetFullURL( &$title, &$url, $query ) {
+		global $wgServer;
+		if ( self::$expandingUrls ) {
+			$l = strlen( $wgServer );
+			if ( substr( $url, 0, 2*$l ) == $wgServer.$wgServer ) {
+				$url = substr( $url, $l );
+			}
+		}
+		return true;
+	}
+
+
+	###
+	## Parser tags and functions
+	#
+
+	/**
+	 * Summary tag parser hook handler.
+	 */
+	public static function summary( $text, $params, &$parser ) {
 		# Remove extra space to make block rendering easier.
 		$text = trim( $text );
 
@@ -106,7 +156,10 @@ class WikilogParser {
 		return isset( $params['hidden'] ) ? '' : $parser->recursiveTagParse( $text );
 	}
 
-	static function settings( &$parser /* ... */ ) {
+	/**
+	 * {{wl-settings:...}} parser function handler.
+	 */
+	public static function settings( &$parser /* ... */ ) {
 		global $wgOut;
 		wfLoadExtensionMessages( 'Wikilog' );
 		self::checkNamespace( $parser );
@@ -140,7 +193,10 @@ class WikilogParser {
 		return '';
 	}
 
-	static function publish( &$parser, $pubdate /*, $author... */ ) {
+	/**
+	 * {{wl-publish:...}} parser function handler.
+	 */
+	public static function publish( &$parser, $pubdate /*, $author... */ ) {
 		wfLoadExtensionMessages( 'Wikilog' );
 		self::checkNamespace( $parser );
 
@@ -168,7 +224,10 @@ class WikilogParser {
 		return '';
 	}
 
-	static function author( &$parser /*, $author... */ ) {
+	/**
+	 * {{wl-author:...}} parser function handler.
+	 */
+	public static function author( &$parser /*, $author... */ ) {
 		wfLoadExtensionMessages( 'Wikilog' );
 		self::checkNamespace( $parser );
 
@@ -180,7 +239,10 @@ class WikilogParser {
 		return '';
 	}
 
-	static function tags( &$parser /*, $tag... */ ) {
+	/**
+	 * {{wl-tags:...}} parser function handler.
+	 */
+	public static function tags( &$parser /*, $tag... */ ) {
 		wfLoadExtensionMessages( 'Wikilog' );
 		self::checkNamespace( $parser );
 
@@ -191,6 +253,100 @@ class WikilogParser {
 		}
 		return '';
 	}
+
+
+	###
+	## Wikilog parser settings.
+	#
+
+	/**
+	 * Enable special wikilog feed parsing.
+	 *
+	 * This function changes the parser behavior in order to output
+	 *
+	 * The proper way to use this function is:
+	 * @code
+	 *   $saveFeedParse = WikilogParser::enableFeedParsing();
+	 *   # ...code that uses $wgParser in order to parse articles...
+	 *   WikilogParser::enableFeedParsing( $saveFeedParse );
+	 * @endcode
+	 *
+	 * @note Using this function changes the behavior of Parser. When enabled,
+	 *   parsed content should be cached under a different key.
+	 */
+	public static function enableFeedParsing( $enable = true ) {
+		$prev = self::$feedParsing;
+		self::$feedParsing = $enable;
+		return $prev;
+	}
+
+	/**
+	 * Enable expansion of local URLs.
+	 *
+	 * In order to output stand-alone content with all absolute links, it is
+	 * necessary to expand local URLs. MediaWiki tries to do this in a few
+	 * places by sniffing into the 'action' GET request parameter, but this
+	 * fails in many ways. This function tries to remedy this.
+	 *
+	 * This function pre-expands all base URL fragments used by MediaWiki,
+	 * and also enables URL expansion in the Wikilog::GetLocalURL hook.
+	 * The original values of all URLs are saved when $enable = true, and
+	 * restored back when $enabled = false.
+	 *
+	 * The proper way to use this function is:
+	 * @code
+	 *   $saveExpUrls = WikilogParser::expandLocalUrls();
+	 *   # ...code that uses $wgParser in order to parse articles...
+	 *   WikilogParser::expandLocalUrls( $saveExpUrls );
+	 * @endcode
+	 *
+	 * @note Using this function changes the behavior of Parser. When enabled,
+	 *   parsed content should be cached under a different key.
+	 */
+	public static function expandLocalUrls( $enable = true ) {
+		global $wgScriptPath, $wgUploadPath, $wgStylePath, $wgMathPath, $wgLocalFileRepo;
+		static $originalPaths = NULL;
+
+		$prev = self::$expandingUrls;
+
+		if ( $enable ) {
+			if ( !self::$expandingUrls ) {
+				self::$expandingUrls = true;
+
+				# Save original values.
+				$originalPaths = array( $wgScriptPath, $wgUploadPath,
+					$wgStylePath, $wgMathPath, $wgLocalFileRepo['url'] );
+
+				# Expand paths.
+				$wgScriptPath = wfExpandUrl( $wgScriptPath );
+				$wgUploadPath = wfExpandUrl( $wgUploadPath );
+				$wgStylePath  = wfExpandUrl( $wgStylePath  );
+				$wgMathPath   = wfExpandUrl( $wgMathPath   );
+				$wgLocalFileRepo['url'] = wfExpandUrl( $wgLocalFileRepo['url'] );
+
+				# Destroy existing RepoGroup, if any.
+				RepoGroup::destroySingleton();
+			}
+		} else {
+			if ( self::$expandingUrls ) {
+				self::$expandingUrls = false;
+
+				# Restore original values.
+				list( $wgScriptPath, $wgUploadPath, $wgStylePath, $wgMathPath,
+					$wgLocalFileRepo['url'] ) = $originalPaths;
+
+				# Destroy existing RepoGroup, if any.
+				RepoGroup::destroySingleton();
+			}
+		}
+
+		return $prev;
+	}
+
+
+	###
+	## Internal stuff.
+	#
 
 	/**
 	 * Adds an author to the current article. If too many authors, warns.
@@ -324,9 +480,36 @@ class WikilogParser {
 
 
 /**
+ * Wikilog parser output. This class is first attached to the Parser as
+ * $parser->mExtWikilog, and then copied to the parser output
+ * $popt->mExtWikilog in WikilogParser::AfterTidy().
+ */
+class WikilogParserOutput {
+
+	/* Item and Wikilog metadata */
+	public $mSummary = false;
+	public $mAuthors = array();
+	public $mTags = array();
+
+	/* Item metadata */
+	public $mPublish = false;
+	public $mPubDate = NULL;
+
+	/* Wikilog settings */
+	public $mIcon = NULL;
+	public $mLogo = NULL;
+
+	/* Acessor functions, lacking... */
+	public function getAuthors() { return $this->mAuthors; }
+	public function getTags() { return $this->mTags; }
+
+}
+
+
+/**
  * Since wikilog parses articles with specific options in order to be
  * outputted in feeds, it is necessary to store these parsed outputs in
- * the cache separatelly. This derived class from ParserCache overloads the
+ * the cache separately. This derived class from ParserCache overloads the
  * getKey() function in order to provide a specific namespace for this
  * purpose.
  */
@@ -341,7 +524,7 @@ class WikilogParserCache extends ParserCache {
 		return $instance;
 	}
 
-	function getKey( &$article, &$user ) {
+	public function getKey( &$article, &$user ) {
 		$pageid = intval( $article->getID() );
 		$hash = $user->getPageRenderingHash();
 		$key = wfMemcKey( 'wlcache', 'idhash', "$pageid-$hash" );

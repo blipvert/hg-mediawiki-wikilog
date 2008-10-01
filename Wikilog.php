@@ -48,29 +48,38 @@ $wgExtensionCredits['specialpage'][] = array(
 require_once( dirname(__FILE__) . '/WlFeed.php' );
 
 
-$dir = dirname(__FILE__) . '/';
-
 /*
  * Messages.
  */
+$dir = dirname(__FILE__) . '/';
 $wgExtensionMessagesFiles['Wikilog'] = $dir . 'Wikilog.i18n.php';
 
 /*
  * Autoloaded classes.
  */
 $wgAutoloadClasses += array(
-	'WikilogParser'			=> $dir . 'WikilogParser.php',
-	'WikilogParserCache'	=> $dir . 'WikilogParser.php',
-	'WikilogMainPage'		=> $dir . 'WikilogMainPage.php',
-	'WikilogItemPage'		=> $dir . 'WikilogItemPage.php',
-	'WikilogCommentsPage'	=> $dir . 'WikilogCommentsPage.php',
-	'WikilogLinksUpdate'	=> $dir . 'WikilogLinksUpdate.php',
+	// General
+	'WikilogFeed'			=> $dir . 'WikilogFeed.php',
+	'WikilogHooks'			=> $dir . 'WikilogHooks.php',
 	'WikilogItemQuery'		=> $dir . 'WikilogQuery.php',
+	'WikilogLinksUpdate'	=> $dir . 'WikilogLinksUpdate.php',
+	'WikilogUtils'			=> $dir . 'WikilogUtils.php',
+	'SpecialWikilog'		=> $dir . 'SpecialWikilog.php',
+
+	// WikilogParser.php
+	'WikilogParser'			=> $dir . 'WikilogParser.php',
+	'WikilogParserOutput'	=> $dir . 'WikilogParser.php',
+	'WikilogParserCache'	=> $dir . 'WikilogParser.php',
+
+	// WikilogPager.php
 	'WikilogSummaryPager'	=> $dir . 'WikilogPager.php',
 	'WikilogTemplatePager'	=> $dir . 'WikilogPager.php',
 	'WikilogArchivesPager'	=> $dir . 'WikilogPager.php',
-	'WikilogFeed'			=> $dir . 'WikilogFeed.php',
-	'SpecialWikilog'		=> $dir . 'SpecialWikilog.php',
+
+	// Namespace pages
+	'WikilogMainPage'		=> $dir . 'WikilogMainPage.php',
+	'WikilogItemPage'		=> $dir . 'WikilogItemPage.php',
+	'WikilogCommentsPage'	=> $dir . 'WikilogCommentsPage.php',
 );
 
 /*
@@ -85,113 +94,36 @@ $wgSpecialPageGroups['Wikilog'] = 'changes';
 $wgExtensionFunctions[] = 'Wikilog::ExtensionInit';
 
 // Main Wikilog hooks
-$wgHooks['ArticleFromTitle'][] = 'Wikilog::ArticleFromTitle';
-$wgHooks['ArticleEditUpdatesDeleteFromRecentchanges'][] = 'Wikilog::ArticleEditUpdates';
-$wgHooks['ArticleDeleteComplete'][] = 'Wikilog::ArticleDeleteComplete';
-$wgHooks['TitleMoveComplete'][] = 'Wikilog::TitleMoveComplete';
-$wgHooks['GetLocalURL'][] = 'Wikilog::GetLocalURL';
-$wgHooks['GetFullURL'][] = 'Wikilog::GetFullURL';
-$wgHooks['LanguageGetSpecialPageAliases'][] = 'Wikilog::LanguageGetSpecialPageAliases';
-$wgHooks['LanguageGetMagic'][] = 'Wikilog::LanguageGetMagic';
-$wgHooks['LoadExtensionSchemaUpdates'][] = 'Wikilog::ExtensionSchemaUpdates';
-$wgHooks['SkinTemplateTabs'][] = 'Wikilog::SkinTemplateTabs';
-$wgHooks['UnknownAction'][] = 'Wikilog::UnknownAction';
+$wgHooks['ArticleFromTitle'][]			= 'Wikilog::ArticleFromTitle';
+$wgHooks['SkinTemplateTabs'][]			= 'Wikilog::SkinTemplateTabs';
+
+// General Wikilog hooks
+$wgHooks['ArticleEditUpdatesDeleteFromRecentchanges'][]
+										= 'WikilogHooks::ArticleEditUpdates';
+$wgHooks['ArticleDeleteComplete'][]		= 'WikilogHooks::ArticleDeleteComplete';
+$wgHooks['TitleMoveComplete'][]			= 'WikilogHooks::TitleMoveComplete';
+$wgHooks['LanguageGetSpecialPageAliases'][]
+										= 'WikilogHooks::LanguageGetSpecialPageAliases';
+$wgHooks['LanguageGetMagic'][]			= 'WikilogHooks::LanguageGetMagic';
+$wgHooks['LoadExtensionSchemaUpdates'][]= 'WikilogHooks::ExtensionSchemaUpdates';
+$wgHooks['UnknownAction'][]				= 'WikilogHooks::UnknownAction';
 
 // WikilogLinksUpdate hooks
-$wgHooks['LinksUpdate'][] = 'WikilogLinksUpdate::LinksUpdate';
+$wgHooks['LinksUpdate'][]				= 'WikilogLinksUpdate::LinksUpdate';
 
 // WikilogParser hooks
-$wgHooks['ParserFirstCallInit'][] = 'WikilogParser::registerParser';
-$wgHooks['ParserClearState'][] = 'WikilogParser::clearState';
-$wgHooks['ParserBeforeInternalParse'][] = 'WikilogParser::beforeInternalParse';
-$wgHooks['ParserAfterTidy'][] = 'WikilogParser::afterTidy';
+$wgHooks['ParserFirstCallInit'][]		= 'WikilogParser::FirstCallInit';
+$wgHooks['ParserClearState'][]			= 'WikilogParser::ClearState';
+$wgHooks['ParserBeforeInternalParse'][]	= 'WikilogParser::BeforeInternalParse';
+$wgHooks['ParserAfterTidy'][]			= 'WikilogParser::AfterTidy';
+$wgHooks['GetLocalURL'][]				= 'WikilogParser::GetLocalURL';
+$wgHooks['GetFullURL'][]				= 'WikilogParser::GetFullURL';
 
 
 /*
- * Configuration.
+ * Default settings.
  */
-
-/**
- * A string in the format "example.org,date", according to RFC 4151, that will
- * be used as taggingEntity in order to create feed item tags.
- */
-$wgTaggingEntity = false;
-
-/**
- * Path of Wikilog style and image files.
- * Defaults to "$wgScriptPath/extensions/Wikilog/style".
- */
-$wgWikilogStylePath = false;
-
-/**
- * Maximum number of items in wikilog front page.
- */
-$wgWikilogSummaryLimit = $wgFeedLimit;
-
-/**
- * Default number of articles to list on the wikilog front page.
- */
-$wgWikilogNumArticles = 20;
-
-/**
- * Maximum number of authors of a wikilog post.
- */
-$wgWikilogMaxAuthors = 6;
-
-/**
- * Enable use of tags. This is disabled by default since MediaWiki category
- * system already provides similar functionality, and are the preferred way
- * of organizing wikilog posts. Enable this if you want or need an additional
- * mechanism for organizing that is independent from categories, and specific
- * for wikilog posts.
- *
- * Even if disabled, tags are still recorded. This configuration only affects
- * the ability of performing queries based on tags. This is so that it could
- * be enabled and disabled without having to perform maintenance on the
- * database.
- */
-$wgWikilogEnableTags = false;
-
-/**
- * Maximum number of tags in a wikilog post.
- */
-$wgWikilogMaxTags = 25;
-
-/**
- * Syndication feed classes. Similar to $wgFeedClasses.
- */
-$wgWikilogFeedClasses = array(
-	'atom' => 'WlAtomFeed',
-	'rss'  => 'WlRSSFeed'
-);
-
-/**
- * Enable or disable output of summary or content in wikilog feeds. At least
- * one of them MUST be true.
- */
-$wgWikilogFeedSummary = true;
-$wgWikilogFeedContent = true;
-
-/**
- * Enable output of article categories in wikilog feeds.
- */
-$wgWikilogFeedCategories = true;
-
-/**
- * Enable output of external references in wikilog feeds.
- */
-$wgWikilogFeedRelated = false;
-
-/**
- * Navigation bars to show in listing pages.
- */
-$wgWikilogNavTop = false;
-$wgWikilogNavBottom = true;
-
-/**
- * Namespaces used for wikilogs.
- */
-$wgWikilogNamespaces = array();
+require_once( dirname(__FILE__) . '/WikilogDefaultSettings.php' );
 
 
 /**
@@ -199,24 +131,6 @@ $wgWikilogNamespaces = array();
  * intended to exist, all member functions are static.
  */
 class Wikilog {
-
-	/**
-	 * True if parsing articles with feed output specific settings.
-	 * This is an horrible hack needed because of many MediaWiki misdesigns.
-	 */
-	static public $feedParsing = false;
-
-	/**
-	 * True if we are expanding local URLs (in order to render stand-alone,
-	 * base-less feeds). This is an horrible hack needed because of many
-	 * MediaWiki misdesigns.
-	 */
-	static public $expandingUrls = false;
-
-	/**
-	 * Original paths before expansion.
-	 */
-	static public $originalPaths = NULL;
 
 	###
 	##  Setup functions.
@@ -263,11 +177,10 @@ class Wikilog {
 	 */
 	static function ExtensionInit() {
 		global $wgWikilogStylePath, $wgWikilogNamespaces;
-		global $wgNamespacesWithSubpages;
+		global $wgScriptPath, $wgNamespacesWithSubpages;
 
 		# Set default style path, if not set.
 		if ( !$wgWikilogStylePath ) {
-			global $wgScriptPath;
 			$wgWikilogStylePath = "$wgScriptPath/extensions/Wikilog/style";
 		}
 
@@ -281,7 +194,7 @@ class Wikilog {
 		# https://bugzilla.wikimedia.org/show_bug.cgi?id=15512
 		global $wgRequest;
 		if ( $wgRequest->getVal( 'action' ) == 'render' ) {
-			self::expandLocalUrls();
+			WikilogParser::expandLocalUrls();
 		}
 	}
 
@@ -306,262 +219,13 @@ class Wikilog {
 	}
 
 	/**
-	 * ArticleEditUpdatesDeleteFromRecentchanges hook handler function.
-	 * Performs post-edit updates if article is a wikilog article.
-	 */
-	static function ArticleEditUpdates( &$article ) {
-		$title = $article->getTitle();
-		$wi = self::getWikilogInfo( $title );
-
-		# Do nothing if not a wikilog article.
-		if ( !$wi ) return true;
-
-		if ( $title->isTalkPage() ) {
-			# ::WikilogCommentsPage::
-			# Invalidate cache of wikilog item page.
-			if ( $wi->getItemTitle()->exists() ) {
-				$wi->getItemTitle()->invalidateCache();
-				$wi->getItemTitle()->purgeSquid();
-			}
-		} else if ( $wi->isItem() ) {
-			# ::WikilogItemPage::
-			$dbw = wfGetDB( DB_MASTER );
-			$id = $article->getId();
-			$editInfo = $article->mPreparedEdit;
-
-			# Check if we have any wikilog metadata available.
-			if ( isset( $editInfo->output->mExtWikilog ) ) {
-				$output = $editInfo->output->mExtWikilog;
-
-				# Update entry in wikilog_posts table.
-				# Entries in wikilog_authors and wikilog_tags are updated
-				# during LinksUpdate process.
-				$updated = $dbw->timestamp();
-				$pubdate = $output->mPublish ? $output->mPubDate : $updated;
-				$dbw->replace(
-					'wikilog_posts',
-					'wlp_page',
-					array(
-						'wlp_page' => $id,
-						'wlp_parent' => $wi->getTitle()->getArticleId(),
-						'wlp_title' => $wi->getItemName(),
-						'wlp_publish' => $output->mPublish,
-						'wlp_pubdate' => $pubdate,
-						'wlp_authors' => serialize( $output->mAuthors ),
-						'wlp_tags' => serialize( $output->mTags ),
-						'wlp_updated' => $updated
-					),
-					__METHOD__
-				);
-			} else {
-				# Remove entry from tables. Entries in wikilog_authors and
-				# wikilog_tags are removed during LinksUpdate process.
-				$dbw->delete( 'wikilog_posts', array( 'wlp_page' => $id ), __METHOD__ );
-			}
-
-			# Invalidate cache of parent wikilog page.
-			self::updateWikilog( $wi->getTitle() );
-		} else {
-			# ::WikilogMainPage::
-			$dbw = wfGetDB( DB_MASTER );
-			$id = $article->getId();
-			$editInfo = $article->mPreparedEdit;
-
-			# Check if we have any wikilog metadata available.
-			if ( isset( $editInfo->output->mExtWikilog ) ) {
-				$output = $editInfo->output->mExtWikilog;
-				$subtitle = $output->mSummary
-					? array( 'html', $output->mSummary )
-					: '';
-
-				# Update entry in wikilog_wikilogs table. Entries in
-				# wikilog_authors and wikilog_tags are updated during
-				# LinksUpdate process.
-				$dbw->replace(
-					'wikilog_wikilogs',
-					'wlw_page',
-					array(
-						'wlw_page' => $id,
-						'wlw_subtitle' => serialize( $subtitle ),
-						'wlw_icon' => $output->mIcon ? $output->mIcon->getDBKey() : '',
-						'wlw_logo' => $output->mLogo ? $output->mLogo->getDBKey() : '',
-						'wlw_authors' => serialize( $output->mAuthors ),
-						'wlw_updated' => $dbw->timestamp()
-					),
-					__METHOD__
-				);
-			} else {
-				# Remove entry from tables. Entries in wikilog_authors and
-				# wikilog_tags are removed during LinksUpdate process.
-				$dbw->delete( 'wikilog_wikilogs', array( 'wlw_page' => $id ), __METHOD__ );
-			}
-		}
-
-		return true;
-	}
-
-	/**
-	 * ArticleDeleteComplete hook handler function.
-	 * Purges wikilog metadata when an article is deleted.
-	 * @note This function REQUIRES MediaWiki 1.13 or higher ($id parameter).
-	 */
-	static function ArticleDeleteComplete( &$article, &$user, $reason, $id )
-	{
-		# Retrieve wikilog information.
-		$wi = self::getWikilogInfo( $article->getTitle() );
-
-		# Take special procedures if it is a wikilog page.
-		if ( $wi ) {
-			$dbw = wfGetDB( DB_MASTER );
-
-			if ( $wi->isItem() ) {
-				# Delete table entries.
-				$dbw->delete( 'wikilog_posts',   array( 'wlp_page' => $id ) );
-				$dbw->delete( 'wikilog_authors', array( 'wla_page' => $id ) );
-				$dbw->delete( 'wikilog_tags',    array( 'wlt_page' => $id ) );
-
-				# Invalidate cache of parent wikilog page.
-				self::updateWikilog( $wi->getTitle() );
-			} else {
-				# Delete table entries.
-				$dbw->delete( 'wikilog_wikilogs', array( 'wlw_page' => $id ) );
-				$dbw->delete( 'wikilog_posts',    array( 'wlp_parent' => $id ) );
-				$dbw->delete( 'wikilog_authors',  array( 'wla_page' => $id ) );
-				$dbw->delete( 'wikilog_tags',     array( 'wlt_page' => $id ) );
-			}
-		}
-
-		return true;
-	}
-
-	/**
-	 * TitleMoveComplete hook handler function.
-	 * Handles moving articles to and from wikilog namespaces.
-	 */
-	static function TitleMoveComplete( &$oldtitle, &$newtitle, &$user, $pageid, $redirid ) {
-		global $wgWikilogNamespaces;
-
-		$oldwl = in_array( ( $oldns = $oldtitle->getNamespace() ), $wgWikilogNamespaces );
-		$newwl = in_array( ( $newns = $newtitle->getNamespace() ), $wgWikilogNamespaces );
-
-		if ( $oldwl && $newwl ) {
-			# Moving titles in wikilog namespaces.
-			## Nothing to do.
-			wfDebug( __METHOD__ . ": Moving title in wikilog namespaces ".
-				"($oldns, $newns)." );
-		} else if ( $oldwl ) {
-			# Moving from wikilog namespace to normal namespace.
-			# Purge wikilog data.
-			wfDebug( __METHOD__ . ": Moving from wikilog namespace to other ".
-				"namespace ($oldns, $newns). Purging wikilog data." );
-			$dbw = wfGetDB( DB_MASTER );
-			$dbw->delete( 'wikilog_wikilogs', array( 'wlw_page' => $pageid ) );
-			$dbw->delete( 'wikilog_posts',    array( 'wlp_page' => $pageid ) );
-			$dbw->delete( 'wikilog_posts',    array( 'wlp_parent' => $pageid ) );
-			$dbw->delete( 'wikilog_authors',  array( 'wla_page' => $pageid ) );
-			$dbw->delete( 'wikilog_tags',     array( 'wlt_page' => $pageid ) );
-		} else if ( $newwl ) {
-			# Moving from normal namespace to wikilog namespace.
-			# Create wikilog data.
-			wfDebug( __METHOD__ . ": Moving from other namespace to wikilog ".
-				"namespace ($oldns, $newns). Creating wikilog data." );
-		}
-		return true;
-	}
-
-	/**
-	 * GetLocalURL hook handler function.
-	 * Expands local URL @a $url if self::$expandingUrls is true.
-	 */
-	static function GetLocalURL( &$title, &$url, $query ) {
-		if ( self::$expandingUrls ) {
-			$url = wfExpandUrl( $url );
-		}
-		return true;
-	}
-
-	/**
-	 * GetFullURL hook handler function.
-	 * Fix some brain-damage in Title::getFullURL() (as of MW 1.13) that
-	 * prepends $wgServer to URL without using wfExpandUrl(), in part because
-	 * we want (above in Wikilog::GetLocalURL()) to return an absolute URL
-	 * from Title::getLocalURL() in situations where action != 'render'.
-	 * @todo Report this bug to MediaWiki bugzilla.
-	 */
-	static function GetFullURL( &$title, &$url, $query ) {
-		global $wgServer;
-		if ( self::$expandingUrls ) {
-			$l = strlen( $wgServer );
-			if ( substr( $url, 0, 2*$l ) == $wgServer.$wgServer ) {
-				$url = substr( $url, $l );
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * LanguageGetSpecialPageAliases hook handler function.
-	 * Adds language aliases for special pages.
-	 */
-	static function LanguageGetSpecialPageAliases( &$specialPageAliases, $lang ) {
-		wfLoadExtensionMessages( 'Wikilog' );
-		$title = Title::newFromText( wfMsg( 'wikilog-specialwikilog' ) );
-		$specialPageAliases['SpecialWikilog'][] = $title->getDBKey();
-		return true;
-	}
-
-	/**
-	 * LanguageGetMagic hook handler function.
-	 * Adds language aliases for magic words.
-	 */
-	static function LanguageGetMagic( &$magicWords, $lang ) {
-		/// TODO: Language magic.
-		$magicWords['wl-settings'] = array( 0, 'wl-settings' );
-		$magicWords['wl-publish' ] = array( 0, 'wl-publish'  );
-		$magicWords['wl-author'  ] = array( 0, 'wl-author'   );
-		$magicWords['wl-tags'    ] = array( 0, 'wl-tags'     );
-		return true;
-	}
-
-	/**
-	 * LoadExtensionSchemaUpdates hook handler function.
-	 * Updates wikilog database tables.
-	 *
-	 * @todo Add support for PostgreSQL and SQLite databases.
-	 */
-	static function ExtensionSchemaUpdates() {
-		global $wgDBtype, $wgExtNewFields, $wgExtPGNewFields, $wgExtNewIndexes, $wgExtNewTables;
-
-		$dir = dirname(__FILE__) . '/';
-		if( $wgDBtype == 'mysql' ) {
-			$wgExtNewTables += array(
-				array( 'wikilog_wikilogs', $dir . 'wikilog-tables.sql' ),
-				array( 'wikilog_posts',    $dir . 'wikilog-tables.sql' ),
-				array( 'wikilog_authors',  $dir . 'wikilog-tables.sql' ),
-				array( 'wikilog_tags',     $dir . 'wikilog-tables.sql' )
-			);
-			$wgExtNewFields += array(
-				array( 'wikilog_posts', 'wlp_parent', $dir . 'archives/patch-post-titles.sql' ),
-				array( 'wikilog_posts', 'wlp_title',  $dir . 'archives/patch-post-titles.sql' ),
-				array( 'wikilog_wikilogs', 'wlw_authors', $dir . 'archives/patch-wikilog-authors.sql' )
-			);
-		} else {
-			/// TODO: PostgreSQL, SQLite, etc...
-			print "\n".
-				"Warning: There are no table structures for the Wikilog\n".
-				"extension other than for MySQL at this moment.\n\n";
-		}
-		return true;
-	}
-
-	/**
 	 * SkinTemplateTabs hook handler function.
 	 * Adds a wikilog tab to articles in Wikilog namespaces.
 	 */
 	static function SkinTemplateTabs( &$skin, &$contentActions ) {
 		global $wgRequest;
 
-		$wi = Wikilog::getWikilogInfo( $skin->mTitle );
+		$wi = self::getWikilogInfo( $skin->mTitle );
 		if ( $wi ) {
 			$action = $wgRequest->getText( 'action' );
 			if ( $wi->isMain() && $skin->mTitle->quickUserCan( 'edit' ) ) {
@@ -574,19 +238,6 @@ class Wikilog {
 		}
 		return true;
 	}
-
-	/**
-	 * UnknownAction hook handler function.
-	 * Handles action=wikilog requests.
-	 */
-	static function UnknownAction( $action, &$article ) {
-		if ( $action == 'wikilog' && $article instanceof WikilogMainPage ) {
-			$article->wikilog();
-			return false;
-		}
-		return true;
-	}
-
 
 	###
 	##  Other global wikilog functions.
@@ -611,259 +262,6 @@ class Wikilog {
 		}
 	}
 
-	/**
-	 * Causes an update to the given Wikilog main page.
-	 */
-	static function updateWikilog( $title ) {
-		if ( $title->exists() ) {
-			$title->invalidateCache();
-			$title->purgeSquid();
-
-			$dbw = wfGetDB( DB_MASTER );
-			$dbw->update(
-				'wikilog_wikilogs',
-				array( 'wlw_updated' => $dbw->timestamp() ),
-				array( 'wlw_page' => $title->getArticleId(), ),
-				__METHOD__
-			);
-		}
-	}
-
-	/**
-	 * Enable special wikilog feed parsing.
-	 *
-	 * This function changes the parser behavior in order to output
-	 *
-	 * The proper way to use this function is:
-	 * @code
-	 *   $saveFeedParse = Wikilog::enableFeedParsing();
-	 *   # ...code that uses $wgParser in order to parse articles...
-	 *   Wikilog::enableFeedParsing( $saveFeedParse );
-	 * @endcode
-	 *
-	 * @note Using this function changes the behavior of Parser. When enabled,
-	 *   parsed content should be cached under a different key than when
-	 *   disabled.
-	 */
-	static function enableFeedParsing( $enable = true ) {
-		$prev = self::$feedParsing;
-		self::$feedParsing = $enable;
-		return $prev;
-	}
-
-	/**
-	 * Enable expansion of local URLs.
-	 *
-	 * In order to output stand-alone content with all absolute links, it is
-	 * necessary to expand local URLs. MediaWiki tries to do this in a few
-	 * places by sniffing into the 'action' GET request parameter, but this
-	 * fails in many ways. This function tries to remedy this.
-	 *
-	 * This function pre-expands all base URL fragments used by MediaWiki,
-	 * and also enables URL expansion in the Wikilog::GetLocalURL hook.
-	 * The original values of all URLs are saved when $enable = true, and
-	 * restored back when $enabled = false.
-	 *
-	 * The proper way to use this function is:
-	 * @code
-	 *   $saveExpUrls = Wikilog::expandLocalUrls();
-	 *   # ...code that uses $wgParser in order to parse articles...
-	 *   Wikilog::expandLocalUrls( $saveExpUrls );
-	 * @endcode
-	 *
-	 * @note Using this function changes the behavior of Parser. When enabled,
-	 *   parsed content should be cached under a different key than when
-	 *   disabled.
-	 */
-	static function expandLocalUrls( $enable = true ) {
-		global $wgScriptPath, $wgUploadPath, $wgStylePath, $wgMathPath, $wgLocalFileRepo;
-		$prev = self::$expandingUrls;
-
-		if ( $enable ) {
-			if ( !self::$expandingUrls ) {
-				self::$expandingUrls = true;
-
-				# Save original values.
-				self::$originalPaths = array( $wgScriptPath, $wgUploadPath,
-					$wgStylePath, $wgMathPath, $wgLocalFileRepo['url'] );
-
-				# Expand paths.
-				$wgScriptPath = wfExpandUrl( $wgScriptPath );
-				$wgUploadPath = wfExpandUrl( $wgUploadPath );
-				$wgStylePath  = wfExpandUrl( $wgStylePath  );
-				$wgMathPath   = wfExpandUrl( $wgMathPath   );
-				$wgLocalFileRepo['url'] = wfExpandUrl( $wgLocalFileRepo['url'] );
-
-				# Destroy existing RepoGroup, if any.
-				RepoGroup::destroySingleton();
-			}
-		} else {
-			if ( self::$expandingUrls ) {
-				self::$expandingUrls = false;
-
-				# Restore original values.
-				list( $wgScriptPath, $wgUploadPath, $wgStylePath, $wgMathPath,
-					$wgLocalFileRepo['url'] ) = self::$originalPaths;
-
-				# Destroy existing RepoGroup, if any.
-				RepoGroup::destroySingleton();
-			}
-		}
-
-		return $prev;
-	}
-
-	/**
-	 * Split summary of a wikilog post from the contents.
-	 * If summary was provided in <summary>...</summary> tags, use it,
-	 * otherwise, use some heuristics to find it in the content.
-	 */
-	static function splitSummaryContent( $parserOutput ) {
-		$content = Sanitizer::removeHTMLcomments( $parserOutput->getText() );
-
-		if ( isset( $parserOutput->mExtWikilog ) && $parserOutput->mExtWikilog->mSummary ) {
-			$summary = Sanitizer::removeHTMLcomments( $parserOutput->mExtWikilog->mSummary );
-		} else {
-			$blocks = preg_split( '/< (h[1-6]) .*? > .*? <\\/\\1>/ix', $content );
-
-			if ( count( $blocks ) > 1 ) {
-				# Long article, get only the first paragraph.
-				$pextr = '/<(p)
-					( \\s+ (?: [^\'"\\/>] | \'[^\']*\' | "[^"]*" )* )?
-					(?: > .*? <\\/\\1\\s*> | \\/> )/isx';
-
-				if ( preg_match_all( $pextr, $blocks[0], $m ) ) {
-					$summary = implode( "\n", $m[0] );
-				} else {
-					$summary = NULL;
-				}
-			} else {
-				# Short article, no summary.
-				$summary = NULL;
-			}
-		}
-
-		return array( $summary, $content );
-	}
-
-	/**
-	 * Formats a list of authors.
-	 * Given a list of authors, this function formats it in wiki syntax,
-	 * with links to their user and user-talk pages, according to the
-	 * 'wikilog-author-signature' system message.
-	 *
-	 * @param $list Array of authors.
-	 * @return Wikitext-formatted textual list of authors.
-	 */
-	static function authorList( $list ) {
-		wfLoadExtensionMessages( 'Wikilog' );
-
-		if ( is_string( $list ) ) {
-			return self::authorSig( $list );
-		}
-		else if ( is_array( $list ) ) {
-			$count = count( $list );
-
-			if ( $count == 0 ) {
-				return '';
-			}
-			else if ( $count == 1 ) {
-				return self::authorSig( $list[0] );
-			}
-			else {
-				$first = implode( ', ', array_map( array( 'Wikilog', 'authorSig' ),
-					array_slice( $list, 0, $count - 1 ) ) );
-				$last = self::authorSig( $list[$count-1] );
-				$and = wfMsgForContent( 'and' );
-				return "{$first} {$and} {$last}";
-			}
-		}
-		else {
-			return '';
-		}
-	}
-
-	/**
-	 * Formats a single author signature.
-	 * Uses the 'wikilog-author-signature' system message, in order to provide
-	 * user and user-talk links.
-	 *
-	 * @param $author String, author name.
-	 * @return Wikitext-formatted author signature.
-	 */
-	static function authorSig( $author ) {
-		static $authorSigCache = array();
-		if ( !isset( $authorSigCache[$author] ) )
-			$authorSigCache[$author] = wfMsgForContent( 'wikilog-author-signature', $author );
-		return $authorSigCache[$author];
-	}
-
-	/**
-	 * Retrieves an article parsed ouput either from parser cache or by
-	 * parsing it again. If parsing again, stores it back into parser cache.
-	 *
-	 * @note This should really be part of MediaWiki, but it doesn't provide
-	 *   such convenient functionality in a single function, and we have to
-	 *   implement it here.
-	 *
-	 * @param $title Article title object.
-	 * @return Two-element array containing the article and its parser output.
-	 */
-	static function parsedArticle( Title $title, $feed = false, &$parser = NULL ) {
-		global $wgUser, $wgEnableParserCache;
-
-		if ( $feed ) {
-			// Enable some feed-specific behavior.
-			$saveFeedParse = Wikilog::enableFeedParsing();
-			$saveExpUrls = Wikilog::expandLocalUrls();
-
-			// Select parser cache.
-			$parserCache = WikilogParserCache::singleton();
-
-			// Parser options.
-			$parserOpt = ParserOptions::newFromUser( $wgUser );
-			$parserOpt->setTidy( true );
-			$parserOpt->setEditSection( false );
-		} else {
-			// Select parser cache.
-			$parserCache = ParserCache::singleton();
-
-			// Parser options.
-			$parserOpt = ParserOptions::newFromUser( $wgUser );
-			$parserOpt->setTidy( true );
-			$parserOpt->enableLimitReport();
-		}
-
-		if ( is_null( $parser ) ) {
-			global $wgParser;
-			$parser = clone $wgParser;
-			$parser->startExternalParse( $title, $parserOpt, Parser::OT_HTML );
-		}
-
-		$article = new Article( $title );
-
-		if ( $wgEnableParserCache ) {
-			$parserOutput = $parserCache->get( $article, $wgUser );
-			if ( !$parserOutput ) {
-				$arttext = $article->fetchContent();
-				$parserOutput = $parser->parse( $arttext, $title, $parserOpt );
-				if ( $parserOutput->getCacheTime() != -1 ) {
-					$parserCache->save( $parserOutput, $article, $wgUser );
-				}
-			}
-		} else {
-			$arttext = $article->fetchContent();
-			$parserOutput = $parser->parse( $arttext, $title, $parserOpt );
-		}
-
-		if ( $feed ) {
-			// Restore default behavior.
-			Wikilog::enableFeedParsing( $saveFeedParse );
-			Wikilog::expandLocalUrls( $saveExpUrls );
-		}
-
-		return array( $article, $parserOutput );
-	}
 }
 
 

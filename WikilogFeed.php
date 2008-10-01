@@ -99,9 +99,9 @@ class WikilogFeed {
 
 		# Retrieve copyright notice.
 		$skin = $wgUser->getSkin();
-		$saveExpUrls = Wikilog::expandLocalUrls();
+		$saveExpUrls = WikilogParser::expandLocalUrls();
 		$this->mCopyright = $skin->getCopyright( 'normal' );
-		Wikilog::expandLocalUrls( $saveExpUrls );
+		WikilogParser::expandLocalUrls( $saveExpUrls );
 	}
 
 	public function execute() {
@@ -183,7 +183,7 @@ class WikilogFeed {
 		$itemTitle =& Title::makeTitle( $row->page_namespace, $row->page_title );
 
 		# Retrieve article parser output
-		list( $article, $parserOutput ) = Wikilog::parsedArticle( $itemTitle, true );
+		list( $article, $parserOutput ) = WikilogUtils::parsedArticle( $itemTitle, true );
 
 		# Generate some fixed bits
 		$authors = unserialize( $row->wlp_authors );
@@ -211,7 +211,7 @@ class WikilogFeed {
 		}
 
 		# Retrieve summary and content.
-		list( $summary, $content ) = Wikilog::splitSummaryContent( $parserOutput );
+		list( $summary, $content ) = WikilogUtils::splitSummaryContent( $parserOutput );
 
 		if ( $wgWikilogFeedSummary && $summary ) {
 			$entry->setSummary( new WlTextConstruct( 'html', $summary ) );
