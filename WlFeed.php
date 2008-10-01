@@ -67,7 +67,7 @@ $wgAutoloadClasses += array(
  * Extension setup.
  */
 
-$wgExtensionFunctions[] = "WlFeed::Setup";
+$wgExtensionFunctions[] = "WlFeed::ExtensionInit";
 
 /**
  * Main WlFeed class.
@@ -98,7 +98,7 @@ class WlFeed {
 	/**
 	 * Extension setup function.
 	 */
-	static function Setup() {
+	static function ExtensionInit() {
 		# Override system feeds.
 		if ( self::$cfgOverride ) {
 			global $wgFeedClasses;
