@@ -96,6 +96,7 @@ $wgExtensionFunctions[] = 'Wikilog::ExtensionInit';
 // Main Wikilog hooks
 $wgHooks['ArticleFromTitle'][]			= 'Wikilog::ArticleFromTitle';
 $wgHooks['SkinTemplateTabs'][]			= 'Wikilog::SkinTemplateTabs';
+$wgHooks['BeforePageDisplay'][]			= 'Wikilog::BeforePageDisplay';
 
 // General Wikilog hooks
 $wgHooks['ArticleEditUpdatesDeleteFromRecentchanges'][]
@@ -236,6 +237,20 @@ class Wikilog {
 				);
 			}
 		}
+		return true;
+	}
+
+	/**
+	 * BeforePageDisplay hook handler function.
+	 * Adds wikilog CSS to pages displayed.
+	 */
+	static function BeforePageDisplay( &$output, &$skin ) {
+		global $wgWikilogStylePath, $wgStyleVersion;
+		$output->addLink( array(
+			'rel' => 'stylesheet',
+			'href' => $wgWikilogStylePath . '/wikilog.css?' . $wgStyleVersion,
+			'type' => 'text/css'
+		) );
 		return true;
 	}
 

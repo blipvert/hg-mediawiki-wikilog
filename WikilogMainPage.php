@@ -133,7 +133,6 @@ class WikilogMainPage extends Article {
 	 */
 	public function wikilog() {
 		global $wgUser, $wgOut, $wgRequest;
-		global $wgWikilogStylePath, $wgStyleVersion;
 
 		if ( $wgRequest->getBool( 'wlActionNewItem' ) )
 			return $this->actionNewItem();
@@ -141,12 +140,6 @@ class WikilogMainPage extends Article {
 		$skin = $wgUser->getSkin();
 		$wgOut->setPageTitle( wfMsg( 'wikilog-tab-title' ) );
 		$wgOut->setRobotpolicy( 'noindex,nofollow' );
-
-		$wgOut->addLink( array(
-			'rel' => 'stylesheet',
-			'href' => $wgWikilogStylePath . '/wikilog.css?' . $wgStyleVersion,
-			'type' => 'text/css'
-		) );
 
 		$wgOut->addHTML( $this->formatWikilogDescription( $skin ) );
 		$wgOut->addHTML( $this->formatWikilogInformation( $skin ) );
