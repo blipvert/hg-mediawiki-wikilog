@@ -67,7 +67,7 @@ $wgAutoloadClasses += array(
  * Extension setup.
  */
 
-$wgExtensionFunctions[] = "WlFeed::ExtensionInit";
+$wgExtensionFunctions[] = array( 'WlFeed', 'ExtensionInit' );
 
 /**
  * Main WlFeed class.

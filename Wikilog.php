@@ -91,7 +91,7 @@ $wgSpecialPageGroups['Wikilog'] = 'changes';
 /*
  * Hooks.
  */
-$wgExtensionFunctions[] = 'Wikilog::ExtensionInit';
+$wgExtensionFunctions[] = array( 'Wikilog', 'ExtensionInit' );
 
 // Main Wikilog hooks
 $wgHooks['ArticleFromTitle'][]			= 'Wikilog::ArticleFromTitle';
