@@ -232,17 +232,13 @@ class WikilogHooks {
 
 		$dir = dirname(__FILE__) . '/';
 		if( $wgDBtype == 'mysql' ) {
-			$wgExtNewTables += array(
-				array( 'wikilog_wikilogs', $dir . 'wikilog-tables.sql' ),
-				array( 'wikilog_posts',    $dir . 'wikilog-tables.sql' ),
-				array( 'wikilog_authors',  $dir . 'wikilog-tables.sql' ),
-				array( 'wikilog_tags',     $dir . 'wikilog-tables.sql' )
-			);
-			$wgExtNewFields += array(
-				array( 'wikilog_posts', 'wlp_parent', $dir . 'archives/patch-post-titles.sql' ),
-				array( 'wikilog_posts', 'wlp_title',  $dir . 'archives/patch-post-titles.sql' ),
-				array( 'wikilog_wikilogs', 'wlw_authors', $dir . 'archives/patch-wikilog-authors.sql' )
-			);
+			$wgExtNewTables[] = array( 'wikilog_wikilogs', $dir . 'wikilog-tables.sql' );
+			$wgExtNewTables[] = array( 'wikilog_posts',    $dir . 'wikilog-tables.sql' );
+			$wgExtNewTables[] = array( 'wikilog_authors',  $dir . 'wikilog-tables.sql' );
+			$wgExtNewTables[] = array( 'wikilog_tags',     $dir . 'wikilog-tables.sql' );
+			$wgExtNewFields[] = array( 'wikilog_posts', 'wlp_parent', $dir . 'archives/patch-post-titles.sql' );
+			$wgExtNewFields[] = array( 'wikilog_posts', 'wlp_title',  $dir . 'archives/patch-post-titles.sql' );
+			$wgExtNewFields[] = array( 'wikilog_wikilogs', 'wlw_authors', $dir . 'archives/patch-wikilog-authors.sql' );
 		} else {
 			/// TODO: PostgreSQL, SQLite, etc...
 			print "\n".
