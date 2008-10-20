@@ -190,7 +190,7 @@ class WikilogParser {
 			$parser->mExtWikilog->mSummary = $output->getText();
 		}
 
-		return '';
+		return '<!-- -->';
 	}
 
 	/**
@@ -221,7 +221,7 @@ class WikilogParser {
 				break;
 		}
 
-		return '';
+		return '<!-- -->';
 	}
 
 	/**
@@ -236,7 +236,7 @@ class WikilogParser {
 			if ( !self::tryAddAuthor( $parser, $name ) )
 				break;
 		}
-		return '';
+		return '<!-- -->';
 	}
 
 	/**
@@ -251,7 +251,7 @@ class WikilogParser {
 			if ( !self::tryAddTag( $parser, $tag ) )
 				break;
 		}
-		return '';
+		return '<!-- -->';
 	}
 
 
