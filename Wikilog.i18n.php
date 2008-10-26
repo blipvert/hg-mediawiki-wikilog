@@ -19,12 +19,12 @@ $messages['en'] = array(
 	'wikilog-tab'				=> 'Wikilog',
 	'wikilog-tab-title'			=> 'Wikilog actions',
 	'wikilog-information'		=> 'Wikilog information',
-	'wikilog-post-count-all'	=>
-		'{{PLURAL:$1|There is one article|There are $1 articles}} in this wikilog.',
 	'wikilog-post-count-published'	=>
-		'{{PLURAL:$1|One article is|$1 articles are}} published.',
+		'There are $1 published {{PLURAL:$1|article|articles}} in this wikilog,',
 	'wikilog-post-count-drafts'	=>
-		'{{PLURAL:$1|One article is a draft|$1 articles are drafts}}.',
+		'plus $1 unpublished (draft) {{PLURAL:$1|article|articles}},',
+	'wikilog-post-count-all'	=>
+		'for a total of $1 {{PLURAL:$1|article|articles}}.',
 	'wikilog-new-item'			=> 'Create new wikilog article',
 	'wikilog-new-item-go'		=> 'Create',
 	'wikilog-item-name'			=> 'Article name:',
@@ -131,12 +131,12 @@ $messages['pt'] = array(
 	'wikilog-tab'				=> 'Wikilog',
 	'wikilog-tab-title'			=> 'Ações wikilog',
 	'wikilog-information'		=> 'Informações do wikilog',
-	'wikilog-post-count-all'	=>
-		'{{PLURAL:$1|Há $1 artigo|Há $1 artigos}} neste wikilog.',
 	'wikilog-post-count-published'	=>
-		'{{PLURAL:$1|$1 artigo está publicado|$1 artigos estão publicados}}.',
+		'Há $1 {{PLURAL:$1|artigo publicado|artigos publicados}} neste wikilog,',
 	'wikilog-post-count-drafts'	=>
-		'{{PLURAL:$1|$1 artigo é rascunho|$1 artigos são rascunhos}}.',
+		'mais $1 {{PLURAL:$1|artigo não-publicado (rascunho)|$1 artigos não-publicados (rascunhos)}},',
+	'wikilog-post-count-all'	=>
+		'para um total de $1 {{PLURAL:$1|artigo|artigos}}.',
 	'wikilog-new-item'			=> 'Criar novo artigo wikilog',
 	'wikilog-new-item-go'		=> 'Criar',
 	'wikilog-item-name'			=> 'Nome do artigo:',

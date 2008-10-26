@@ -193,10 +193,10 @@ class WikilogMainPage extends Article {
 		), __METHOD__ );
 		$n_drafts = $n_total - $n_published;
 
-		$cont = $this->formatPostCount( $skin, 'p', 'all', $n_total );
+		$cont = $this->formatPostCount( $skin, 'p', 'published', $n_published );
 		$cont .= Xml::openElement( 'ul' );
-		$cont .= $this->formatPostCount( $skin, 'li', 'published', $n_published );
 		$cont .= $this->formatPostCount( $skin, 'li', 'drafts', $n_drafts );
+		$cont .= $this->formatPostCount( $skin, 'li', 'all', $n_total );
 		$cont .= Xml::closeElement( 'ul' );
 
 		return Xml::fieldset( wfMsg( 'wikilog-information' ), $cont ) . "\n";
