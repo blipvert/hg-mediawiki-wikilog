@@ -39,7 +39,7 @@ class WikilogCommentsPage extends Article {
 		parent::__construct( $title );
 
 		$this->mWikilogName = $wi->getName();
-		$this->mWikilogTitle =& $wi->getTitle();
+		$this->mWikilogTitle = $wi->getTitle();
 
 		if ( $wi->isItem() ) {
 			$this->mItemName = $wi->getItemName();

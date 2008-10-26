@@ -49,7 +49,7 @@ class WikilogItemPage extends Article {
 		wfLoadExtensionMessages( 'Wikilog' );
 
 		$this->mWikilogName = $wi->getName();
-		$this->mWikilogTitle =& $wi->getTitle();
+		$this->mWikilogTitle = $wi->getTitle();
 		$this->mItemName = $wi->getItemName();
 		$this->mCmtsTitle =& Title::makeTitle( $title->getNamespace()^1, $title->getDBkey() );
 
