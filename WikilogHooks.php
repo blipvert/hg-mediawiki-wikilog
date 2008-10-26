@@ -213,11 +213,12 @@ class WikilogHooks {
 	 * Adds language aliases for magic words.
 	 */
 	static function LanguageGetMagic( &$magicWords, $lang ) {
-		/// TODO: Language magic.
-		$magicWords['wl-settings'] = array( 0, 'wl-settings' );
-		$magicWords['wl-publish' ] = array( 0, 'wl-publish'  );
-		$magicWords['wl-author'  ] = array( 0, 'wl-author'   );
-		$magicWords['wl-tags'    ] = array( 0, 'wl-tags'     );
+		require( 'Wikilog.i18n.magic.php' );
+		if ( $lang == 'en' || !isset( $words[$lang] ) ) {
+			$magicWords += $words['en'];
+		} else {
+			$magicWords += array_merge( $words['en'], $words[$lang] );
+		}
 		return true;
 	}
 

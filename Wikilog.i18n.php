@@ -76,6 +76,7 @@ $messages['en'] = array(
 
 	# Warning and error messages
 	'wikilog-error-msg'			=> "Wikilog: \$1",
+	'wikilog-invalid-param'		=> "Invalid parameter: \$1.",
 	'wikilog-invalid-author'	=> "Invalid author: \$1.",
 	'wikilog-invalid-date'		=> "Invalid date: \$1.",
 	'wikilog-invalid-tag'		=> "Invalid tag: \$1.",
@@ -185,6 +186,7 @@ $messages['pt'] = array(
 
 	# Warning and error messages
 	'wikilog-error-msg'			=> "Wikilog: \$1",
+	'wikilog-invalid-param'		=> "Parâmetro inválido: \$1.",
 	'wikilog-invalid-author'	=> "Autor inválido: \$1.",
 	'wikilog-invalid-date'		=> "Data inválida: \$1.",
 	'wikilog-invalid-tag'		=> "Rótulo inválido: \$1.",

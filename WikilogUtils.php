@@ -209,4 +209,16 @@ class WikilogUtils {
 		}
 	}
 
+	/**
+	 * Given a MagicWord, returns any array element which key matches the
+	 * magic word. Always case-sensitive.
+	 */
+	public static function arrayMagicKeyGet( &$array, MagicWord $mw ) {
+		foreach ( $mw->getSynonyms() as $key ) {
+			if ( array_key_exists( $key, $array ) )
+				return $array[$key];
+		}
+		return NULL;
+	}
+
 }

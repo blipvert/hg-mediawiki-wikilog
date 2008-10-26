@@ -57,7 +57,11 @@ class WikilogParser {
 	 * ParserFirstCallInit hook handler function.
 	 */
 	public static function FirstCallInit( &$parser ) {
-		$parser->setHook( 'summary', array( 'WikilogParser', 'summary' ) );
+		$mwSummary =& MagicWord::get( 'wlk-summary' );
+		foreach ( $mwSummary->getSynonyms() as $tagname ) {
+			$parser->setHook( $tagname, array( 'WikilogParser', 'summary' ) );
+		}
+
 		$parser->setFunctionHook( 'wl-settings', array( 'WikilogParser', 'settings' ), SFH_NO_HASH );
 		$parser->setFunctionHook( 'wl-publish',  array( 'WikilogParser', 'publish'  ), SFH_NO_HASH );
 		$parser->setFunctionHook( 'wl-author',   array( 'WikilogParser', 'author'   ), SFH_NO_HASH );
@@ -144,6 +148,8 @@ class WikilogParser {
 	 * Summary tag parser hook handler.
 	 */
 	public static function summary( $text, $params, &$parser ) {
+		$mwHidden =& MagicWord::get( 'wlk-hidden' );
+
 		# Remove extra space to make block rendering easier.
 		$text = trim( $text );
 
@@ -153,7 +159,9 @@ class WikilogParser {
 			$output = $parser->parse( $text, $parser->getTitle(), $popt, true, false );
 			$parser->mExtWikilog->mSummary = $output->getText();
 		}
-		return isset( $params['hidden'] ) ? '' : $parser->recursiveTagParse( $text );
+
+		$hidden = WikilogUtils::arrayMagicKeyGet( $params, $mwHidden );
+		return $hidden ? '<!-- -->' : $parser->recursiveTagParse( $text );
 	}
 
 	/**
@@ -164,30 +172,35 @@ class WikilogParser {
 		wfLoadExtensionMessages( 'Wikilog' );
 		self::checkNamespace( $parser );
 
-		$args = array();
-		foreach ( array_slice( func_get_args(), 1 ) as $arg ) {
-			if ( preg_match( '/^([^=]+?)\s*=\s*(.*)/', $arg, $m ) ) {
-				$args[$m[1]] = $m[2];
-			}
-		}
+		$mwIcon     =& MagicWord::get( 'wlk-icon' );
+		$mwLogo     =& MagicWord::get( 'wlk-logo' );
+		$mwSubtitle =& MagicWord::get( 'wlk-subtitle' );
 
-		$icon = $logo = NULL;
-		if ( isset( $args['icon'] ) ) {
-			if ( ( $icon = self::parseImageLink( $parser, $args['icon'] ) ) ) {
-				$parser->mExtWikilog->mIcon = $icon->getTitle();
+		$args = array_slice( func_get_args(), 1 );
+		foreach ( $args as $arg ) {
+			$parts = array_map( 'trim', explode( '=', $arg, 2 ) );
+
+			if ( empty( $parts[0] ) ) continue;
+			if ( count( $parts ) < 2 ) $parts[1] = '';
+			list( $key, $value ) = $parts;
+
+			if ( $mwIcon->matchStart( $key ) ) {
+				if ( ( $icon = self::parseImageLink( $parser, $value ) ) ) {
+					$parser->mExtWikilog->mIcon = $icon->getTitle();
+				}
+			} else if ( $mwLogo->matchStart( $key ) ) {
+				if ( ( $logo = self::parseImageLink( $parser, $value ) ) ) {
+					$parser->mExtWikilog->mLogo = $logo->getTitle();
+				}
+			} else if ( $mwSubtitle->matchStart( $key ) ) {
+				$popt = $parser->getOptions();
+				$popt->enableLimitReport( false );
+				$output = $parser->parse( $value, $parser->getTitle(), $popt, true, false );
+				$parser->mExtWikilog->mSummary = $output->getText();
+			} else {
+				$warning = wfMsg( 'wikilog-error-msg', wfMsg( 'wikilog-invalid-param', htmlspecialchars( $key ) ) );
+				$parser->mOutput->addWarning( $warning );
 			}
-		}
-		if ( isset( $args['logo'] ) ) {
-			if ( ( $logo = self::parseImageLink( $parser, $args['logo'] ) ) ) {
-				$parser->mExtWikilog->mLogo = $logo->getTitle();
-			}
-		}
-		if ( isset( $args['subtitle'] ) ) {
-			$popt = $parser->getOptions();
-			$popt->enableLimitReport( false );
-			$output = $parser->parse( $args['subtitle'], $parser->getTitle(),
-				$popt, true, false );
-			$parser->mExtWikilog->mSummary = $output->getText();
 		}
 
 		return '<!-- -->';
