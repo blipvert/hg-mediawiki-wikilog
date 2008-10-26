@@ -189,9 +189,9 @@ class WikilogMainPage extends Article {
 	protected function formatWikilogInformation( Linker $skin ) {
 		$dbr = wfGetDB( DB_SLAVE );
 
-		$n_total = $dbr->selectField(
+		$row = $dbr->selectRow(
 			array( 'wikilog_posts', 'page' ),
-			'COUNT(*)',
+			'COUNT(*) as total, SUM(wlp_publish) as published',
 			array(
 				'wlp_page = page_id',
 				'wlp_parent' => $this->mTitle->getArticleId(),
@@ -199,17 +199,8 @@ class WikilogMainPage extends Article {
 			),
 			__METHOD__
 		);
-		$n_published = $dbr->selectField(
-			array( 'wikilog_posts', 'page' ),
-			'COUNT(*)',
-			array(
-				'wlp_page = page_id',
-				'wlp_parent' => $this->mTitle->getArticleId(),
-				'wlp_publish' => 1,
-				'page_is_redirect' => 0
-			),
-			__METHOD__
-		);
+		$n_total = $row->total;
+		$n_published = $row->published;
 		$n_drafts = $n_total - $n_published;
 
 		$cont = $this->formatPostCount( $skin, 'p', 'published', $n_published );
