@@ -210,7 +210,7 @@ class WikilogParser {
 				$parser->mExtWikilog->mPubDate = wfTimestamp( TS_MW, $ts );
 			}
 			else {
-				$warning = wfMsg( 'wikilog-invalid-date', $pubdate );
+				$warning = wfMsg( 'wikilog-error-msg', wfMsg( 'wikilog-invalid-date', $pubdate ) );
 				$parser->mOutput->addWarning( $warning );
 			}
 		}
@@ -356,7 +356,7 @@ class WikilogParser {
 		global $wgWikilogMaxAuthors;
 
 		if ( count( $parser->mExtWikilog->mAuthors ) >= $wgWikilogMaxAuthors ) {
-			$warning = wfMsg( 'wikilog-too-many-authors' );
+			$warning = wfMsg( 'wikilog-error-msg', wfMsg( 'wikilog-too-many-authors' ) );
 			$parser->mOutput->addWarning( $warning );
 			return false;
 		}
@@ -366,7 +366,7 @@ class WikilogParser {
 			$parser->mExtWikilog->mAuthors[$user->getName()] = $user->getID();
 		}
 		else {
-			$warning = wfMsg( 'wikilog-invalid-author', $name );
+			$warning = wfMsg( 'wikilog-error-msg', wfMsg( 'wikilog-invalid-author', $name ) );
 			$parser->mOutput->addWarning( $warning );
 		}
 		return true;
@@ -383,7 +383,7 @@ class WikilogParser {
 		if ( !$tcre ) { $tcre = '/[^' . Title::legalChars() . ']/'; }
 
 		if ( count( $parser->mExtWikilog->mTags ) >= $wgWikilogMaxTags ) {
-			$warning = wfMsg( 'wikilog-too-many-tags' );
+			$warning = wfMsg( 'wikilog-error-msg', wfMsg( 'wikilog-too-many-tags' ) );
 			$parser->mOutput->addWarning( $warning );
 			return false;
 		}
@@ -392,7 +392,7 @@ class WikilogParser {
 			$parser->mExtWikilog->mTags[$tag] = 1;
 		}
 		else {
-			$warning = wfMsg( 'wikilog-invalid-tag', $tag );
+			$warning = wfMsg( 'wikilog-error-msg', wfMsg( 'wikilog-invalid-tag', $tag ) );
 			$parser->mOutput->addWarning( $warning );
 		}
 		return true;
@@ -409,7 +409,7 @@ class WikilogParser {
 		if ( !$tested ) {
 			$title = $parser->getTitle();
 			if ( !in_array( $title->getNamespace(), $wgWikilogNamespaces ) ) {
-				$warning = wfMsg( 'wikilog-out-of-context' );
+				$warning = wfMsg( 'wikilog-error-msg', wfMsg( 'wikilog-out-of-context' ) );
 				$parser->mOutput->addWarning( $warning );
 			}
 			$tested = true;
@@ -427,21 +427,21 @@ class WikilogParser {
 	private static function parseImageLink( &$parser, $text ) {
 		$obj = self::parseMediaLink( $parser, $text );
 		if ( !$obj ) {
-			$warning = wfMsg( 'wikilog-invalid-file', htmlspecialchars( $text ) );
+			$warning = wfMsg( 'wikilog-error-msg', wfMsg( 'wikilog-invalid-file', htmlspecialchars( $text ) ) );
 			$parser->mOutput->addWarning( $warning );
 			return NULL;
 		}
 
 		list( $t1, $t2, $file ) = $obj;
 		if ( !$file ) {
-			$warning = wfMsg( 'wikilog-file-not-found', htmlspecialchars( $t1 ) );
+			$warning = wfMsg( 'wikilog-error-msg', wfMsg( 'wikilog-file-not-found', htmlspecialchars( $t1 ) ) );
 			$parser->mOutput->addWarning( $warning );
 			return NULL;
 		}
 
 		$type = $file->getMediaType();
 		if ( $type != MEDIATYPE_BITMAP && $type != MEDIATYPE_DRAWING ) {
-			$warning = wfMsg( 'wikilog-not-an-image', $file->getName() );
+			$warning = wfMsg( 'wikilog-error-msg', wfMsg( 'wikilog-not-an-image', $file->getName() ) );
 			$parser->mOutput->addWarning( $warning );
 			return NULL;
 		}

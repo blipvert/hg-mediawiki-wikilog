@@ -42,6 +42,7 @@ $messages['en'] = array(
 	'wikilog-actions'			=> 'Actions',
 	'wikilog-view-archives'		=> 'Archives',
 	'wikilog-view-summary'		=> 'Summary',
+	'wikilog-draft-title-mark'	=> "(draft)",
 
 	# Pager strings
 	'wikilog-pager-newer-n'		=> '← newer $1',
@@ -74,14 +75,13 @@ $messages['en'] = array(
 	'wikilog-feed-description'	=> "Read the most recent posts in this feed.",
 
 	# Warning and error messages
-	'wikilog-invalid-author'	=> "Wikilog: Invalid author: \$1.",
-	'wikilog-invalid-date'		=> "Wikilog: Invalid date: \$1.",
-	'wikilog-invalid-tag'		=> "Wikilog: Invalid tag: \$1.",
-	'wikilog-invalid-param'		=> "Wikilog: Invalid parameter: \$1.",
-	'wikilog-invalid-file'		=> "Wikilog: Invalid file: \$1.",
-	'wikilog-file-not-found'	=> "Wikilog: Non-existing file: \$1.",
-	'wikilog-not-an-image'		=> "Wikilog: File is not an image: \$1.",
-	'wikilog-draft-title-mark'	=> "(draft)",
+	'wikilog-error-msg'			=> "Wikilog: \$1",
+	'wikilog-invalid-author'	=> "Invalid author: \$1.",
+	'wikilog-invalid-date'		=> "Invalid date: \$1.",
+	'wikilog-invalid-tag'		=> "Invalid tag: \$1.",
+	'wikilog-invalid-file'		=> "Invalid file: \$1.",
+	'wikilog-file-not-found'	=> "Non-existing file: \$1.",
+	'wikilog-not-an-image'		=> "File is not an image: \$1.",
 	'wikilog-out-of-context'	=>
 			"Warning: Wikilog tags are being used out of context. " .
 			"They should only be used in articles in the Wikilog namespace.",
@@ -89,14 +89,11 @@ $messages['en'] = array(
 			"Warning: Too many authors listed in this wikilog post.",
 	'wikilog-too-many-tags'	=>
 			"Warning: Too many tags listed in this wikilog post.",
+
 	'wikilog-reading-draft'		=>
 			"<div class=\"mw-warning\">\n".
-			"<p><strong>This article is a draft.</strong></p>\n".
-			"<p>This wikilog post is a draft, and is not published yet.</p>\n".
-			"<p>In order to publish a wikilog post, you must sign it using ".
-			"<code><nowiki>--~~~~</nowiki></code> or the ".
-			"<code><nowiki>{{wl-publish:...}}</nowiki></code> tag.</p>\n".
-			"</div>\n",
+			"<p>This wikilog article is a draft, it was not published yet.</p>\n".
+			"</div>",
 
 	# Forms
 	'wikilog-form-legend'		=> 'Search for wikilog posts',
@@ -154,6 +151,7 @@ $messages['pt'] = array(
 	'wikilog-actions'			=> 'Ações',
 	'wikilog-view-archives'		=> 'Arquivos',
 	'wikilog-view-summary'		=> 'Resumo',
+	'wikilog-draft-title-mark'	=> "(rascunho)",
 
 	# Pager strings
 	'wikilog-pager-newer-n'		=> '← $1 próximos',
@@ -186,14 +184,13 @@ $messages['pt'] = array(
 	'wikilog-feed-description'	=> "Leia as postagens mais recentes neste feed.",
 
 	# Warning and error messages
-	'wikilog-invalid-author'	=> "Wikilog: Autor inválido: \$1.",
-	'wikilog-invalid-date'		=> "Wikilog: Data inválida: \$1.",
-	'wikilog-invalid-tag'		=> "Wikilog: Rótulo inválido: \$1.",
-	'wikilog-invalid-param'		=> "Wikilog: Parâmetro inválido: \$1.",
-	'wikilog-invalid-file'		=> "Wikilog: Arquivo inválido: \$1.",
-	'wikilog-file-not-found'	=> "Wikilog: Arquivo não-existente: \$1.",
-	'wikilog-not-an-image'		=> "Wikilog: Arquivo não é uma imagem: \$1.",
-	'wikilog-draft-title-mark'	=> "(rascunho)",
+	'wikilog-error-msg'			=> "Wikilog: \$1",
+	'wikilog-invalid-author'	=> "Autor inválido: \$1.",
+	'wikilog-invalid-date'		=> "Data inválida: \$1.",
+	'wikilog-invalid-tag'		=> "Rótulo inválido: \$1.",
+	'wikilog-invalid-file'		=> "Arquivo inválido: \$1.",
+	'wikilog-file-not-found'	=> "Arquivo não-existente: \$1.",
+	'wikilog-not-an-image'		=> "Arquivo não é uma imagem: \$1.",
 	'wikilog-out-of-context'	=>
 			"Aviso: Rótulos wikilog estão sendo utilizados fora de contexto. " .
 			"Eles devem ser usados apenas em artigos no espaço de nomes do Wikilog.",
@@ -201,14 +198,11 @@ $messages['pt'] = array(
 			"Aviso: Autores demais listados nesta postagem wikilog.",
 	'wikilog-too-many-tags'	=>
 			"Aviso: Rótulos demais listados nesta postagem wikilog.",
+
 	'wikilog-reading-draft'		=>
 			"<div class=\"mw-warning\">\n".
-			"<p><strong>Este artigo é um rascunho.</strong></p>\n".
-			"<p>Esta postagem wikilog é um rascunho, e ainda não foi publicada.</p>".
-			"<p>Para publicar uma postagem wikilog, você deve assiná-la usando ".
-			"<code><nowiki>--~~~~</nowiki></code> ou a marcação ".
-			"<code><nowiki>{{wl-publish:...}}</nowiki></code></p>.\n".
-			"</div>\n",
+			"<p>Este artigo wikilog é um rascunho, ainda não foi publicado.</p>\n".
+			"</div>",
 
 	# Forms
 	'wikilog-form-legend'		=> 'Procurar por postagens wikilog',
