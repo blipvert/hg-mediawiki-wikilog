@@ -134,6 +134,11 @@ class WikilogMainPage extends Article {
 	public function wikilog() {
 		global $wgUser, $wgOut, $wgRequest;
 
+		if ( !$this->mTitle->exists() ) {
+			$wgOut->showErrorPage( 'nopagetitle', 'nopagetext' );
+			return;
+		}
+
 		if ( $wgRequest->getBool( 'wlActionNewItem' ) )
 			return $this->actionNewItem();
 
@@ -184,13 +189,27 @@ class WikilogMainPage extends Article {
 	protected function formatWikilogInformation( Linker $skin ) {
 		$dbr = wfGetDB( DB_SLAVE );
 
-		$n_total = $dbr->selectField( 'wikilog_posts', 'COUNT(*)', array(
-			'wlp_parent' => $this->mTitle->getArticleId()
-		), __METHOD__ );
-		$n_published = $dbr->selectField( 'wikilog_posts', 'COUNT(*)', array(
-			'wlp_parent' => $this->mTitle->getArticleId(),
-			'wlp_publish' => 1
-		), __METHOD__ );
+		$n_total = $dbr->selectField(
+			array( 'wikilog_posts', 'page' ),
+			'COUNT(*)',
+			array(
+				'wlp_page = page_id',
+				'wlp_parent' => $this->mTitle->getArticleId(),
+				'page_is_redirect' => 0
+			),
+			__METHOD__
+		);
+		$n_published = $dbr->selectField(
+			array( 'wikilog_posts', 'page' ),
+			'COUNT(*)',
+			array(
+				'wlp_page = page_id',
+				'wlp_parent' => $this->mTitle->getArticleId(),
+				'wlp_publish' => 1,
+				'page_is_redirect' => 0
+			),
+			__METHOD__
+		);
 		$n_drafts = $n_total - $n_published;
 
 		$cont = $this->formatPostCount( $skin, 'p', 'published', $n_published );
