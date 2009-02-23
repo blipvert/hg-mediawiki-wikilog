@@ -35,10 +35,10 @@ if ( !defined( 'MEDIAWIKI' ) )
 class WikilogHooks {
 
 	/**
-	 * ArticleEditUpdatesDeleteFromRecentchanges hook handler function.
+	 * ArticleEditUpdates hook handler function.
 	 * Performs post-edit updates if article is a wikilog article.
 	 */
-	static function ArticleEditUpdates( &$article ) {
+	static function ArticleEditUpdates( &$article, &$editInfo, $changed ) {
 		$title = $article->getTitle();
 		$wi = Wikilog::getWikilogInfo( $title );
 
@@ -54,9 +54,8 @@ class WikilogHooks {
 			}
 		} else if ( $wi->isItem() ) {
 			# ::WikilogItemPage::
-			$dbw = wfGetDB( DB_MASTER );
-			$id = $article->getId();
-			$editInfo = $article->mPreparedEdit;
+			$item = new WikilogItem( $wi );
+			$item->resetID( $article->getId() );
 
 			# Check if we have any wikilog metadata available.
 			if ( isset( $editInfo->output->mExtWikilog ) ) {
@@ -65,27 +64,14 @@ class WikilogHooks {
 				# Update entry in wikilog_posts table.
 				# Entries in wikilog_authors and wikilog_tags are updated
 				# during LinksUpdate process.
-				$updated = $dbw->timestamp();
-				$pubdate = $output->mPublish ? $output->mPubDate : $updated;
-				$dbw->replace(
-					'wikilog_posts',
-					'wlp_page',
-					array(
-						'wlp_page' => $id,
-						'wlp_parent' => $wi->getTitle()->getArticleId(),
-						'wlp_title' => $wi->getItemName(),
-						'wlp_publish' => $output->mPublish,
-						'wlp_pubdate' => $pubdate,
-						'wlp_authors' => serialize( $output->mAuthors ),
-						'wlp_tags' => serialize( $output->mTags ),
-						'wlp_updated' => $updated
-					),
-					__METHOD__
-				);
+				$item->mPublish = $output->mPublish;
+				$item->mUpdated = wfTimestamp( TS_MW );
+				$item->mPubDate = $output->mPublish ? $output->mPubDate : $updated;
+				$item->saveData();
 			} else {
 				# Remove entry from tables. Entries in wikilog_authors and
 				# wikilog_tags are removed during LinksUpdate process.
-				$dbw->delete( 'wikilog_posts', array( 'wlp_page' => $id ), __METHOD__ );
+				$item->deleteData();
 			}
 
 			# Invalidate cache of parent wikilog page.
@@ -94,7 +80,6 @@ class WikilogHooks {
 			# ::WikilogMainPage::
 			$dbw = wfGetDB( DB_MASTER );
 			$id = $article->getId();
-			$editInfo = $article->mPreparedEdit;
 
 			# Check if we have any wikilog metadata available.
 			if ( isset( $editInfo->output->mExtWikilog ) ) {
@@ -132,7 +117,6 @@ class WikilogHooks {
 	/**
 	 * ArticleDeleteComplete hook handler function.
 	 * Purges wikilog metadata when an article is deleted.
-	 * @note This function REQUIRES MediaWiki 1.13 or higher ($id parameter).
 	 */
 	static function ArticleDeleteComplete( &$article, &$user, $reason, $id ) {
 		# Retrieve wikilog information.
@@ -232,14 +216,14 @@ class WikilogHooks {
 		global $wgDBtype, $wgExtNewFields, $wgExtPGNewFields, $wgExtNewIndexes, $wgExtNewTables;
 
 		$dir = dirname(__FILE__) . '/';
+
 		if( $wgDBtype == 'mysql' ) {
-			$wgExtNewTables[] = array( 'wikilog_wikilogs', $dir . 'wikilog-tables.sql' );
-			$wgExtNewTables[] = array( 'wikilog_posts',    $dir . 'wikilog-tables.sql' );
-			$wgExtNewTables[] = array( 'wikilog_authors',  $dir . 'wikilog-tables.sql' );
-			$wgExtNewTables[] = array( 'wikilog_tags',     $dir . 'wikilog-tables.sql' );
+			foreach ( array( 'wikilogs', 'posts', 'authors', 'tags', 'comments' ) as $t )
+				$wgExtNewTables[] = array( "wikilog_{$t}", "{$dir}wikilog-tables.sql" );
 			$wgExtNewFields[] = array( 'wikilog_posts', 'wlp_parent', $dir . 'archives/patch-post-titles.sql' );
 			$wgExtNewFields[] = array( 'wikilog_posts', 'wlp_title',  $dir . 'archives/patch-post-titles.sql' );
 			$wgExtNewFields[] = array( 'wikilog_wikilogs', 'wlw_authors', $dir . 'archives/patch-wikilog-authors.sql' );
+			$wgExtNewFields[] = array( 'wikilog_posts', 'wlp_num_comments', $dir . 'archives/patch-comment-count.sql' );
 		} else {
 			/// TODO: PostgreSQL, SQLite, etc...
 			print "\n".
@@ -251,10 +235,10 @@ class WikilogHooks {
 
 	/**
 	 * UnknownAction hook handler function.
-	 * Handles action=wikilog requests.
+	 * Handles ?action=wikilog requests.
 	 */
 	static function UnknownAction( $action, &$article ) {
-		if ( $action == 'wikilog' && $article instanceof WikilogMainPage ) {
+		if ( $action == 'wikilog' && $article instanceof WikilogCustomAction ) {
 			$article->wikilog();
 			return false;
 		}

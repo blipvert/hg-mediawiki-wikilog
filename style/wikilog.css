@@ -43,8 +43,39 @@ div.wl-draft {
 	padding: 0.25em 0.75em;
 }
 
+div.wl-thread {
+}
+
+div.wl-thread div.wl-thread {
+	padding-left: 2.0em;
+}
+
+div.wl-comment {
+	margin: 0.25em 0;
+	padding: 0.5em 0;
+}
+
+div.wl-comment-meta {
+	background-color: #EEEEEE;
+	border-top: 1px solid #CCCCCC;
+	border-bottom: 1px solid #CCCCCC;
+	color: black;
+	margin: 0 0;
+	padding: 0.25em 0.75em;
+}
+
+div.wl-comment-text {
+	padding: 0.25em 0.75em;
+}
+
+.TablePager_col_wlp_num_comments {
+	text-align: right;
+}
+
 #feedlinks a,
 a.feed {
 	background: transparent url(images/feed-icon-12x12.png) center left no-repeat;
 	padding: 0 0 0 15px;
 }
+
+/* kate: indent-mode normal; space-indent off; tab-width 4; */

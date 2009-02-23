@@ -29,7 +29,7 @@ if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
 
-class WikilogMainPage extends Article {
+class WikilogMainPage extends Article implements WikilogCustomAction {
 
 	/**
 	 * Alternate views.

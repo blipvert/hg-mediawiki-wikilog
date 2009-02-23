@@ -386,6 +386,10 @@ class WikilogArchivesPager extends TablePager {
 				}
 				return $s;
 
+			case 'wlp_num_comments':
+				$talkTitle = $this->mCurrItemTitle->getTalkPage();
+				return $this->getSkin()->makeKnownLinkObj( $talkTitle, $value ? $value : '?' );
+
 			case '_wl_actions':
 				if ( $this->mCurrItemTitle->userCanEdit() ) {
 					return $this->editLink( $this->mCurrItemTitle );
@@ -403,17 +407,23 @@ class WikilogArchivesPager extends TablePager {
 	}
 
 	function getFieldNames() {
+		global $wgWikilogEnableComments;
+
 		$fields = array();
 
-		$fields['wlp_pubdate']	= wfMsgHtml( 'wikilog-published' );
-// 		$fields['wlp_updated']	= wfMsgHtml( 'wikilog-updated' );
-		$fields['wlp_authors']	= wfMsgHtml( 'wikilog-authors' );
+		$fields['wlp_pubdate']			= wfMsgHtml( 'wikilog-published' );
+// 		$fields['wlp_updated']			= wfMsgHtml( 'wikilog-updated' );
+		$fields['wlp_authors']			= wfMsgHtml( 'wikilog-authors' );
 
 		if ( !$this->mQuery->isSingleWikilog() )
-			$fields['wlw_title'] = wfMsgHtml( 'wikilog-wikilog' );
+			$fields['wlw_title']		= wfMsgHtml( 'wikilog-wikilog' );
 
-		$fields['wlp_title']	= wfMsgHtml( 'wikilog-title' );
-		$fields['_wl_actions']	= wfMsgHtml( 'wikilog-actions' );
+		$fields['wlp_title']			= wfMsgHtml( 'wikilog-title' );
+
+		if ( $wgWikilogEnableComments )
+			$fields['wlp_num_comments']	= wfMsgHtml( 'wikilog-comments' );
+
+		$fields['_wl_actions']			= wfMsgHtml( 'wikilog-actions' );
 		return $fields;
 	}
 

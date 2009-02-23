@@ -66,6 +66,10 @@ $wgAutoloadClasses += array(
 	'WikilogUtils'			=> $dir . 'WikilogUtils.php',
 	'SpecialWikilog'		=> $dir . 'SpecialWikilog.php',
 
+	// Objects
+	'WikilogItem'			=> $dir . 'WikilogItem.php',
+	'WikilogComment'		=> $dir . 'WikilogComment.php',
+
 	// WikilogParser.php
 	'WikilogParser'			=> $dir . 'WikilogParser.php',
 	'WikilogParserOutput'	=> $dir . 'WikilogParser.php',
@@ -95,12 +99,13 @@ $wgExtensionFunctions[] = array( 'Wikilog', 'ExtensionInit' );
 
 // Main Wikilog hooks
 $wgHooks['ArticleFromTitle'][]			= 'Wikilog::ArticleFromTitle';
-$wgHooks['SkinTemplateTabs'][]			= 'Wikilog::SkinTemplateTabs';
 $wgHooks['BeforePageDisplay'][]			= 'Wikilog::BeforePageDisplay';
+$wgHooks['LinkBegin'][]					= 'Wikilog::LinkBegin';
+$wgHooks['SkinTemplateTabAction'][]		= 'Wikilog::SkinTemplateTabAction';
+$wgHooks['SkinTemplateTabs'][]			= 'Wikilog::SkinTemplateTabs';
 
 // General Wikilog hooks
-$wgHooks['ArticleEditUpdatesDeleteFromRecentchanges'][]
-										= 'WikilogHooks::ArticleEditUpdates';
+$wgHooks['ArticleEditUpdates'][]		= 'WikilogHooks::ArticleEditUpdates';
 $wgHooks['ArticleDeleteComplete'][]		= 'WikilogHooks::ArticleDeleteComplete';
 $wgHooks['TitleMoveComplete'][]			= 'WikilogHooks::TitleMoveComplete';
 $wgHooks['LanguageGetSpecialPageAliases'][]
@@ -120,6 +125,16 @@ $wgHooks['ParserAfterTidy'][]			= 'WikilogParser::AfterTidy';
 $wgHooks['GetLocalURL'][]				= 'WikilogParser::GetLocalURL';
 $wgHooks['GetFullURL'][]				= 'WikilogParser::GetFullURL';
 
+/*
+ * Added rights.
+ */
+$wgAvailableRights[] = 'wikilog-post-comment';
+$wgGroupPermissions['user']['wikilog-post-comment'] = true;
+
+/*
+ * Reserved usernames.
+ */
+$wgReservedUsernames[] = 'msg:wikilog-auto';
 
 /*
  * Default settings.
@@ -206,15 +221,74 @@ class Wikilog {
 	 * instance for the article.
 	 */
 	static function ArticleFromTitle( &$title, &$article ) {
+		global $wgWikilogEnableComments;
+
 		if ( ( $wi = self::getWikilogInfo( $title ) ) ) {
 			if ( $title->isTalkPage() ) {
-				$article = new WikilogCommentsPage( $title, $wi );
+				if ( $wgWikilogEnableComments && $wi->isItem() ) {
+					$article = new WikilogCommentsPage( $title, $wi );
+				} else {
+					return true;
+				}
 			} else if ( $wi->isItem() ) {
 				$article = new WikilogItemPage( $title, $wi );
 			} else {
 				$article = new WikilogMainPage( $title, $wi );
 			}
 			return false;	// stop processing
+		}
+		return true;
+	}
+
+	/**
+	 * BeforePageDisplay hook handler function.
+	 * Adds wikilog CSS to pages displayed.
+	 */
+	static function BeforePageDisplay( &$output, &$skin ) {
+		global $wgWikilogStylePath, $wgStyleVersion;
+		$output->addLink( array(
+			'rel' => 'stylesheet',
+			'href' => $wgWikilogStylePath . '/wikilog.css?' . $wgStyleVersion,
+			'type' => 'text/css'
+		) );
+		return true;
+	}
+
+	/**
+	 * LinkBegin hook handler function.
+	 * Links to wikilog comment pages are always "known" if the corresponding
+	 * article page exists.
+	 */
+	static function LinkBegin( $skin, $target, &$text, &$attribs, &$query,
+			&$options, &$ret )
+	{
+		if ( $target->isTalkPage() && !in_array( 'known', $options ) ) {
+			$wi = self::getWikilogInfo( $target );
+			if ( $wi && $wi->isItem() && $wi->getItemTitle()->exists() ) {
+				if ( ($i = array_search( 'broken', $options )) !== false ) {
+					array_splice( $options, $i, 1 );
+				}
+				$options[] = 'known';
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * SkinTemplateTabAction hook handler function.
+	 * Same as Wikilog::LinkBegin, but for the tab actions.
+	 */
+	static function SkinTemplateTabAction( &$skin, $title, $message, $selected,
+			$checkEdit, &$classes, &$query, &$text, &$result )
+	{
+		if ( $title->isTalkPage() && !$title->exists() ) {
+			$wi = self::getWikilogInfo( $title );
+			if ( $wi && $wi->isItem() && $wi->getItemTitle()->exists() ) {
+				$query = '';
+				if ( ($i = array_search( 'new', $classes )) !== false ) {
+					array_splice( $classes, $i, 1 );
+				}
+			}
 		}
 		return true;
 	}
@@ -240,20 +314,6 @@ class Wikilog {
 		return true;
 	}
 
-	/**
-	 * BeforePageDisplay hook handler function.
-	 * Adds wikilog CSS to pages displayed.
-	 */
-	static function BeforePageDisplay( &$output, &$skin ) {
-		global $wgWikilogStylePath, $wgStyleVersion;
-		$output->addLink( array(
-			'rel' => 'stylesheet',
-			'href' => $wgWikilogStylePath . '/wikilog.css?' . $wgStyleVersion,
-			'type' => 'text/css'
-		) );
-		return true;
-	}
-
 	###
 	##  Other global wikilog functions.
 	#
@@ -269,7 +329,7 @@ class Wikilog {
 	static function getWikilogInfo( $title ) {
 		global $wgWikilogNamespaces;
 
-		$ns = Namespace::getSubject( $title->getNamespace() );
+		$ns = MWNamespace::getSubject( $title->getNamespace() );
 		if ( in_array( $ns, $wgWikilogNamespaces ) ) {
 			return new WikilogInfo( $title );
 		} else {
@@ -293,17 +353,29 @@ class WikilogInfo {
 	public $mItemName;			///< Wikilog post title (textual string).
 	public $mItemTitle;			///< Wikilog post title object.
 
+	public $mIsTalk;			///< Constructed using a talk page title.
+	public $mTrailing = NULL;	///< Trailing subpage title.
+
 	/**
 	 * Constructor.
 	 * @param $title Title object.
 	 */
 	function __construct( $title ) {
-		$ns = Namespace::getSubject( $title->getNamespace() );
+		$origns = $title->getNamespace();
+		$this->mIsTalk = MWNamespace::isTalk( $origns );
+		$ns = MWNamespace::getSubject( $origns );
+
 		if ( strpos( $title->getText(), '/' ) !== false ) {
 			list( $this->mWikilogName, $this->mItemName ) =
 				explode( '/', $title->getText(), 2 );
+
+			if ( strpos( $this->mItemName, '/' ) !== false ) {
+				list( $this->mItemName, $this->mTrailing ) =
+					explode( '/', $this->mItemName, 2 );
+			}
+
 			$this->mWikilogTitle = Title::makeTitle( $ns, $this->mWikilogName );
-			$this->mItemTitle = Title::makeTitle( $ns, $title->getText() );
+			$this->mItemTitle = Title::makeTitle( $ns, "{$this->mWikilogName}/{$this->mItemName}" );
 		} else {
 			$this->mWikilogName = $title->getText();
 			$this->mWikilogTitle = Title::makeTitle( $ns, $this->mWikilogName );
@@ -314,10 +386,24 @@ class WikilogInfo {
 
 	function isMain() { return $this->mItemTitle === NULL; }
 	function isItem() { return $this->mItemTitle !== NULL; }
+	function isTalk() { return $this->mIsTalk; }
+	function isSubpage() { return $this->mTrailing !== NULL; }
+
 	function getName() { return $this->mWikilogName; }
 	function getTitle() { return $this->mWikilogTitle; }
 	function getItemName() { return $this->mItemName; }
 	function getItemTitle() { return $this->mItemTitle; }
 
+	function getTrailing() { return $this->mTrailing; }
+
+}
+
+
+/**
+ * Interface used by article derived classes that implement the "wikilog"
+ * action handler. That is, pages that can be called with ?action=wikilog.
+ */
+interface WikilogCustomAction {
+	public function wikilog();
 }
 

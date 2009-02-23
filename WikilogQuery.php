@@ -191,9 +191,10 @@ class WikilogItemQuery {
 			'wlp_title',
 			'wlp_publish',
 			'wlp_pubdate',
+			'wlp_updated',
 			'wlp_authors',
 			'wlp_tags',
-			'wlp_updated',
+			'wlp_num_comments',
 		);
 		$conds = array(
 			'p.page_is_redirect' => 0

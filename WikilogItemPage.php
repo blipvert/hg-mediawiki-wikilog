@@ -37,36 +37,32 @@ class WikilogItemPage extends Article {
 	protected $mNumComments;
 	protected $mNumCommentsTxt;
 	protected $mItemName;
-
-	private   $mItemDataLoaded = false;
-	public    $mItemPublish    = false;
-	public    $mItemPubDate    = false;
-	public    $mItemAuthors    = array();
-	public    $mItemTags       = array();
+	protected $mItem;
 
 	function __construct( &$title, &$wi ) {
 		parent::__construct( $title );
 		wfLoadExtensionMessages( 'Wikilog' );
 
+		$this->mItem = new WikilogItem( $wi );
+
 		$this->mWikilogName = $wi->getName();
 		$this->mWikilogTitle = $wi->getTitle();
 		$this->mItemName = $wi->getItemName();
-		$this->mCmtsTitle =& Title::makeTitle( $title->getNamespace()^1, $title->getDBkey() );
+
+		$this->mCmtsTitle =& Title::makeTitle( MWNamespace::getTalk( $title->getNamespace() ), $title->getDBkey() );
 
 		# Count comments
-		$comments = new WikilogCommentsPage( $this->mCmtsTitle, $wi );
-		$this->mNumComments = $comments->getNumComments();
-		$this->mNumCommentsTxt =
-			( $this->mNumComments == 0 ?
-				wfMsg( 'wikilog-no-comments' ) :
-				wfMsg( 'wikilog-has-comments', $this->mNumComments ) );
+		$this->mNumComments = $this->mItem->getNumComments();
+		$this->mNumCommentsTxt = wfMsgExt(
+			( $this->mNumComments ? 'wikilog-has-comments' : 'wikilog-no-comments' ),
+			array( 'parseinline', 'parsemag' ), $this->mNumComments );
 	}
 
 	function view() {
 		global $wgOut, $wgUser, $wgContLang, $wgFeed, $wgWikilogFeedClasses;
 
 		# Load data
-		$this->loadItemData();
+		$this->mItem->loadData();
 
 		# Get skin
 		$skin = $wgUser->getSkin();
@@ -87,13 +83,14 @@ class WikilogItemPage extends Article {
 		}
 
 		# Generate some fixed bits.
-		$authors = WikilogUtils::authorList( array_keys( $this->mItemAuthors ) );
-		$pubdate = $wgContLang->timeanddate( $this->mItemPubDate, true );
+		$authors = WikilogUtils::authorList( array_keys( $this->mItem->mAuthors ) );
+		$pubdate = $wgContLang->timeanddate( $this->mItem->mPubDate, true );
+
 		$commentsLink = $this->mCmtsTitle->getPrefixedURL();
 		$comments = "[[{$commentsLink}|{$this->mNumCommentsTxt}]]";
 
 		# Display draft notice.
-		if ( !$this->getIsPublished() ) {
+		if ( !$this->mItem->getIsPublished() ) {
 			$wgOut->addHtml( wfMsgWikiHtml( 'wikilog-reading-draft' ) );
 		}
 
@@ -148,16 +145,6 @@ class WikilogItemPage extends Article {
 		}
 	}
 
-	function getIsPublished() {
-		$this->loadItemData();
-		return $this->mItemPublish;
-	}
-
-	function getPublishDate() {
-		$this->loadItemData();
-		return $this->mItemPubDate;
-	}
-
 	/**
 	 * Override for preSaveTransform. Enables quick post publish by signing
 	 * the article using the standard --~~~~ marker. This causes the signature
@@ -193,55 +180,6 @@ class WikilogItemPage extends Article {
 		$text = $wgParser->mStripState->unstripBoth( $text );
 
 		return parent::preSaveTransform( $text );
-	}
-
-	private function itemData( $dbr, $conditions ) {
-		$row = $dbr->selectRow(
-			'wikilog_posts',
-			array(
-				'wlp_page',
-				'wlp_parent',
-				'wlp_publish',
-				'wlp_pubdate',
-				'wlp_updated',
-				'wlp_authors',
-				'wlp_tags'
-			),
-			$conditions,
-			__METHOD__
-		);
-		return $row ;
-	}
-
-	private function itemDataFromId( $dbr, $id ) {
-		return $this->itemData( $dbr, array( 'wlp_page' => $id ) );
-	}
-
-	private function loadItemData() {
-		if ( !$this->mItemDataLoaded ) {
-			$dbr = $this->getDB();
-			$data = $this->itemDataFromId( $dbr, $this->getId() );
-
-			if ( $data ) {
-				$this->mItemParent = $data->wlp_parent;
-				$this->mItemPublish = $data->wlp_publish;
-				$this->mItemPubDate = $data->wlp_pubdate ?
-					wfTimestamp( TS_MW, $data->wlp_pubdate ) : null;
-				$this->mItemUpdated = wfTimestamp( TS_MW, $data->wlp_updated );
-
-				$this->mItemAuthors = unserialize( $data->wlp_authors );
-				if ( !is_array( $this->mItemAuthors ) ) {
-					$this->mItemAuthors = array();
-				}
-
-				$this->mItemTags = unserialize( $data->wlp_tags );
-				if ( !is_array( $this->mItemTags ) ) {
-					$this->mItemTags = array();
-				}
-			}
-
-			$this->mItemDataLoaded = true;
-		}
 	}
 
 }
