@@ -64,8 +64,48 @@ div.wl-comment-meta {
 	padding: 0.25em 0.75em;
 }
 
+div.wl-comment-pending .wl-comment-meta {
+	background-color: #FFFFCC;
+}
+
+div.wl-comment-meta .wl-comment-status {
+	font-style: italic;
+	font-weight: bold;
+	margin: 0;
+	padding: 0 1em;
+}
+
 div.wl-comment-text {
 	padding: 0.25em 0.75em;
+}
+
+div.wl-comment-pending .wl-comment-text,
+div.wl-comment-hidden .wl-comment-text,
+div.wl-comment-deleted .wl-comment-text {
+	background-color: #FFFFFF;
+	color: #999999;
+}
+
+div.wl-comment-by-author .wl-comment-author {
+	font-weight: bold;
+}
+
+div.wl-comment-placeholder {
+	background-color: #EEEEEE;
+	border: 1px solid #CCCCCC;
+	color: #999999;
+	font-style: italic;
+	padding: 0.5em;
+	text-align: center;
+}
+
+div.wl-comment-error-box {
+	background-color: #FFEEEE;
+	border: 1px solid #FFCCCC;
+	color: #990000;
+	font-weight: bold;
+	padding: 0.5em;
+	text-align: center;
 }
 
 .TablePager_col_wlp_num_comments {

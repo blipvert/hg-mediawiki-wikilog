@@ -132,8 +132,10 @@ $wgHooks['GetFullURL'][]				= 'WikilogParser::GetFullURL';
 /*
  * Added rights.
  */
-$wgAvailableRights[] = 'wikilog-post-comment';
-$wgGroupPermissions['user']['wikilog-post-comment'] = true;
+$wgAvailableRights[] = 'wl-postcomment';
+$wgAvailableRights[] = 'wl-moderation';
+$wgGroupPermissions['user']['wl-postcomment'] = true;
+$wgGroupPermissions['sysop']['wl-moderation'] = true;
 
 /*
  * Reserved usernames.

@@ -50,6 +50,7 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 	protected $mItem;
 	protected $mFormOptions;
 	protected $mUserCanPost;
+	protected $mUserCanModerate;
 	protected $mPostedComment;
 	protected $mCaptchaForm;
 
@@ -75,7 +76,8 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 		$this->mItem->loadData();
 
 		# Check if user can post.
-		$this->mUserCanPost = $wgUser->isAllowed( 'wikilog-post-comment' );
+		$this->mUserCanPost = $wgUser->isAllowed( 'wl-postcomment' );
+		$this->mUserCanModerate = $wgUser->isAllowed( 'wl-moderation' );
 
 		# Form options.
 		$this->mFormOptions = new FormOptions();
@@ -197,38 +199,55 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 	 * Formats a single post in HTML.
 	 */
 	protected function formatComment( $comment ) {
-		global $wgOut, $wgLang;
+		global $wgUser, $wgContLang, $wgOut;
 
-		$id = ( $comment->mID ? "c{$comment->mID}" : 'cpreview' );
-		$link = $this->getCommentPermalink( $comment );
-		$tools = $this->getCommentToolLinks( $comment );
+		$divclass = array( 'wl-comment' );
+		$hidden = WikilogComment::$statusMap[ $comment->mStatus ];
+		$status = $hidden ? wfMsg( "wikilog-comment-{$hidden}" ) : '';
+
+		if ( $hidden ) {
+			$divclass[] = "wl-comment-{$hidden}";
+		}
 
 		if ( $comment->mUserID ) {
-			$by = wfMsgHtml( 'wikilog-comment-by',
+			$by = wfMsgExt( 'wikilog-comment-by-user',
+				array( 'parseinline', 'content', 'replaceafter' ),
 				$this->mSkin->userLink( $comment->mUserID, $comment->mUserText ),
 				$this->mSkin->userTalkLink( $comment->mUserID, $comment->mUserText )
 			);
+			$divclass[] = 'wl-comment-by-user';
+			if ( isset( $comment->mItem->mAuthors[$comment->mUserText] ) ) {
+				$divclass[] = 'wl-comment-by-author';
+			}
 		} else {
-			$by = wfMsgHtml( 'wikilog-comment-by-anon',
+			$by = wfMsgExt( 'wikilog-comment-by-anon',
+				array( 'parseinline', 'content', 'replaceafter' ),
 				$this->mSkin->userLink( $comment->mUserID, $comment->mUserText ),
 				$this->mSkin->userTalkLink( $comment->mUserID, $comment->mUserText ),
 				htmlspecialchars( $comment->mAnonName )
 			);
+			$divclass[] = 'wl-comment-by-anon';
 		}
 
-		$html = Xml::tags( 'div', array( 'class' => 'wl-comment-meta' ),
-			"{$link} {$by} &nbsp; " .
-			$wgLang->timeanddate( $comment->mTimestamp ) .
-			" &nbsp; <small>{$tools}</small>"
-		);
+		if ( $hidden && !$this->mUserCanModerate ) {
+			$html = Xml::tags( 'div', array( 'class' => 'wl-comment-placeholder' ),
+				$status );
+		} else {
+			$link = $this->getCommentPermalink( $comment );
+			$tools = $this->getCommentToolLinks( $comment );
+			$ts = $wgContLang->timeanddate( $comment->mTimestamp, true );
+			$meta = "{$link} {$by} &#8226; {$ts} &#8226; <small>{$tools}</small>" .
+				( $hidden ? "<div class=\"wl-comment-status\">{$status}</div>" : '' );
+			$text = $wgOut->parse( $comment->getText() );  // TODO: Optimize this.
 
-		$html .= Xml::tags( 'div', array( 'class' => 'wl-comment-text' ),
-			$wgOut->parse( $comment->getText() )
-		);
+			$html =
+				Xml::tags( 'div', array( 'class' => 'wl-comment-meta' ), $meta ).
+				Xml::tags( 'div', array( 'class' => 'wl-comment-text' ), $text );
+		}
 
 		return Xml::tags( 'div', array(
-			'class' => 'wl-comment',
-			'id' => $id
+			'class' => implode( ' ', $divclass ),
+			'id' => ( $comment->mID ? "c{$comment->mID}" : 'cpreview' )
 		), $html );
 	}
 
@@ -244,13 +263,19 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 	}
 
 	protected function getCommentToolLinks( $comment ) {
+		$tools = array();
+
 		if ( $comment->mID ) {
-			$tools = array(
-				$this->getCommentReplyLink( $comment ),
-// 				$this->mSkin->link( $comment->mCommentTitle, 'page' ),
-			);
-			return wfMsg( 'wikilog-brackets',
-				implode( wfMsg( 'comma-separator' ), $tools ) );
+			if ( $this->mUserCanPost ) {
+				$tools[] = $this->getCommentReplyLink( $comment );
+			}
+			if ( $this->mUserCanModerate ) {
+// 				$tools[] = $this->mSkin->link( $comment->mCommentTitle, 'page' );
+			}
+		}
+
+		if ( !empty( $tools ) ) {
+			return wfMsg( 'wikilog-brackets', implode( wfMsg( 'comma-separator' ), $tools ) );
 		} else {
 			return '';
 		}
@@ -390,7 +415,7 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 		global $wgRequest, $wgUser;
 		return $wgRequest->wasPosted()
 			&& $wgUser->matchEditToken( $wgRequest->getVal( 'wpEditToken' )
-			&& $wgUser->isAllowed( 'wikilog-post-comment' ) );
+			&& $wgUser->isAllowed( 'wl-postcomment' ) );
 	}
 
 	/**

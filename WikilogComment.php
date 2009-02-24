@@ -36,6 +36,14 @@ class WikilogComment {
 	const S_DELETED_USER	= 'DELETED_USER';
 	const S_DELETED_SYSOP	= 'DELETED_SYSOP';
 
+	public static $statusMap = array(
+		self::S_OK				=> false,
+		self::S_PENDING			=> 'pending',
+		self::S_HIDDEN_SYSOP	=> 'hidden',
+		self::S_DELETED_USER	=> 'deleted',
+		self::S_DELETED_SYSOP	=> 'deleted'
+	);
+
 	public  $mItem			= NULL;
 	private $mTextChanged	= false;
 
@@ -123,7 +131,7 @@ class WikilogComment {
 		if ( $this->mTextChanged ) {
 			$this->mCommentTitle = $this->getCommentArticleTitle();
 			$art = new Article( $this->mCommentTitle );
-			$art->doEdit( $this->mText, '', EDIT_AUTOSUMMARY );
+			$art->doEdit( $this->mText, $this->getAutoSummary() );
 			$this->mTextChanged = false;
 
 			$this->mCommentPage = $art->getID();
@@ -154,6 +162,15 @@ class WikilogComment {
 				$it->getText() . '/c' . self::padID( $this->mID )
 			);
 		}
+	}
+
+	public function getAutoSummary() {
+		global $wgContLang;
+		$user = $this->mUserID ? $this->mUserText : $this->mAnonName;
+		$summ = $wgContLang->truncate( str_replace("\n", ' ', $this->mText),
+			max( 0, 200 - strlen( wfMsgForContent( 'wikilog-comment-autosumm' ) ) ),
+			'...' );
+		return wfMsgForContent( 'wikilog-comment-autosumm', $user, $summ );
 	}
 
 	public static function getThreadHistory( $id, $parent ) {

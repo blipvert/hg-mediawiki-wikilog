@@ -14,7 +14,8 @@ $messages['en'] = array(
 	# Extension information
 	'wikilog-desc'				=> 'Adds blogging features, creating a wiki-blog hybrid.',
 	'wikilog-auto'				=> 'Wikilog Auto',	# reserved username
-	'right-wikilog-post-comment'=> 'Post comments to wikilog articles',
+	'right-wl-postcomment'		=> 'Post comments to wikilog articles',
+	'right-wl-moderation'		=> 'Moderation of wikilog article comments',
 
 	# Special:Wikilog
 	'wikilog'					=> 'Wikilogs',	# Page title
@@ -73,8 +74,12 @@ $messages['en'] = array(
 	'wikilog-item-footer'		=> ': <i>&mdash; $5 &#8226; $6 &#8226; $7</i>',
 
 	# Comments
-	'wikilog-comment-by'		=> 'Comment by $1 ($2)',
-	'wikilog-comment-by-anon'	=> 'Comment by $3 (anonymous)',
+	'wikilog-comment-by-user'	=> 'Comment by <span class="wl-comment-author">$1</span> ($2)',
+	'wikilog-comment-by-anon'	=> 'Comment by <span class="wl-comment-author">$3</span> (anonymous)',
+	'wikilog-comment-pending'	=> 'This comment is awaiting approval.',
+	'wikilog-comment-hidden'	=> 'This comment is hidden.',
+	'wikilog-comment-deleted'	=> 'This comment was deleted.',
+	'wikilog-comment-autosumm'	=> 'New comment by $1: $2',
 	'wikilog-reply-to-comment'	=> 'Post a reply to this comment',
 	'wikilog-newtalk-text'		=> '<!-- blank page created by Wikilog -->',
 	'wikilog-newtalk-summary'	=> 'created automatically by wikilog',
@@ -157,7 +162,8 @@ $messages['pt'] = array(
 	# Extension information
 	'wikilog-desc'				=> 'Adiciona recursos de blog, criando um híbrido wiki-blog.',
 	'wikilog-auto'				=> 'Wikilog Auto',	# reserved username
-	'right-wikilog-post-comment'=> 'Postar comentários em artigos wikilog',
+	'right-wl-postcomment'		=> 'Postar comentários em artigos wikilog',
+	'right-wl-moderation'		=> 'Moderação de comentários de artigos wikilog',
 
 	# Special:Wikilog
 	'wikilog'					=> 'Wikilogs',
@@ -216,8 +222,12 @@ $messages['pt'] = array(
 	'wikilog-item-footer'		=> ': <i>&mdash; $5 &#8226; $6 &#8226; $7</i>',
 
 	# Comments
-	'wikilog-comment-by'		=> 'Comentário por $1 ($2)',
-	'wikilog-comment-by-anon'	=> 'Comentário por $3 (anônimo)',
+	'wikilog-comment-by-user'	=> 'Comentário por <span class="wl-comment-author">$1</span> ($2)',
+	'wikilog-comment-by-anon'	=> 'Comentário por <span class="wl-comment-author">$3</span> (anônimo)',
+	'wikilog-comment-pending'	=> 'Este comentário está aguardando aprovação.',
+	'wikilog-comment-hidden'	=> 'Este comentário está oculto.',
+	'wikilog-comment-deleted'	=> 'Este comentário foi apagado.',
+	'wikilog-comment-autosumm'	=> 'Novo comentário por $1: $2',
 	'wikilog-reply-to-comment'	=> 'Postar uma resposta a esse comentário',
 	'wikilog-newtalk-text'		=> '<!-- página em branco criada pelo Wikilog -->',
 	'wikilog-newtalk-summary'	=> 'criado automaticamente pelo wikilog',
