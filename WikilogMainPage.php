@@ -270,6 +270,10 @@ class WikilogMainPage extends Article implements WikilogCustomAction {
 		}
 
 		$itemname = $wgRequest->getText( 'wlItemName' );
+
+		if ( strchr( $itemname, '/' ) !== false )
+			throw new ErrorPageError( 'badtitle', 'badtitletext' );
+
 		$title = Title::makeTitle( $this->mTitle->getNamespace(),
 			$this->mTitle->getText() . '/' . $itemname );
 
