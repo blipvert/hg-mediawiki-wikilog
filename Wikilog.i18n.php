@@ -66,7 +66,7 @@ $messages['en'] = array(
 	'wikilog-has-comments'		=> '{{PLURAL:$1|one comment|$1 comments}}',
 
 	'wikilog-author-signature'	=> '[[{{ns:User}}:$1|$1]] ([[{{ns:User_talk}}:$1|talk]])',
-	'wikilog-item-brief-header'	=> ': <i><small>by $5, from [[$1|$2]], $6.</small></i>',
+	'wikilog-item-brief-header'	=> ': <i><small>by $5, from [[$1|$2]], $6, $7.</small></i>',
 	'wikilog-item-brief-footer'	=> '',
 	'wikilog-item-more'			=> '[[$3|&rarr; continue reading...]]',
 	'wikilog-item-sub'			=> '',
@@ -141,6 +141,7 @@ $messages['en'] = array(
 	'wikilog-show-drafts'		=> 'Drafts',
 	'wikilog-submit'			=> 'Submit',
 	'wikilog-preview'			=> 'Preview',	# verb
+	'wikilog-edit-lc'			=> 'edit',		# verb
 	'wikilog-reply-lc'			=> 'reply',		# verb
 
 	# Untranslatable strings
@@ -214,7 +215,7 @@ $messages['pt'] = array(
 	'wikilog-has-comments'		=> '{{PLURAL:$1|um comentário|$1 comentários}}',
 
 	'wikilog-author-signature'	=> '[[{{ns:User}}:$1|$1]] ([[{{ns:User_talk}}:$1|discussão]])',
-	'wikilog-item-brief-header'	=> ': <i><small>por $5, em [[$1|$2]], $6.</small></i>',
+	'wikilog-item-brief-header'	=> ': <i><small>por $5, em [[$1|$2]], $6, $7.</small></i>',
 	'wikilog-item-brief-footer'	=> '',
 	'wikilog-item-more'			=> '[[$3|&rarr; continuar lendo...]]',
 	'wikilog-item-sub'			=> '',
@@ -293,5 +294,6 @@ $messages['pt'] = array(
 	'wikilog-show-drafts'		=> 'Rascunhos',
 	'wikilog-submit'			=> 'Submeter',
 	'wikilog-preview'			=> 'Previsão',		# verb
+	'wikilog-edit-lc'			=> 'editar',		# verb
 	'wikilog-reply-lc'			=> 'responder',		# verb
 );

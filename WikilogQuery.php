@@ -172,7 +172,7 @@ class WikilogItemQuery {
 	function getDate()			{ return $this->mDate; }
 
 	function getQueryInfo( $db ) {
-		list( $page ) = $db->tableNamesN( 'page' );
+		extract( $db->tableNames( 'page' ) );
 
 		# Basic defaults.
 

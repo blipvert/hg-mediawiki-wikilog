@@ -72,8 +72,7 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 		$this->mSkin = $wgUser->getSkin();
 
 		# Get item object relative to this comments page.
-		$this->mItem = new WikilogItem( $wi );
-		$this->mItem->loadData();
+		$this->mItem = WikilogItem::newFromInfo( $wi );
 
 		# Check if user can post.
 		$this->mUserCanPost = $wgUser->isAllowed( 'wl-postcomment' );

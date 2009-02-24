@@ -30,13 +30,13 @@ if ( !defined( 'MEDIAWIKI' ) )
 
 
 class WikilogItem {
-	public    $mWikilogName;
-	public    $mWikilogTitle;
-	public    $mItemName;
-	public    $mItemTitle;
 
-	private   $mDataLoaded  = false;
 	public    $mID          = false;
+	public    $mName        = false;
+	public    $mTitle       = false;
+	public    $mParent      = false;
+	public    $mParentName  = false;
+	public    $mParentTitle = false;
 	public    $mPublish     = false;
 	public    $mPubDate     = false;
 	public    $mUpdated     = false;
@@ -44,12 +44,7 @@ class WikilogItem {
 	public    $mTags        = array();
 	public    $mNumComments = false;
 
-	public function __construct( WikilogInfo &$wi ) {
-		$this->mWikilogName = $wi->getName();
-		$this->mWikilogTitle = $wi->getTitle();
-		$this->mItemName = $wi->getItemName();
-		$this->mItemTitle = $wi->getItemTitle();
-		$this->mID = $this->mItemTitle->getArticleID();
+	public function __construct( ) {
 	}
 
 	public function getID() {
@@ -60,47 +55,21 @@ class WikilogItem {
 		return $this->getID() != 0;
 	}
 
-	function getIsPublished() {
-		$this->loadData();
+	public function getIsPublished() {
 		return $this->mPublish;
 	}
 
-	function getPublishDate() {
-		$this->loadData();
+	public function getPublishDate() {
 		return $this->mPubDate;
 	}
 
-	function getNumComments() {
-		$this->loadData();
-		$this->updateNumComments();
-		return $this->mNumComments;
+	public function getUpdatedDate() {
+		return $this->mUpdated;
 	}
 
-	public function loadData() {
-		if ( !$this->mDataLoaded ) {
-			$dbr = wfGetDB( DB_SLAVE );
-			$data = $this->itemDataFromId( $dbr, $this->getID() );
-
-			if ( $data ) {
-				$this->mParent = $data->wlp_parent;
-				$this->mPublish = $data->wlp_publish;
-				$this->mPubDate = $data->wlp_pubdate ? wfTimestamp( TS_MW, $data->wlp_pubdate ) : NULL;
-				$this->mUpdated = $data->wlp_updated ? wfTimestamp( TS_MW, $data->wlp_updated ) : NULL;
-				$this->mNumComments = is_null( $data->wlp_num_comments ) ? false : $data->wlp_num_comments;
-
-				$this->mAuthors = unserialize( $data->wlp_authors );
-				if ( !is_array( $this->mAuthors ) ) {
-					$this->mAuthors = array();
-				}
-
-				$this->mTags = unserialize( $data->wlp_tags );
-				if ( !is_array( $this->mTags ) ) {
-					$this->mTags = array();
-				}
-			}
-
-			$this->mDataLoaded = true;
-		}
+	public function getNumComments() {
+		$this->updateNumComments();
+		return $this->mNumComments;
 	}
 
 	public function saveData() {
@@ -110,8 +79,8 @@ class WikilogItem {
 			'wlp_page',
 			array(
 				'wlp_page'    => $this->mID,
-				'wlp_parent'  => $this->mWikilogTitle->getArticleId(),
-				'wlp_title'   => $this->mItemName,
+				'wlp_parent'  => $this->mParent,
+				'wlp_title'   => $this->mName,
 				'wlp_publish' => $this->mPublish,
 				'wlp_pubdate' => $this->mPubDate ? $dbw->timestamp( $this->mPubDate ) : '',
 				'wlp_updated' => $this->mUpdated ? $dbw->timestamp( $this->mUpdated ) : '',
@@ -124,7 +93,7 @@ class WikilogItem {
 
 	public function deleteData() {
 		$dbw = wfGetDB( DB_MASTER );
-		$dbw->delete( 'wikilog_posts', array( 'wlp_page' => $this->mItemTitle->getArticleId() ), __METHOD__ );
+		$dbw->delete( 'wikilog_posts', array( 'wlp_page' => $this->getID() ), __METHOD__ );
 	}
 
 	public function updateNumComments( $force = false ) {
@@ -138,7 +107,8 @@ class WikilogItem {
 			# Update wikilog_posts cache
 			$dbw->update( 'wikilog_posts',
 				array( 'wlp_num_comments' => $count ),
-				array( 'wlp_page' => $this->getID() )
+				array( 'wlp_page' => $this->getID() ),
+				__METHOD__
 			);
 
 			$this->mNumComments = $count;
@@ -146,52 +116,19 @@ class WikilogItem {
 	}
 
 	public function resetID( $id ) {
-		$this->mItemTitle->resetArticleID( $id );
+		$this->mTitle->resetArticleID( $id );
 		$this->mID = $id;
 	}
 
 	public function getComments( $thread = NULL ) {
 		$dbr = wfGetDB( DB_SLAVE );
 
-		$conditions = array( 'wlc_post' => $this->mID );
-
 		if ( $thread ) {
-			if ( is_array( $thread ) ) {
-				$thread = implode( '/', $thread );
-			}
-			$thread = $dbr->escapeLike( $thread );
-			$conditions[] = "wlc_thread LIKE '{$thread}/%'";
+			$result = WikilogComment::fetchAllFromItemThread( $dbr, $this->mID, $thread );
+		} else {
+			$result = WikilogComment::fetchAllFromItem( $dbr, $this->mID );
 		}
 
-		$result = $dbr->select(
-			array(
-				'wikilog_comments',
-				'page'
-			),
-			array(
-				'wlc_id',
-				'wlc_parent',
-				'wlc_thread',
-				'wlc_user',
-				'wlc_user_text',
-				'wlc_anon_name',
-				'wlc_status',
-				'wlc_timestamp',
-				'wlc_updated',
-				'wlc_comment_page',
-				'page_namespace',
-				'page_title',
-				'page_latest'
-			),
-			$conditions,
-			__METHOD__,
-			array(
-				'ORDER BY' => 'wlc_thread, wlc_id'
-			),
-			array(
-				'page' => array( 'LEFT JOIN', 'wlc_comment_page = page_id' )
-			)
-		);
 		$comments = array();
 		foreach( $result as $row ) {
 			$comment = WikilogComment::newFromRow( $this, $row );
@@ -204,28 +141,83 @@ class WikilogItem {
 		$result->free();
 		return $comments;
 	}
-	
-	private static function itemDataFromConditions( $dbr, $conditions ) {
+
+	public static function newFromRow( $row ) {
+		$item = new WikilogItem();
+		$item->mID          = intval( $row->wlp_page );
+		$item->mName        = strval( $row->wlp_title );
+		$item->mTitle       = Title::makeTitle( $row->page_namespace, $row->page_title );
+		$item->mParent      = intval( $row->wlp_parent );
+		$item->mParentName  = str_replace( '_', ' ', $row->wlw_title );
+		$item->mParentTitle = Title::makeTitle( $row->wlw_namespace, $row->wlw_title );
+		$item->mPublish     = intval( $row->wlp_publish );
+		$item->mPubDate     = $row->wlp_pubdate ? wfTimestamp( TS_MW, $row->wlp_pubdate ) : NULL;
+		$item->mUpdated     = $row->wlp_updated ? wfTimestamp( TS_MW, $row->wlp_updated ) : NULL;
+		$item->mNumComments = is_null( $row->wlp_num_comments ) ? false : $row->wlp_num_comments;
+		$item->mAuthors     = unserialize( $row->wlp_authors );
+		$item->mTags        = unserialize( $row->wlp_tags );
+		if ( !is_array( $item->mAuthors ) ) {
+			$item->mAuthors = array();
+		}
+		if ( !is_array( $item->mTags ) ) {
+			$item->mTags = array();
+		}
+		return $item;
+	}
+
+	public static function newFromID( $id ) {
+		$dbr = wfGetDB( DB_SLAVE );
+		$row = self::loadFromID( $dbr, $id );
+		if ( $row ) {
+			return self::newFromRow( $row );
+		}
+		return NULL;
+	}
+
+	public static function newFromInfo( WikilogInfo &$wi ) {
+		return self::newFromID( $wi->getItemTitle()->getArticleID() );
+	}
+
+	private static function loadFromConds( $dbr, $conds ) {
+		extract( self::selectInfo( $dbr ) );	// $tables, $fields
+		extract( $dbr->tableNames( 'page' ) );
 		$row = $dbr->selectRow(
-			'wikilog_posts',
-			array(
+			$tables,
+			$fields,
+			$conds,
+			__METHOD__,
+			array( )
+		);
+		return $row;
+	}
+
+	private static function loadFromID( $dbr, $id ) {
+		return self::loadFromConds( $dbr, array( 'wlp_page' => $id ) );
+	}
+
+	private static function selectInfo( $dbr ) {
+		extract( $dbr->tableNames( 'wikilog_posts', 'page' ) );
+		return array(
+			'tables' =>
+				"{$wikilog_posts} ".
+				"LEFT JOIN {$page} AS w ON (w.page_id = wlp_parent) ".
+				"LEFT JOIN {$page} AS p ON (p.page_id = wlp_page) ",
+			'fields' => array(
 				'wlp_page',
 				'wlp_parent',
+				'w.page_namespace AS wlw_namespace',
+				'w.page_title AS wlw_title',
+				'p.page_namespace AS page_namespace',
+				'p.page_title AS page_title',
+				'wlp_title',
 				'wlp_publish',
 				'wlp_pubdate',
 				'wlp_updated',
 				'wlp_authors',
 				'wlp_tags',
 				'wlp_num_comments'
-			),
-			$conditions,
-			__METHOD__
+			)
 		);
-		return $row;
-	}
-
-	private static function itemDataFromID( $dbr, $id ) {
-		return self::itemDataFromConditions( $dbr, array( 'wlp_page' => $id ) );
 	}
 
 }

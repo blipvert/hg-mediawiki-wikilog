@@ -156,7 +156,7 @@ class WikilogComment {
 		} else if ( $this->mCommentPage ) {
 			return Title::newFromID( $this->mCommentPage, GAID_FOR_UPDATE );
 		} else {
-			$it = $this->mItem->mItemTitle;
+			$it = $this->mItem->mTitle;
 			return Title::makeTitle(
 				MWNamespace::getTalk( $it->getNamespace() ),
 				$it->getText() . '/c' . self::padID( $this->mID )
@@ -200,27 +200,22 @@ class WikilogComment {
 	}
 
 	public static function newFromRow( &$item, $row ) {
-		return self::newFromData( $item, get_object_vars( $row ) );
-	}
-
-	public static function newFromData( &$item, $data ) {
 		$comment = new WikilogComment( $item );
-		$comment->mID           = intval( $data['wlc_id'] );
-		$comment->mParent       = $data['wlc_parent'];
-		$comment->mThread       = explode( '/', $data['wlc_thread'] );
-		$comment->mUserID       = $data['wlc_user'];
-		$comment->mUserText     = $data['wlc_user_text'];
-		$comment->mAnonName     = $data['wlc_anon_name'];
-		$comment->mStatus       = $data['wlc_status'];
-		$comment->mTimestamp    = wfTimestamp( TS_MW, $data['wlc_timestamp'] );
-		$comment->mUpdated      = wfTimestamp( TS_MW, $data['wlc_updated'] );
-		$comment->mCommentPage  = $data['wlc_comment_page'];
+		$comment->mID           = intval( $row->wlc_id );
+		$comment->mParent       = intval( $row->wlc_parent );
+		$comment->mThread       = explode( '/', $row->wlc_thread );
+		$comment->mUserID       = intval( $row->wlc_user );
+		$comment->mUserText     = strval( $row->wlc_user_text );
+		$comment->mAnonName     = strval( $row->wlc_anon_name );
+		$comment->mStatus       = strval( $row->wlc_status );
+		$comment->mTimestamp    = wfTimestamp( TS_MW, $row->wlc_timestamp );
+		$comment->mUpdated      = wfTimestamp( TS_MW, $row->wlc_updated );
+		$comment->mCommentPage  = $row->wlc_comment_page;
 
 		# This information may not be available for deleted comments.
-		if ( $data['page_title'] && $data['page_latest'] ) {
-			$comment->mCommentTitle =
-				Title::makeTitle( $data['page_namespace'], $data['page_title'] );
-			$comment->mCommentRev = $data['page_latest'];
+		if ( $row->page_title && $row->page_latest ) {
+			$comment->mCommentTitle = Title::makeTitle( $row->page_namespace, $row->page_title );
+			$comment->mCommentRev = $row->page_latest;
 		}
 		return $comment;
 	}
@@ -238,31 +233,79 @@ class WikilogComment {
 
 	public static function newFromID( &$item, $id ) {
 		$dbr = wfGetDB( DB_SLAVE );
-		$row = self::commentDataFromID( $dbr, $id );
+		$row = self::loadFromID( $dbr, $id );
 		if ( $row ) {
 			return self::newFromRow( $item, $row );
-		} else {
-			return NULL;
 		}
+		return NULL;
 	}
 
 	public static function newFromPageID( &$item, $pageid ) {
 		$dbr = wfGetDB( DB_SLAVE );
-		$row = self::commentDataFromPageID( $dbr, $pageid );
+		$row = self::loadFromPageID( $dbr, $pageid );
 		if ( $row && $row->wlc_post == $item->getID() ) {
 			return self::newFromRow( $item, $row );
-		} else {
-			return NULL;
 		}
+		return NULL;
 	}
 
-	private static function commentDataFromConditions( $dbr, $conditions ) {
+	private static function loadFromConds( $dbr, $conds ) {
+		extract( self::selectInfo( $dbr ) );	// $tables, $fields
 		$row = $dbr->selectRow(
-			array(
-				'wikilog_comments',
-				'page'
-			),
-			array(
+			$tables,
+			$fields,
+			$conds,
+			__METHOD__,
+			array( )
+		);
+		return $row;
+	}
+
+	private static function loadFromID( $dbr, $id ) {
+		return self::loadFromConds( $dbr, array( 'wlc_id' => $id ) );
+	}
+
+	private static function loadFromPageID( $dbr, $pageid ) {
+		return self::loadFromConds( $dbr, array( 'wlc_comment_page' => $pageid ) );
+	}
+
+	public static function fetchAllFromItem( $dbr, $itemid ) {
+		return self::fetchFromConds( $dbr,
+			array( 'wlc_post' => $itemid ),
+			array( 'ORDER BY' => 'wlc_thread, wlc_id' )
+		);
+	}
+
+	public static function fetchAllFromItemThread( $dbr, $itemid, $thread ) {
+		if ( is_array( $thread ) ) {
+			$thread = implode( '/', $thread );
+		}
+		$thread = $dbr->escapeLike( $thread );
+		return self::fetchFromConds( $dbr,
+			array( 'wlc_post' => $itemid, "wlc_thread LIKE {$thread}/%" ),
+			array( 'ORDER BY' => 'wlc_thread, wlc_id' )
+		);
+	}
+
+	private static function fetchFromConds( $dbr, $conds, $options = array() ) {
+		extract( self::selectInfo( $dbr ) );	// $tables, $fields
+		$result = $dbr->select(
+			$tables,
+			$fields,
+			$conds,
+			__METHOD__,
+			$options
+		);
+		return $result;
+	}
+
+	private static function selectInfo( $dbr ) {
+		extract( $dbr->tableNames( 'wikilog_comments', 'page' ) );
+		return array(
+			'tables' =>
+				"{$wikilog_comments} ".
+				"LEFT JOIN {$page} ON (page_id = wlc_comment_page)",
+			'fields' => array(
 				'wlc_id',
 				'wlc_parent',
 				'wlc_thread',
@@ -277,23 +320,8 @@ class WikilogComment {
 				'page_namespace',
 				'page_title',
 				'page_latest'
-			),
-			$conditions,
-			__METHOD__,
-			array( ),
-			array(
-				'page' => array( 'LEFT JOIN', 'wlc_comment_page = page_id' )
 			)
 		);
-		return $row;
-	}
-
-	private static function commentDataFromID( $dbr, $id ) {
-		return self::commentDataFromConditions( $dbr, array( 'wlc_id' => $id ) );
-	}
-
-	private static function commentDataFromPageID( $dbr, $pageid ) {
-		return self::commentDataFromConditions( $dbr, array( 'wlc_comment_page' => $pageid ) );
 	}
 
 }

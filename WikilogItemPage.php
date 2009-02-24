@@ -43,11 +43,11 @@ class WikilogItemPage extends Article {
 		parent::__construct( $title );
 		wfLoadExtensionMessages( 'Wikilog' );
 
-		$this->mItem = new WikilogItem( $wi );
+		$this->mItem = WikilogItem::newFromInfo( $wi );
 
 		$this->mWikilogName = $wi->getName();
 		$this->mWikilogTitle = $wi->getTitle();
-		$this->mItemName = $wi->getItemName();
+		$this->mItemName = $this->mItem->mName;
 
 		$this->mCmtsTitle =& Title::makeTitle( MWNamespace::getTalk( $title->getNamespace() ), $title->getDBkey() );
 
@@ -60,9 +60,6 @@ class WikilogItemPage extends Article {
 
 	function view() {
 		global $wgOut, $wgUser, $wgContLang, $wgFeed, $wgWikilogFeedClasses;
-
-		# Load data
-		$this->mItem->loadData();
 
 		# Get skin
 		$skin = $wgUser->getSkin();
