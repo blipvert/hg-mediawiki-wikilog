@@ -252,11 +252,12 @@ class Wikilog {
 	 */
 	static function BeforePageDisplay( &$output, &$skin ) {
 		global $wgWikilogStylePath, $wgStyleVersion;
-		$output->addLink( array(
+		$output->addExtensionStyle( "{$wgWikilogStylePath}/wikilog.css?{$wgStyleVersion}" );
+/*		$output->addLink( array(
 			'rel' => 'stylesheet',
 			'href' => $wgWikilogStylePath . '/wikilog.css?' . $wgStyleVersion,
 			'type' => 'text/css'
-		) );
+		) );*/
 		return true;
 	}
 
