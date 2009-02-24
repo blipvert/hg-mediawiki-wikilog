@@ -254,7 +254,7 @@ $messages['pt'] = array(
 	'wikilog-too-many-tags'	=>
 			'Aviso: Rótulos demais listados nesta postagem wikilog.',
 	'wikilog-comment-is-empty'	=>
-			'O comentário em branco.',
+			'O comentário postado está em branco.',
 	'wikilog-comment-too-long'	=>
 			'O comentário postado é muito longo.',
 	'wikilog-comment-invalid-name' =>
