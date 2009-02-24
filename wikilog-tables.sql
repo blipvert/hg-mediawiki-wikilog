@@ -158,6 +158,6 @@ CREATE TABLE IF NOT EXISTS /*$wgDBprefix*/wikilog_comments (
 
   PRIMARY KEY (wlc_id),
   INDEX wlc_post_thread (wlc_post, wlc_thread),
-  INDEX wlc_comment (wlc_comment)
+  INDEX wlc_comment_page (wlc_comment_page)
 
 ) /*$wgDBTableOptions*/;
