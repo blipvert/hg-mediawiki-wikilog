@@ -258,7 +258,7 @@ $messages['pt'] = array(
 	'wikilog-comment-too-long'	=>
 			'O comentário postado é muito longo.',
 	'wikilog-comment-invalid-name' =>
-			'O nome fornecidos é inválido.',
+			'O nome fornecido é inválido.',
 
 	'wikilog-reading-draft'		=>
 			'<div class="mw-warning">'.
