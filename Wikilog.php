@@ -84,6 +84,10 @@ $wgAutoloadClasses += array(
 	'WikilogMainPage'		=> $dir . 'WikilogMainPage.php',
 	'WikilogItemPage'		=> $dir . 'WikilogItemPage.php',
 	'WikilogCommentsPage'	=> $dir . 'WikilogCommentsPage.php',
+
+	// Captcha adapter
+	'WlCaptcha'				=> $dir . 'WlCaptchaAdapter.php',
+	'WlCaptchaAdapter'		=> $dir . 'WlCaptchaAdapter.php',
 );
 
 /*

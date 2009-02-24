@@ -51,6 +51,7 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 	protected $mFormOptions;
 	protected $mUserCanPost;
 	protected $mPostedComment;
+	protected $mCaptchaForm;
 
 	protected $mTrailing;
 
@@ -120,7 +121,7 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 
 			# Display "post new comment" form, if appropriate.
 			if ( $replyTo == $pid && $this->mUserCanPost ) {
-				$wgOut->addHtml( $this->postCommentForm( $pid ) );
+				$wgOut->addHtml( $this->getPostCommentForm( $pid ) );
 			}
 		}
 	}
@@ -178,7 +179,7 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 				$this->formatComment( $comment );
 
 			if ( $comment->mID == $replyTo && $this->mUserCanPost ) {
-				$html .= Xml::wrapClass( $this->postCommentForm( $comment->mID ),
+				$html .= Xml::wrapClass( $this->getPostCommentForm( $comment->mID ),
 					'wl-thread', 'div' );
 			}
 
@@ -270,23 +271,13 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 	 * @param $parent If provided, generates a "post reply" form to reply to
 	 *   the given comment.
 	 */
-	public function postCommentForm( $parent = NULL ) {
-		global $wgUser, $wgScript, $wgRequest;
+	public function getPostCommentForm( $parent = NULL ) {
+		global $wgUser, $wgTitle, $wgScript, $wgRequest;
 
-		$fields = array();
-		$fields[] = Xml::hidden( 'title', $this->getTitle()->getPrefixedText() );
-		$fields[] = Xml::hidden( 'action', 'wikilog' );
-		$fields[] = Xml::hidden( 'wpEditToken', $wgUser->editToken() );
-
-		if ( $parent )
-			$fields[] = Xml::hidden( 'wlParent', $parent );
-
-		$html = implode( "\n", $fields ) . "\n";
-
-		$html .= $this->formatPostCommentForm();
-
-		$preview = false;
 		$comment = $this->mPostedComment;
+		$opts = $this->mFormOptions;
+
+		$preview = '';
 		if ( $comment && $comment->mParent == $parent) {
 			$check = $this->validateComment( $comment );
 			if ( $check ) {
@@ -294,84 +285,65 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 			} else {
 				$preview = $this->formatComment( $this->mPostedComment );
 			}
-		}
-		if ( $preview ) {
-			$html = '<b>' . wfMsgHtml( 'wikilog-form-preview' ) . '</b>' .
-					$preview . '<hr/>' . $html;
+			$header = wfMsgHtml( 'wikilog-form-preview' );
+			$preview = "<b>{$header}</b>{$preview}<hr/>";
 		}
 
-		$form = Xml::tags( 'form', array(
-			'action' => "{$wgScript}#wl-comment-form",
-			'method' => 'post'
-		), $html );
+		$form =
+			Xml::hidden( 'title', $this->getTitle()->getPrefixedText() ).
+			Xml::hidden( 'action', 'wikilog' ).
+			Xml::hidden( 'wpEditToken', $wgUser->editToken() ).
+			( $parent ? Xml::hidden( 'wlParent', $parent ) : '' );
 
-		$msgid = ( $parent ? 'wikilog-post-reply' : 'wikilog-post-comment' );
-		return Xml::fieldset( wfMsg( $msgid ), $form,
-			array( 'id' => 'wl-comment-form' ) ) . "\n";
-	}
-
-	protected function formatPostCommentForm() {
-		global $wgContLang;
-
-		$fields = $this->getPostCommentFormFields();
-		$align = $wgContLang->isRtl() ? 'left' : 'right';
-
-		$out = Xml::openElement( 'table', array( 'width' => '100%' ) );
-
-		foreach ( $fields as $row ) {
-			$out .= Xml::openElement( 'tr' );
-			if ( is_array( $row ) ) {
-				$out .= Xml::tags( 'td', array( 'align' => $align ), $row[0] );
-				$out .= Xml::tags( 'td', array( 'width' => '80%' ), $row[1] );
-			} else {
-				$out .= Xml::tags( 'td', array( 'colspan' => 2 ), $row );
-			}
-			$out .= Xml::closeElement( 'tr' );
-		}
-
-		$out .= Xml::closeElement( 'table' );
-
-		foreach ( $this->mFormOptions->getUnconsumedValues() as $key => $value ) {
-			$out .= Xml::hidden( $key, $value );
-		}
-
-		return $out;
-	}
-
-	protected function getPostCommentFormFields() {
-		global $wgUser, $wgTitle;
-
-		$opts =& $this->mFormOptions;
 		$fields = array();
 
 		if ( $wgUser->isLoggedIn() ) {
-			$fields['name'] = array(
+			$fields[] = array(
 				wfMsg( 'wikilog-form-name' ),
 				$this->mSkin->userLink( $wgUser->getId(), $wgUser->getName() )
 			);
 		} else {
 			$loginTitle = SpecialPage::getTitleFor( 'Userlogin' );
 			$loginLink = $this->mSkin->makeKnownLinkObj( $loginTitle,
-				 wfMsgHtml( 'loginreqlink' ),
-				 'returnto=' . $wgTitle->getPrefixedUrl()
-			);
-
-			$fields['name'] = array(
+				wfMsgHtml( 'loginreqlink' ), 'returnto=' . $wgTitle->getPrefixedUrl() );
+			$message = wfMsg( 'wikilog-posting-anonymously', $loginLink );
+			$fields[] = array(
 				Xml::label( wfMsg( 'wikilog-form-name' ), 'wl-name' ),
-				Xml::input( 'wlAnonName', 25, $opts->consumeValue( 'wlAnonName' ), array( 'id' => 'wl-name' ) )
-					. '<br/>' . wfMsg( 'wikilog-posting-anonymously', $loginLink )
+				Xml::input( 'wlAnonName', 25, $opts->consumeValue( 'wlAnonName' ),
+					array( 'id' => 'wl-name', 'maxlength' => 255 ) ).
+					"<p>{$message}</p>"
 			);
 		}
 
-		$fields['comment'] =
+		$fields[] = array(
+			Xml::label( wfMsg( 'wikilog-form-comment' ), 'wl-comment' ),
 			Xml::textarea( 'wlComment', $opts->consumeValue( 'wlComment' ),
-				40, 5, array( 'id' => 'wl-comment' ) );
+				40, 5, array( 'id' => 'wl-comment' ) )
+		);
 
-		$fields['submit'] =
-			Xml::submitbutton( wfMsg( 'wikilog-submit' ), array( 'name' => 'wlActionCommentSubmit' ) ) . ' ' .
-			Xml::submitbutton( wfMsg( 'wikilog-preview' ), array( 'name' => 'wlActionCommentPreview' ) );
+		if ( $this->mCaptchaForm ) {
+			$fields[] = array( '', $this->mCaptchaForm );
+		}
 
-		return $fields;
+		$fields[] = array( '',
+			Xml::submitbutton( wfMsg( 'wikilog-submit' ), array( 'name' => 'wlActionCommentSubmit' ) ) .'&nbsp;'.
+			Xml::submitbutton( wfMsg( 'wikilog-preview' ), array( 'name' => 'wlActionCommentPreview' ) )
+		);
+
+		$form .= WikilogUtils::buildForm( $fields );
+
+		foreach ( $opts->getUnconsumedValues() as $key => $value ) {
+			$form .= Xml::hidden( $key, $value );
+		}
+
+		$form = Xml::tags( 'form', array(
+			'action' => "{$wgScript}#wl-comment-form",
+			'method' => 'post'
+		), $form );
+
+		$msgid = ( $parent ? 'wikilog-post-reply' : 'wikilog-post-comment' );
+		return Xml::fieldset( wfMsg( $msgid ), $preview . $form,
+			array( 'id' => 'wl-comment-form' ) ) . "\n";
 	}
 
 	/**
@@ -385,6 +357,13 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 
 		if ( $check !== false ) {
 			return $this->view();
+		}
+
+		# Check through captcha.
+		if ( !WlCaptcha::confirmEdit( $this->getTitle(), $comment->getText() ) ) {
+			$this->mCaptchaForm = WlCaptcha::getCaptchaForm();
+			$wgOut->addHtml( $this->getPostCommentForm( $comment->mParent ) );
+			return;
 		}
 
 		if ( !$this->exists() ) {

@@ -221,4 +221,24 @@ class WikilogUtils {
 		return NULL;
 	}
 
+	/**
+	 * Builds an HTML form in a table.
+	 */
+	public static function buildForm( $fields ) {
+		$rows = array();
+		foreach ( $fields as $field ) {
+			if ( is_array( $field ) ) {
+				$row = Xml::tags( 'td', array( 'class' => 'mw-label' ), $field[0] ).
+					Xml::tags( 'td', array( 'class' => 'mw-input' ), $field[1] );
+			} else {
+				$row = Xml::tags( 'td', array( 'class' => 'mw-input',
+					'colspan' => 2 ), $field );
+			}
+			$rows[] = Xml::tags( 'tr', array(), $row );
+		}
+		$form = Xml::tags( 'table', array( 'width' => '100%' ),
+			implode( "\n", $rows ) );
+		return $form;
+	}
+
 }
