@@ -192,6 +192,20 @@ class WikilogUtils {
 	}
 
 	/**
+	 * Formats a comments page link.
+	 *
+	 * @param $item WikilogItem object.
+	 * @return Wikitext-formatted comments link.
+	 */
+	public static function getCommentsWikiText( WikilogItem &$item ) {
+		$commentsNum = $item->getNumComments();
+		$commentsMsg = ( $commentsNum ? 'wikilog-has-comments' : 'wikilog-no-comments' );
+		$commentsUrl = $item->mTitle->getTalkPage()->getPrefixedURL();
+		$commentsTxt = wfMsgExt( $commentsMsg, array( 'parseinline', 'parsemag', 'content' ), $commentsNum );
+		return "[[{$commentsUrl}|{$commentsTxt}]]";
+	}
+
+	/**
 	 * Causes an update to the given Wikilog main page.
 	 */
 	public static function updateWikilog( $title ) {

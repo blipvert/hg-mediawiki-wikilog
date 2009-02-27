@@ -122,7 +122,7 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		# Some general data.
 		$authors = WikilogUtils::authorList( array_keys( $item->mAuthors ) );
 		$pubdate = $wgContLang->timeanddate( $item->getPublishDate(), true );
-		$comments = self::getCommentsWikiText( $item );
+		$comments = WikilogUtils::getCommentsWikiText( $item );
 
 		# Entry div class.
 		$divclass = 'wl-entry' . ( $item->getIsPublished() ? '' : ' wl-draft' );
@@ -187,14 +187,6 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		return "<span class=\"editsection\">$result</span>";
 	}
 
-	protected static function getCommentsWikiText( WikilogItem &$item ) {
-		$commentsNum = $item->getNumComments();
-		$commentsMsg = ( $commentsNum ? 'wikilog-has-comments' : 'wikilog-no-comments' );
-		$commentsUrl = $item->mTitle->getTalkPage()->getPrefixedURL();
-		$commentsTxt = wfMsgExt( $commentsMsg, array( 'parseinline', 'parsemag', 'content' ), $commentsNum );
-		return "[[{$commentsUrl}|{$commentsTxt}]]";
-	}
-
 }
 
 
@@ -250,7 +242,7 @@ class WikilogTemplatePager extends WikilogSummaryPager {
 		$tags = implode( wfMsgForContent( 'comma-separator' ), array_keys( $item->mTags ) );
 		$pubdate = $wgContLang->timeanddate( $item->getPublishDate(), true );
 		$updated = $wgContLang->timeanddate( $item->getUpdatedDate(), true );
-		$comments = self::getCommentsWikiText( $item );
+		$comments = WikilogUtils::getCommentsWikiText( $item );
 		$divclass = 'wl-entry' . ( $item->getIsPublished() ? '' : ' wl-draft' );
 
 		# Template parameters.

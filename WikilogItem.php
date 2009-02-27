@@ -175,19 +175,18 @@ class WikilogItem {
 	}
 
 	public static function newFromInfo( WikilogInfo &$wi ) {
-		return self::newFromID( $wi->getItemTitle()->getArticleID() );
+		$itemTitle = $wi->getItemTitle();
+		if ( $itemTitle ) {
+			return self::newFromID( $itemTitle->getArticleID() );
+		} else {
+			return NULL;
+		}
 	}
 
 	private static function loadFromConds( $dbr, $conds ) {
 		extract( self::selectInfo( $dbr ) );	// $tables, $fields
 		extract( $dbr->tableNames( 'page' ) );
-		$row = $dbr->selectRow(
-			$tables,
-			$fields,
-			$conds,
-			__METHOD__,
-			array( )
-		);
+		$row = $dbr->selectRow( $tables, $fields, $conds, __METHOD__, array( ) );
 		return $row;
 	}
 
