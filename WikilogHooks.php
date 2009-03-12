@@ -54,7 +54,16 @@ class WikilogHooks {
 			}
 		} else if ( $wi->isItem() ) {
 			# ::WikilogItemPage::
-			$item = new WikilogItem( $wi );
+			$item = WikilogItem::newFromInfo( $wi );
+			if ( $item === NULL ) {
+				$item = new WikilogItem();
+				$item->mName = $wi->getItemName();
+				$item->mTitle = $wi->getItemTitle();
+				$item->mParentName = $wi->getName();
+				$item->mParentTitle = $wi->getTitle();
+				$item->mParent = $item->mParentTitle->getArticleId();
+			}
+
 			$item->resetID( $article->getId() );
 
 			# Check if we have any wikilog metadata available.
@@ -67,6 +76,8 @@ class WikilogHooks {
 				$item->mPublish = $output->mPublish;
 				$item->mUpdated = wfTimestamp( TS_MW );
 				$item->mPubDate = $output->mPublish ? $output->mPubDate : $updated;
+				$item->mAuthors = $output->mAuthors;
+				$item->mTags    = $output->mTags;
 				$item->saveData();
 			} else {
 				# Remove entry from tables. Entries in wikilog_authors and
