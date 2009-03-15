@@ -356,7 +356,7 @@ $messages['de'] = array(
 	'wikilog-no-comments'		=> 'keine Kommentare',
 	'wikilog-has-comments'		=> '{{PLURAL:$1|ein Kommentar|$1 Kommentare}}',
 
-	'wikilog-author-signature'	=> '[[{{ns:User}}:$1|$1]] ([[{{ns:User_talk}}:$1|talk]])',
+	'wikilog-author-signature'	=> '[[{{ns:User}}:$1|$1]] ([[{{ns:User_talk}}:$1|Diskussion]])',
 	'wikilog-item-brief-header'	=> ': <i><small>von $5, aus [[$1|$2]], $6, $7.</small></i>',
 	'wikilog-item-brief-footer'	=> '',
 	'wikilog-item-more'			=> '[[$3|&rarr; weiterlesen...]]',
@@ -412,7 +412,7 @@ $messages['de'] = array(
 			'Sie sind zur Zeit nicht eingeloggt; ihr Kommentar wird anonym '.
 			'versendet, identifiziert durch ihre Internetverbindungsadresse. '.
 			'Sie sollten oben entweder ein Pseudonym angeben, um ihren '.
-			'Kommentar zu identifizieren oder $1 damit er passend zugeordnet wird.',
+			'Kommentar zu identifizieren oder $1, damit er passend zugeordnet wird.',
 
 	# Forms
 	'wikilog-post-comment'		=> 'Poste einen neuen Kommentar',
