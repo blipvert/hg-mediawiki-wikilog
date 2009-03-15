@@ -98,7 +98,7 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 		$comment = NULL;
 		$pid = false;
 
-		if ( $this->mTrailing !== NULL ) {
+		if ( $this->mItem !== NULL && $this->mTrailing !== NULL ) {
 			# Check if this is a comment.
 			$comment = WikilogComment::newFromPageID( $this->mItem, $this->getID() );
 			if ( $comment ) {
@@ -109,7 +109,7 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 		# Display talk page contents.
 		parent::view();
 
-		if ( $this->mItem->exists() ) {
+		if ( $this->mItem !== NULL && $this->mItem->exists() ) {
 			$header = Xml::tags( 'h2',
 				array( 'id' => 'wl-comments-header' ),
 				wfMsgExt( 'wikilog-comments', array( 'parseinline', 'content' ) )
@@ -154,7 +154,8 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 	 * if the item page exists.
 	 */
 	public function hasViewableContent() {
-		return parent::hasViewableContent() || $this->mItem->exists();
+		return parent::hasViewableContent() ||
+			( $this->mItem !== NULL && $this->mItem->exists() );
 	}
 
 	/**
