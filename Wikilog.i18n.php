@@ -50,8 +50,8 @@ $messages['en'] = array(
 	'wikilog-anonymous-mark'	=> '(anonymous)',
 
 	# Pager strings
-	'wikilog-pager-newer-n'		=> '← newer $1',
-	'wikilog-pager-older-n'		=> 'older $1 →',
+	'wikilog-pager-newer-n'		=> '← newer $1',	# $1 = number of items
+	'wikilog-pager-older-n'		=> 'older $1 →',	# $1 = number of items
 	'wikilog-pager-newest'		=> '←← newest',
 	'wikilog-pager-oldest'		=> 'oldest →→',
 	'wikilog-pager-prev'		=> '← previous',
@@ -199,8 +199,8 @@ $messages['pt'] = array(
 	'wikilog-anonymous-mark'	=> '(anônimo)',
 
 	# Pager strings
-	'wikilog-pager-newer-n'		=> '← $1 próximos',
-	'wikilog-pager-older-n'		=> '$1 anteriores →',
+	'wikilog-pager-newer-n'		=> '← $1 próximos',	# $1 = number of items
+	'wikilog-pager-older-n'		=> '$1 anteriores →',	# $1 = number of items
 	'wikilog-pager-newest'		=> '←← mais recentes',
 	'wikilog-pager-oldest'		=> 'mais antigos →→',
 	'wikilog-pager-prev'		=> '← anterior',
@@ -341,8 +341,8 @@ $messages['de'] = array(
 	'wikilog-anonymous-mark'	=> '(anonym)',
 
 	# Pager strings
-	'wikilog-pager-newer-n'		=> '← neuer $1',
-	'wikilog-pager-older-n'		=> 'älter $1 →',
+	'wikilog-pager-newer-n'		=> '← neuere $1',	# $1 = number of items
+	'wikilog-pager-older-n'		=> 'ältere $1 →',	# $1 = number of items
 	'wikilog-pager-newest'		=> '←← neuester',
 	'wikilog-pager-oldest'		=> 'ältester →→',
 	'wikilog-pager-prev'		=> '← vorheriger',
