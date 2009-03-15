@@ -297,3 +297,142 @@ $messages['pt'] = array(
 	'wikilog-edit-lc'			=> 'editar',		# verb
 	'wikilog-reply-lc'			=> 'responder',		# verb
 );
+
+/** German (Deutsch)
+ * @author Erkan Yilmaz
+ */
+$messages['de'] = array(
+	# Extension information
+	'wikilog-desc'				=> 'Fügt Blog-Funktionen hinzu, um einen Wiki-Blog Hybrid zu erzeugen.',
+	'wikilog-auto'				=> 'Wikilog Auto',	# reserved username
+	'right-wl-postcomment'		=> 'Poste Kommentare zu Wikilog-Beiträgen',
+	'right-wl-moderation'		=> 'Moderation von Kommentaren zu wikilog-Beiträgen',
+
+	# Special:Wikilog
+	'wikilog'					=> 'Wikilogs',	# Page title
+	'wikilog-specialwikilog'	=> 'Wikilog',	# Special page name
+
+	# Wikilog tab
+	'wikilog-tab'				=> 'Wikilog',
+	'wikilog-tab-title'			=> 'Wikilog Aktionen',
+	'wikilog-information'		=> 'Wikilog Information',
+	'wikilog-post-count-published'	=>
+		'$1 {{PLURAL:$1|Beitrag|Beiträge}} wurden in diesem Wikilog veröffentlicht,',
+	'wikilog-post-count-drafts'	=>
+		'plus $1 {{PLURAL:$1|Beitrag|Beiträge}}, die unveröffentlicht (Entwurf) sind,',
+	'wikilog-post-count-all'	=>
+		'insgesamt gibt es $1 {{PLURAL:$1|Beitrag|Beiträge}}.',
+	'wikilog-new-item'			=> 'Erstelle einen neuen Wikilog-Beitrag',
+	'wikilog-new-item-go'		=> 'Erstellen',
+	'wikilog-item-name'			=> 'Beitrag-Name:',
+
+	# Generic strings
+	'wikilog-published'			=> 'Veröffentlicht',
+	'wikilog-updated'			=> 'Aktualisiert',
+	'wikilog-draft'				=> 'Entwurf',
+	'wikilog-authors'			=> 'Autoren',
+	'wikilog-wikilog'			=> 'Wikilog',
+	'wikilog-title'				=> 'Titel',
+	'wikilog-actions'			=> 'Aktionen',
+	'wikilog-comments'			=> 'Kommentare',
+	'wikilog-view-archives'		=> 'Archive',
+	'wikilog-view-summary'		=> 'Zusammenfassung',
+	'wikilog-draft-title-mark'	=> '(Entwurf)',
+	'wikilog-anonymous-mark'	=> '(anonym)',
+
+	# Pager strings
+	'wikilog-pager-newer-n'		=> '← neuer $1',
+	'wikilog-pager-older-n'		=> 'älter $1 →',
+	'wikilog-pager-newest'		=> '←← neuester',
+	'wikilog-pager-oldest'		=> 'ältester →→',
+	'wikilog-pager-prev'		=> '← vorheriger',
+	'wikilog-pager-next'		=> 'nächster →',
+	'wikilog-pager-first'		=> '←← erster',
+	'wikilog-pager-last'		=> 'letzter →→',
+	'wikilog-pager-empty'		=>
+		'<div class="wl-empty">(keine Beiträge)</div>',
+
+	# Comments page link text
+	'wikilog-no-comments'		=> 'keine Kommentare',
+	'wikilog-has-comments'		=> '{{PLURAL:$1|ein Kommentar|$1 Kommentare}}',
+
+	'wikilog-author-signature'	=> '[[{{ns:User}}:$1|$1]] ([[{{ns:User_talk}}:$1|talk]])',
+	'wikilog-item-brief-header'	=> ': <i><small>von $5, aus [[$1|$2]], $6, $7.</small></i>',
+	'wikilog-item-brief-footer'	=> '',
+	'wikilog-item-more'			=> '[[$3|&rarr; weiterlesen...]]',
+	'wikilog-item-sub'			=> '',
+	'wikilog-item-header'		=> '',
+	'wikilog-item-footer'		=> ': <i>&mdash; $5 &#8226; $6 &#8226; $7</i>',
+
+	# Comments
+	'wikilog-comment-by-user'	=> 'Kommentar von <span class="wl-comment-author">$1</span> ($2)',
+	'wikilog-comment-by-anon'	=> 'Kommentar von <span class="wl-comment-author">$3</span> (anonym)',
+	'wikilog-comment-pending'	=> 'Dieser Kommentar muss noch zugelassen werden.',
+	'wikilog-comment-hidden'	=> 'Dieser Kommentar ist versteckt.',
+	'wikilog-comment-deleted'	=> 'Dieser Kommentar wurde gelöscht.',
+	'wikilog-comment-autosumm'	=> 'Neuer Kommentar von $1: $2',
+	'wikilog-reply-to-comment'	=> 'Poste eine Antwort auf diesen Kommentar',
+	'wikilog-newtalk-text'		=> '<!-- leere Seite erzeugt durch Wikilog -->',
+	'wikilog-newtalk-summary'	=> 'automatisch erzeugt durch Wikilog',
+
+	# Atom and RSS feeds
+	'wikilog-feed-title'		=> '{{SITENAME}} - $1 [$2]', # $1 = title, $2 = content language
+	'wikilog-feed-description'	=> 'Lese die neuesten Beiträge in diesem Feed.',
+
+	# Warning and error messages
+	'wikilog-error-msg'			=> 'Wikilog: $1',
+	'wikilog-error-title'		=> 'Wikilog Fehler',
+	'wikilog-invalid-param'		=> 'Ungültiger Parameter: $1.',
+	'wikilog-invalid-author'	=> 'Ungültiger Autor: $1.',
+	'wikilog-invalid-date'		=> 'Ungültiges Datum: $1.',
+	'wikilog-invalid-tag'		=> 'Ungültiges Tag: $1.',
+	'wikilog-invalid-file'		=> 'Ungültige Datei: $1.',
+	'wikilog-file-not-found'	=> 'Nicht vorhandene Datei: $1.',
+	'wikilog-not-an-image'		=> 'Datei ist kein Bild: $1.',
+	'wikilog-out-of-context'	=>
+			'Warnung: Wikilog Tags werden nicht im Zusammenhang (out of context) benutzt. ' .
+			'Sie sollten nur in Beiträgen im Wikilog Namensraum benutzt werden.',
+	'wikilog-too-many-authors'	=>
+			'Warnung: Zu viele Autoren werden in diesem Wikilog-Beitrag aufgeführt.',
+	'wikilog-too-many-tags'		=>
+			'Warnung: Zu viele Tags werden in diesem Wikilog-Beitrag erfasst.',
+	'wikilog-comment-is-empty'	=>
+			'Der gesendete Kommentar ist leer.',
+	'wikilog-comment-too-long'	=>
+			'Der gesendete Kommentar ist zu lang.',
+	'wikilog-comment-invalid-name' =>
+			'Der angegebene Name ist ungültig.',
+
+	'wikilog-reading-draft'		=>
+			'<div class="mw-warning">'.
+			'<p>Dieser Wikilog-Beitrag ist ein Entwurf, er wurde noch nicht veröffentlicht.</p>'.
+			'</div>',
+
+	'wikilog-posting-anonymously' =>	# $1 = "Login" link
+			'Sie sind zur Zeit nicht eingeloggt; ihr Kommentar wird anonym '.
+			'versendet, identifiziert durch ihre Internetverbindungsadresse. '.
+			'Sie sollten oben entweder ein Pseudonym angeben, um ihren '.
+			'Kommentar zu identifizieren oder $1 damit er passend zugeordnet wird.',
+
+	# Forms
+	'wikilog-post-comment'		=> 'Poste einen neuen Kommentar',
+	'wikilog-post-reply'		=> 'Poste eine neue Antwort',
+	'wikilog-form-legend'		=> 'Suche nach Wikilog-Beiträgen',
+	'wikilog-form-wikilog'		=> 'Wikilog:',
+	'wikilog-form-category'		=> 'Kategorie:',
+	'wikilog-form-name'			=> 'Name:',
+	'wikilog-form-author'		=> 'Autor:',
+	'wikilog-form-tag'			=> 'Tag:',
+	'wikilog-form-date'			=> 'Datum:',
+	'wikilog-form-status'		=> 'Status:',
+	'wikilog-form-preview'		=> 'Vorschau:',
+	'wikilog-form-comment'		=> 'Kommentar:',
+	'wikilog-show-all'			=> 'Alle Beiträge',
+	'wikilog-show-published'	=> 'Veröffentlicht',
+	'wikilog-show-drafts'		=> 'Entwürfe',
+	'wikilog-submit'			=> 'Abschicken',
+	'wikilog-preview'			=> 'Vorher betrachten',	# verb
+	'wikilog-edit-lc'			=> 'bearbeiten',		# verb
+	'wikilog-reply-lc'			=> 'antworten',		# verb
+
+);
