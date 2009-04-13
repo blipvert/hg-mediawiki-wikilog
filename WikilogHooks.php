@@ -75,7 +75,7 @@ class WikilogHooks {
 				# during LinksUpdate process.
 				$item->mPublish = $output->mPublish;
 				$item->mUpdated = wfTimestamp( TS_MW );
-				$item->mPubDate = $output->mPublish ? $output->mPubDate : $updated;
+				$item->mPubDate = $output->mPublish ? $output->mPubDate : $item->mUpdated;
 				$item->mAuthors = $output->mAuthors;
 				$item->mTags    = $output->mTags;
 				$item->saveData();
