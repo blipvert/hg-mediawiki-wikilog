@@ -79,8 +79,10 @@ $messages['en'] = array(
 	'wikilog-comment-pending'	=> 'This comment is awaiting approval.',
 	'wikilog-comment-hidden'	=> 'This comment is hidden.',
 	'wikilog-comment-deleted'	=> 'This comment was deleted.',
+	'wikilog-comment-edited'	=> 'This comment was last edited on $1 [$2].', # $1 = date and time, $2 = history link
 	'wikilog-comment-autosumm'	=> 'New comment by $1: $2',
 	'wikilog-reply-to-comment'	=> 'Post a reply to this comment',
+	'wikilog-comment-history'	=> 'View comment history',
 	'wikilog-newtalk-text'		=> '<!-- blank page created by Wikilog -->',
 	'wikilog-newtalk-summary'	=> 'created automatically by wikilog',
 
@@ -143,6 +145,7 @@ $messages['en'] = array(
 	'wikilog-preview'			=> 'Preview',	# verb
 	'wikilog-edit-lc'			=> 'edit',		# verb
 	'wikilog-reply-lc'			=> 'reply',		# verb
+	'wikilog-history-lc'		=> 'history',
 
 	# Untranslatable strings
 	'wikilog-summary'			=> '',			# Special page summary
@@ -228,8 +231,10 @@ $messages['pt'] = array(
 	'wikilog-comment-pending'	=> 'Este comentário está aguardando aprovação.',
 	'wikilog-comment-hidden'	=> 'Este comentário está oculto.',
 	'wikilog-comment-deleted'	=> 'Este comentário foi apagado.',
+	'wikilog-comment-edited'	=> 'Este comentário foi editado pela última vez em $1 [$2].', # $1 = date and time, $2 = history link
 	'wikilog-comment-autosumm'	=> 'Novo comentário por $1: $2',
 	'wikilog-reply-to-comment'	=> 'Postar uma resposta a esse comentário',
+	'wikilog-comment-history'	=> 'Ver histórico do comentário',
 	'wikilog-newtalk-text'		=> '<!-- página em branco criada pelo Wikilog -->',
 	'wikilog-newtalk-summary'	=> 'criado automaticamente pelo wikilog',
 
@@ -296,6 +301,7 @@ $messages['pt'] = array(
 	'wikilog-preview'			=> 'Previsão',		# verb
 	'wikilog-edit-lc'			=> 'editar',		# verb
 	'wikilog-reply-lc'			=> 'responder',		# verb
+	'wikilog-history-lc'		=> 'histórico',
 );
 
 /** German (Deutsch)
@@ -370,8 +376,11 @@ $messages['de'] = array(
 	'wikilog-comment-pending'	=> 'Dieser Kommentar muss noch zugelassen werden.',
 	'wikilog-comment-hidden'	=> 'Dieser Kommentar ist versteckt.',
 	'wikilog-comment-deleted'	=> 'Dieser Kommentar wurde gelöscht.',
+	##TRANSLATE##	'wikilog-comment-edited'	=> 'This comment was last edited on $1 [$2].', # $1 = date and time, $2 = history link
 	'wikilog-comment-autosumm'	=> 'Neuer Kommentar von $1: $2',
 	'wikilog-reply-to-comment'	=> 'Poste eine Antwort auf diesen Kommentar',
+	##TRANSLATE##	'wikilog-comment-history'	=> 'View comment history',
+
 	'wikilog-newtalk-text'		=> '<!-- leere Seite erzeugt durch Wikilog -->',
 	'wikilog-newtalk-summary'	=> 'automatisch erzeugt durch Wikilog',
 
@@ -434,5 +443,6 @@ $messages['de'] = array(
 	'wikilog-preview'			=> 'Vorher betrachten',	# verb
 	'wikilog-edit-lc'			=> 'bearbeiten',		# verb
 	'wikilog-reply-lc'			=> 'antworten',		# verb
+	##TRANSLATE##	'wikilog-history-lc'		=> 'history',
 
 );

@@ -75,6 +75,12 @@ div.wl-comment-meta .wl-comment-status {
 	padding: 0 1em;
 }
 
+div.wl-comment-meta .wl-comment-edited {
+	font-style: italic;
+	margin: 0;
+	padding: 0 1em;
+}
+
 div.wl-comment-text {
 	padding: 0.25em 0.75em;
 }

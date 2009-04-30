@@ -199,19 +199,19 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 	 * Formats a single post in HTML.
 	 */
 	protected function formatComment( $comment ) {
-		global $wgUser, $wgContLang, $wgOut;
+		global $wgUser, $wgLang, $wgOut;
 
 		$divclass = array( 'wl-comment' );
 		$hidden = WikilogComment::$statusMap[ $comment->mStatus ];
-		$status = $hidden ? wfMsg( "wikilog-comment-{$hidden}" ) : '';
 
 		if ( $hidden ) {
 			$divclass[] = "wl-comment-{$hidden}";
 		}
 
+		/* user link */
 		if ( $comment->mUserID ) {
 			$by = wfMsgExt( 'wikilog-comment-by-user',
-				array( 'parseinline', 'content', 'replaceafter' ),
+				array( 'parseinline', 'replaceafter' ),
 				$this->mSkin->userLink( $comment->mUserID, $comment->mUserText ),
 				$this->mSkin->userTalkLink( $comment->mUserID, $comment->mUserText )
 			);
@@ -221,7 +221,7 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 			}
 		} else {
 			$by = wfMsgExt( 'wikilog-comment-by-anon',
-				array( 'parseinline', 'content', 'replaceafter' ),
+				array( 'parseinline', 'replaceafter' ),
 				$this->mSkin->userLink( $comment->mUserID, $comment->mUserText ),
 				$this->mSkin->userTalkLink( $comment->mUserID, $comment->mUserText ),
 				htmlspecialchars( $comment->mAnonName )
@@ -229,15 +229,31 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 			$divclass[] = 'wl-comment-by-anon';
 		}
 
+		/* body */
 		if ( $hidden && !$this->mUserCanModerate ) {
+			/* placeholder */
+			$status = wfMsg( "wikilog-comment-{$hidden}" );
 			$html = Xml::tags( 'div', array( 'class' => 'wl-comment-placeholder' ),
 				$status );
 		} else {
+			/* comment metadata */
 			$link = $this->getCommentPermalink( $comment );
 			$tools = $this->getCommentToolLinks( $comment );
-			$ts = $wgContLang->timeanddate( $comment->mTimestamp, true );
-			$meta = "{$link} {$by} &#8226; {$ts} &#8226; <small>{$tools}</small>" .
-				( $hidden ? "<div class=\"wl-comment-status\">{$status}</div>" : '' );
+			$ts = $wgLang->timeanddate( $comment->mTimestamp, true );
+			$meta = "{$link} {$by} &#8226; {$ts} &#8226; <small>{$tools}</small>";
+
+			if ( $hidden ) {
+				$status = wfMsg( "wikilog-comment-{$hidden}" );
+				$meta .= "<div class=\"wl-comment-status\">{$status}</div>";
+			}
+			if ( $comment->mUpdated != $comment->mTimestamp ) {
+				$updated = wfMsg( 'wikilog-comment-edited',
+					$wgLang->timeanddate( $comment->mUpdated, true ),
+					$this->getCommentHistoryLink( $comment ) );
+				$meta .= "<div class=\"wl-comment-edited\">{$updated}</div>";
+			}
+
+			/* comment text */
 			$text = $wgOut->parse( $comment->getText() );  // TODO: Optimize this.
 
 			$html =
@@ -245,6 +261,7 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 				Xml::tags( 'div', array( 'class' => 'wl-comment-text' ), $text );
 		}
 
+		/* enclose everything in a div */
 		return Xml::tags( 'div', array(
 			'class' => implode( ' ', $divclass ),
 			'id' => ( $comment->mID ? "c{$comment->mID}" : 'cpreview' )
@@ -287,6 +304,13 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 		return $this->mSkin->link( $title, wfMsg( 'wikilog-reply-lc' ),
 			array( 'title' => wfMsg( 'wikilog-reply-to-comment' ) ),
 			array( 'wlParent' => $comment->mID ) );
+	}
+
+	protected function getCommentHistoryLink( $comment ) {
+		return $this->mSkin->link( $comment->mCommentTitle,
+			wfMsg( 'wikilog-history-lc' ),
+			array( 'title' => wfMsg( 'wikilog-comment-history' ) ),
+			array( 'action' => 'history' ) );
 	}
 
 	/**
