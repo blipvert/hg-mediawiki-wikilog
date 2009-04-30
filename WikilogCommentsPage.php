@@ -401,6 +401,7 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 	 */
 	protected function postComment( WikilogComment &$comment ) {
 		global $wgOut;
+		global $wgWikilogModerateAnonymous;
 
 		$check = $this->validateComment( $comment );
 
@@ -413,6 +414,11 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 			$this->mCaptchaForm = WlCaptcha::getCaptchaForm();
 			$wgOut->addHtml( $this->getPostCommentForm( $comment->mParent ) );
 			return;
+		}
+
+		# Set pending state if moderated.
+		if ( $comment->mUserID == 0 && $wgWikilogModerateAnonymous ) {
+			$comment->mStatus = WikilogComment::S_PENDING;
 		}
 
 		if ( !$this->exists() ) {

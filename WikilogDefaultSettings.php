@@ -93,6 +93,17 @@ $wgWikilogEnableComments = true;
 $wgWikilogMaxCommentSize = 2048;	// bytes
 
 /**
+ * Moderation options for comments. When set to true, new comments by anonymous
+ * users will be placed in a pending state until someone with 'wl-moderation'
+ * right approves it.
+ *
+ * @note No option of moderation for logged-in users is provided, it doesn't
+ * make a lot of sense for a wiki. If this is your case, check if what you
+ * need isn't better accomplished with user rights or anti-spam filters.
+ */
+$wgWikilogModerateAnonymous = false;
+
+/**
  * Syndication feed classes. Similar to $wgFeedClasses.
  */
 $wgWikilogFeedClasses = array(
