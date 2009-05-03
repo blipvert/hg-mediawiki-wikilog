@@ -44,17 +44,20 @@ if ( !defined( 'MEDIAWIKI' ) )
  * for the rest of the wiki. If you wan't a similar interface for the other
  * talk pages, you may want to check LiquidThreads or some other extension.
  */
-class WikilogCommentsPage extends Article implements WikilogCustomAction {
-
-	protected $mSkin;
-	protected $mItem;
-	protected $mFormOptions;
-	protected $mUserCanPost;
-	protected $mUserCanModerate;
-	protected $mPostedComment;
-	protected $mCaptchaForm;
-
-	protected $mTrailing;
+class WikilogCommentsPage
+	extends Article
+	implements WikilogCustomAction
+{
+	protected $mSkin;				///< Skin used for rendering the page.
+	protected $mItem;				///< Wikilog item the page is associated with.
+	protected $mTalkTitle;			///< Main talk page title.
+	protected $mFormOptions;		///< Post comment form fields.
+	protected $mUserCanPost;		///< User is allowed to post.
+	protected $mUserCanModerate;	///< User is allowed to moderate.
+	protected $mPostedComment;		///< Posted comment, from HTTP post data.
+	protected $mCaptchaForm;		///< Captcha form fields, when saving comment.
+	protected $mTrailing;			///< Trailing text in comments title page.
+	protected $mSingleComment;		///< Used when viewing a single comment.
 
 	/**
 	 * Constructor.
@@ -87,42 +90,93 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 
 		# This flags if we are viewing a single comment (subpage).
 		$this->mTrailing = $wi->getTrailing();
+		$this->mTalkTitle = $wi->getItemTalkTitle();
+		if ( $this->mItem && $this->mTrailing ) {
+			$this->mSingleComment =
+				WikilogComment::newFromPageID( $this->mItem, $this->getID() );
+		}
 	}
 
 	/**
 	 * Handler for action=view requests.
 	 */
 	public function view() {
-		global $wgOut, $wgRequest;
+		global $wgRequest;
 
-		$comment = NULL;
-		$pid = false;
+		# If diffing, don't show comments.
+		if ( $wgRequest->getVal( 'diff' ) )
+			return parent::view();
 
-		if ( $this->mItem !== NULL && $this->mTrailing !== NULL ) {
-			# Check if this is a comment.
-			$comment = WikilogComment::newFromPageID( $this->mItem, $this->getID() );
-			if ( $comment ) {
-				$pid = $comment->mID;
-			}
+		# Normal page view, show talk page contents followed by comments.
+		if ( $this->mItem ) {
+			$this->viewHeader();
 		}
 
 		# Display talk page contents.
 		parent::view();
 
-		if ( $this->mItem !== NULL && $this->mItem->exists() ) {
+		# Retrieve comments from database and display them.
+		if ( $this->mItem ) {
+			$this->viewComments();
+		}
+	}
+
+	/**
+	 * Wikilog comments page header.
+	 */
+	protected function viewHeader() {
+		global $wgOut;
+
+		if ( $this->mSingleComment ) {
+			$meta = $this->formatCommentMetadata( $this->mSingleComment );
+			$wgOut->addHtml( Xml::tags(
+				'div', array( 'class' => 'wl-comment-meta' ), $meta
+			) );
+		}
+	}
+
+	/**
+	 * Wikilog comments view. Retrieve comments from database and display
+	 * them in threads.
+	 */
+	protected function viewComments() {
+		global $wgOut, $wgRequest;
+
+		if ( $this->mSingleComment ) {
+			$pid = $this->mSingleComment->getID();	# Post ID
+
+			# == Replies ==
 			$header = Xml::tags( 'h2',
 				array( 'id' => 'wl-comments-header' ),
-				wfMsgExt( 'wikilog-comments', array( 'parseinline', 'content' ) )
+				wfMsgExt( 'wikilog-replies', array( 'parseinline' ) )
+			);
+			$wgOut->addHtml( $header );
+
+			# Display comment replies.
+			$replyTo = $wgRequest->getInt( 'wlParent', $pid );
+			$replies = $this->formatComments( $this->mSingleComment, $replyTo );
+			$wgOut->addHtml( $replies );
+
+			# Display "post new reply" form, if appropriate.
+			if ( $replyTo == $pid && $this->mUserCanPost ) {
+				$wgOut->addHtml( $this->getPostCommentForm( $pid ) );
+			}
+		} else if ( !$this->mTrailing ) {
+			# == Comments ==
+			$header = Xml::tags( 'h2',
+				array( 'id' => 'wl-comments-header' ),
+				wfMsgExt( 'wikilog-comments', array( 'parseinline' ) )
 			);
 			$wgOut->addHtml( $header );
 
 			# Display article comments.
-			$replyTo = $wgRequest->getInt( 'wlParent', $pid );
-			$wgOut->addHtml( $this->formatComments( $comment, $replyTo ) );
+			$replyTo = $wgRequest->getInt( 'wlParent' );
+			$comments = $this->formatComments( NULL, $replyTo );
+			$wgOut->addHtml( $comments );
 
 			# Display "post new comment" form, if appropriate.
-			if ( $replyTo == $pid && $this->mUserCanPost ) {
-				$wgOut->addHtml( $this->getPostCommentForm( $pid ) );
+			if ( !$replyTo && $this->mUserCanPost ) {
+				$wgOut->addHtml( $this->getPostCommentForm() );
 			}
 		}
 	}
@@ -132,9 +186,28 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 	 * Enabled via WikilogHooks::UnknownAction() hook handler.
 	 */
 	public function wikilog() {
-		global $wgOut, $wgRequest;
+		global $wgOut, $wgUser, $wgRequest;
 
-		if ( $this->mItem->exists() && $this->isValidPost() ) {
+		if ( !$this->mItem || !$this->mItem->exists() ) {
+			$wgOut->showErrorPage( 'wikilog-error', 'wikilog-no-such-article' );
+			return;
+		}
+		if ( !$wgUser->matchEditToken( $wgRequest->getVal( 'wpEditToken' ) ) ) {
+			$wgOut->showErrorPage( 'wikilog-error', 'sessionfailure' );
+			return;
+		}
+
+		# Initialize a session, when an anonymous post a comment...
+		if( session_id() == '' ) {
+			wfSetupSession();
+		}
+
+		if ( $wgRequest->wasPosted() ) {
+			# HTTP post: either comment preview or submission.
+			if ( !$this->mUserCanPost ) {
+				$wgOut->permissionRequired( 'wl-postcomment' );
+				return;
+			}
 			$this->mPostedComment = $this->getPostedComment();
 			if ( $this->mPostedComment ) {
 				if ( $wgRequest->getBool( 'wlActionCommentSubmit' ) ) {
@@ -142,6 +215,24 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 				}
 				if ( $wgRequest->getBool( 'wlActionCommentPreview' ) ) {
 					return $this->view();
+				}
+			}
+		} else {
+			# Comment moderation, actions performed to single-comment pages.
+			if ( $this->mSingleComment ) {
+				# Check permissions.
+				$title = $this->mSingleComment->getCommentArticleTitle();
+				$permerrors = $title->getUserPermissionsErrors( 'wl-moderation', $wgUser );
+				if ( count( $permerrors ) > 0 ) {
+					$wgOut->showPermissionsErrorPage( $permerrors );
+					return;
+				}
+
+				$approval = $wgRequest->getVal( 'wlActionCommentApprove' );
+
+				# Approve or reject a pending comment.
+				if ( $approval ) {
+					return $this->setCommentApproval( $this->mSingleComment, $approval );
 				}
 			}
 		}
@@ -161,7 +252,10 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 	/**
 	 * Formats wikilog article comments in a threaded format.
 	 *
+	 * @param $parent Parent comment, if not NULL, only the thread below
+	 *   the given comment will be displayed.
 	 * @param $replyTo Comment ID to attach a reply form to.
+	 * @return Generated HTML.
 	 */
 	public function formatComments( $parent = NULL, $replyTo = false ) {
 		global $wgOut;
@@ -197,65 +291,38 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 
 	/**
 	 * Formats a single post in HTML.
+	 *
+	 * @param $comment Comment to be formatted.
+	 * @return Generated HTML.
 	 */
 	protected function formatComment( $comment ) {
-		global $wgUser, $wgLang, $wgOut;
+		global $wgUser, $wgOut;
 
-		$divclass = array( 'wl-comment' );
 		$hidden = WikilogComment::$statusMap[ $comment->mStatus ];
 
-		if ( $hidden ) {
+		/* div class */
+		$divclass = array( 'wl-comment' );
+		if ( !$comment->isVisible() ) {
 			$divclass[] = "wl-comment-{$hidden}";
 		}
-
-		/* user link */
 		if ( $comment->mUserID ) {
-			$by = wfMsgExt( 'wikilog-comment-by-user',
-				array( 'parseinline', 'replaceafter' ),
-				$this->mSkin->userLink( $comment->mUserID, $comment->mUserText ),
-				$this->mSkin->userTalkLink( $comment->mUserID, $comment->mUserText )
-			);
 			$divclass[] = 'wl-comment-by-user';
 			if ( isset( $comment->mItem->mAuthors[$comment->mUserText] ) ) {
 				$divclass[] = 'wl-comment-by-author';
 			}
 		} else {
-			$by = wfMsgExt( 'wikilog-comment-by-anon',
-				array( 'parseinline', 'replaceafter' ),
-				$this->mSkin->userLink( $comment->mUserID, $comment->mUserText ),
-				$this->mSkin->userTalkLink( $comment->mUserID, $comment->mUserText ),
-				htmlspecialchars( $comment->mAnonName )
-			);
 			$divclass[] = 'wl-comment-by-anon';
 		}
 
 		/* body */
-		if ( $hidden && !$this->mUserCanModerate ) {
+		if ( !$comment->isVisible() && !$this->mUserCanModerate ) {
 			/* placeholder */
 			$status = wfMsg( "wikilog-comment-{$hidden}" );
 			$html = Xml::tags( 'div', array( 'class' => 'wl-comment-placeholder' ),
 				$status );
 		} else {
-			/* comment metadata */
-			$link = $this->getCommentPermalink( $comment );
-			$tools = $this->getCommentToolLinks( $comment );
-			$ts = $wgLang->timeanddate( $comment->mTimestamp, true );
-			$meta = "{$link} {$by} &#8226; {$ts} &#8226; <small>{$tools}</small>";
-
-			if ( $hidden ) {
-				$status = wfMsg( "wikilog-comment-{$hidden}" );
-				$meta .= "<div class=\"wl-comment-status\">{$status}</div>";
-			}
-			if ( $comment->mUpdated != $comment->mTimestamp ) {
-				$updated = wfMsg( 'wikilog-comment-edited',
-					$wgLang->timeanddate( $comment->mUpdated, true ),
-					$this->getCommentHistoryLink( $comment ) );
-				$meta .= "<div class=\"wl-comment-edited\">{$updated}</div>";
-			}
-
-			/* comment text */
+			$meta = $this->formatCommentMetadata( $comment );
 			$text = $wgOut->parse( $comment->getText() );  // TODO: Optimize this.
-
 			$html =
 				Xml::tags( 'div', array( 'class' => 'wl-comment-meta' ), $meta ).
 				Xml::tags( 'div', array( 'class' => 'wl-comment-text' ), $text );
@@ -266,6 +333,44 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 			'class' => implode( ' ', $divclass ),
 			'id' => ( $comment->mID ? "c{$comment->mID}" : 'cpreview' )
 		), $html );
+	}
+
+	protected function formatCommentMetadata( $comment ) {
+		global $wgLang;
+
+		if ( $comment->mUserID ) {
+			$by = wfMsgExt( 'wikilog-comment-by-user',
+				array( 'parseinline', 'replaceafter' ),
+				$this->mSkin->userLink( $comment->mUserID, $comment->mUserText ),
+				$this->mSkin->userTalkLink( $comment->mUserID, $comment->mUserText )
+			);
+		} else {
+			$by = wfMsgExt( 'wikilog-comment-by-anon',
+				array( 'parseinline', 'replaceafter' ),
+				$this->mSkin->userLink( $comment->mUserID, $comment->mUserText ),
+				$this->mSkin->userTalkLink( $comment->mUserID, $comment->mUserText ),
+				htmlspecialchars( $comment->mAnonName )
+			);
+		}
+
+		$link = $this->getCommentPermalink( $comment );
+		$tools = $this->getCommentToolLinks( $comment );
+		$ts = $wgLang->timeanddate( $comment->mTimestamp, true );
+		$meta = "{$link} {$by} &#8226; {$ts} &#8226; <small>{$tools}</small>";
+
+		if ( !$comment->isVisible() ) {
+			$hidden = WikilogComment::$statusMap[ $comment->mStatus ];
+			$status = wfMsg( "wikilog-comment-{$hidden}" );
+			$meta .= "<div class=\"wl-comment-status\">{$status}</div>";
+		}
+		if ( $comment->mUpdated != $comment->mTimestamp ) {
+			$updated = wfMsg( 'wikilog-comment-edited',
+				$wgLang->timeanddate( $comment->mUpdated, true ),
+				$this->getCommentHistoryLink( $comment ) );
+			$meta .= "<div class=\"wl-comment-edited\">{$updated}</div>";
+		}
+
+		return $meta;
 	}
 
 	protected function getCommentPermalink( $comment ) {
@@ -280,19 +385,58 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 	}
 
 	protected function getCommentToolLinks( $comment ) {
+		global $wgUser;
 		$tools = array();
 
-		if ( $comment->mID ) {
-			if ( $this->mUserCanPost ) {
+		if ( $comment->mID && $comment->mCommentTitle->exists() ) {
+			if ( $this->mUserCanPost && $comment->isVisible() ) {
 				$tools[] = $this->getCommentReplyLink( $comment );
 			}
 			if ( $this->mUserCanModerate ) {
-// 				$tools[] = $this->mSkin->link( $comment->mCommentTitle, 'page' );
+				$tools[] = $this->mSkin->link( $comment->mCommentTitle,
+					wfMsg( 'wikilog-page-lc' ),
+					array( 'title' => wfMsg( 'wikilog-comment-page' ) ),
+					array( ), 'known' );
+			}
+			if ( $comment->mCommentTitle->quickUserCan( 'edit' ) ) {
+				$tools[] = $this->mSkin->link( $comment->mCommentTitle,
+					wfMsg( 'wikilog-edit-lc' ),
+					array( 'title' => wfMsg( 'wikilog-comment-edit' ) ),
+					array( 'action' => 'edit' ), 'known' );
+			}
+			if ( $comment->mCommentTitle->quickUserCan( 'delete' ) ) {
+				$tools[] = $this->mSkin->link( $comment->mCommentTitle,
+					wfMsg( 'wikilog-delete-lc' ),
+					array( 'title' => wfMsg( 'wikilog-comment-delete' ) ),
+					array( 'action' => 'delete' ), 'known' );
+			}
+
+			if ( $this->mUserCanModerate && $comment->mStatus == WikilogComment::S_PENDING ) {
+				$token = $wgUser->editToken();
+				$tools[] = $this->mSkin->link( $comment->mCommentTitle,
+					wfMsg( 'wikilog-approve-lc' ),
+					array( 'title' => wfMsg( 'wikilog-comment-approve' ) ),
+					array(
+						'action' => 'wikilog',
+						'wlActionCommentApprove' => 'approve',
+						'wpEditToken' => $token
+					),
+					'known' );
+				$tools[] = $this->mSkin->link( $comment->mCommentTitle,
+					wfMsg( 'wikilog-reject-lc' ),
+					array( 'title' => wfMsg( 'wikilog-comment-reject' ) ),
+					array(
+						'action' => 'wikilog',
+						'wlActionCommentApprove' => 'reject',
+						'wpEditToken' => $token
+					),
+					'known' );
 			}
 		}
 
 		if ( !empty( $tools ) ) {
-			return wfMsg( 'wikilog-brackets', implode( wfMsg( 'comma-separator' ), $tools ) );
+			$tools = implode( wfMsg( 'comma-separator' ), $tools );
+			return wfMsg( 'wikilog-brackets', $tools );
 		} else {
 			return '';
 		}
@@ -310,7 +454,7 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 		return $this->mSkin->link( $comment->mCommentTitle,
 			wfMsg( 'wikilog-history-lc' ),
 			array( 'title' => wfMsg( 'wikilog-comment-history' ) ),
-			array( 'action' => 'history' ) );
+			array( 'action' => 'history' ), 'known' );
 	}
 
 	/**
@@ -322,6 +466,7 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 	 */
 	public function getPostCommentForm( $parent = NULL ) {
 		global $wgUser, $wgTitle, $wgScript, $wgRequest;
+		global $wgWikilogModerateAnonymous;
 
 		$comment = $this->mPostedComment;
 		$opts = $this->mFormOptions;
@@ -374,6 +519,10 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 			$fields[] = array( '', $this->mCaptchaForm );
 		}
 
+		if ( $wgWikilogModerateAnonymous && $wgUser->isAnon() ) {
+			$fields[] = array( '', wfMsg( 'wikilog-anonymous-moderated' ) );
+		}
+
 		$fields[] = array( '',
 			Xml::submitbutton( wfMsg( 'wikilog-submit' ), array( 'name' => 'wlActionCommentSubmit' ) ) .'&nbsp;'.
 			Xml::submitbutton( wfMsg( 'wikilog-preview' ), array( 'name' => 'wlActionCommentPreview' ) )
@@ -395,6 +544,40 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 			array( 'id' => 'wl-comment-form' ) ) . "\n";
 	}
 
+	protected function setCommentApproval( $comment, $approval ) {
+		global $wgOut, $wgUser;
+
+		# Check if comment is really awaiting moderation.
+		if ( $comment->mStatus != WikilogComment::S_PENDING ) {
+			$wgOut->showErrorPage( 'nosuchaction', 'nosuchactiontext' );
+			return;
+		}
+
+		$log = new LogPage( 'wikilog' );
+		$title = $comment->getCommentArticleTitle();
+
+		if ( $approval == 'approve' ) {
+			$comment->mStatus = WikilogComment::S_OK;
+			$comment->saveComment();
+			$log->addEntry( 'c-approv', $title, '' );
+			$wgOut->redirect( $this->mTalkTitle->getFullUrl() );
+		} else if ( $approval == 'reject' ) {
+			$reason = wfMsgForContent( 'wikilog-log-cmt-rejdel', $comment->mUserText );
+			$id = $title->getArticleID( GAID_FOR_UPDATE );
+			if ( $this->doDeleteArticle( $reason, false, $id ) ) {
+				$comment->deleteComment();
+				$log->addEntry( 'c-reject', $title, '' );
+				$wgOut->redirect( $this->mTalkTitle->getFullUrl() );
+			} else {
+				$wgOut->showFatalError( wfMsgExt( 'cannotdelete', array( 'parse' ) ) );
+				$wgOut->addHTML( Xml::element( 'h2', null, LogPage::logName( 'delete' ) ) );
+				LogEventsList::showLogExtract( $wgOut, 'delete', $this->mTitle->getPrefixedText() );
+			}
+		} else {
+			$wgOut->showErrorPage( 'nosuchaction', 'nosuchactiontext' );
+		}
+	}
+
 	/**
 	 * Validates and saves a new comment. Redirects back to the comments page.
 	 * @param $comment Posted comment.
@@ -412,6 +595,8 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 		# Check through captcha.
 		if ( !WlCaptcha::confirmEdit( $this->getTitle(), $comment->getText() ) ) {
 			$this->mCaptchaForm = WlCaptcha::getCaptchaForm();
+			$wgOut->setPageTitle( $this->mTitle->getPrefixedText() );
+			$wgOut->setRobotPolicy( 'noindex,nofollow' );
 			$wgOut->addHtml( $this->getPostCommentForm( $comment->mParent ) );
 			return;
 		}
@@ -436,16 +621,6 @@ class WikilogCommentsPage extends Article implements WikilogCustomAction {
 		$dest = $this->getTitle();
 		$dest->setFragment( "#c{$comment->mID}" );
 		$wgOut->redirect( $dest->getFullUrl() );
-	}
-
-	/**
-	 * Checks if the post data is correct and the user is allowed to post.
-	 */
-	protected static function isValidPost() {
-		global $wgRequest, $wgUser;
-		return $wgRequest->wasPosted()
-			&& $wgUser->matchEditToken( $wgRequest->getVal( 'wpEditToken' )
-			&& $wgUser->isAllowed( 'wl-postcomment' ) );
 	}
 
 	/**

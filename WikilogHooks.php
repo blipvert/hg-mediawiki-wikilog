@@ -235,6 +235,7 @@ class WikilogHooks {
 			$wgExtNewFields[] = array( 'wikilog_posts', 'wlp_title',  $dir . 'archives/patch-post-titles.sql' );
 			$wgExtNewFields[] = array( 'wikilog_wikilogs', 'wlw_authors', $dir . 'archives/patch-wikilog-authors.sql' );
 			$wgExtNewFields[] = array( 'wikilog_posts', 'wlp_num_comments', $dir . 'archives/patch-comment-count.sql' );
+			/* TODO: archives/patch-simplify-comment-status.sql */
 		} else {
 			/// TODO: PostgreSQL, SQLite, etc...
 			print "\n".

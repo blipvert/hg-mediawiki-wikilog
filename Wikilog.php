@@ -143,6 +143,15 @@ $wgGroupPermissions['sysop']['wl-moderation'] = true;
 $wgReservedUsernames[] = 'msg:wikilog-auto';
 
 /*
+ * Logs.
+ */
+$wgLogTypes[] = 'wikilog';
+$wgLogNames['wikilog'] = 'wikilog-log-pagename';
+$wgLogHeaders['wikilog'] = 'wikilog-log-pagetext';
+$wgLogActions['wikilog/c-approv'] = 'wikilog-log-cmt-approve';
+$wgLogActions['wikilog/c-reject'] = 'wikilog-log-cmt-reject';
+
+/*
  * Default settings.
  */
 require_once( dirname(__FILE__) . '/WikilogDefaultSettings.php' );
@@ -152,8 +161,8 @@ require_once( dirname(__FILE__) . '/WikilogDefaultSettings.php' );
  * Main Wikilog class. Used as a namespace. No instances of this class are
  * intended to exist, all member functions are static.
  */
-class Wikilog {
-
+class Wikilog
+{
 	###
 	##  Setup functions.
 	#
@@ -251,13 +260,8 @@ class Wikilog {
 	 * Adds wikilog CSS to pages displayed.
 	 */
 	static function BeforePageDisplay( &$output, &$skin ) {
-		global $wgWikilogStylePath, $wgStyleVersion;
-		$output->addExtensionStyle( "{$wgWikilogStylePath}/wikilog.css?{$wgStyleVersion}" );
-/*		$output->addLink( array(
-			'rel' => 'stylesheet',
-			'href' => $wgWikilogStylePath . '/wikilog.css?' . $wgStyleVersion,
-			'type' => 'text/css'
-		) );*/
+		global $wgWikilogStylePath, $wgWikilogStyleVersion;
+		$output->addExtensionStyle( "{$wgWikilogStylePath}/wikilog.css?{$wgWikilogStyleVersion}" );
 		return true;
 	}
 
@@ -271,7 +275,7 @@ class Wikilog {
 	{
 		if ( $target->isTalkPage() && !in_array( 'known', $options ) ) {
 			$wi = self::getWikilogInfo( $target );
-			if ( $wi && $wi->isItem() && $wi->getItemTitle()->exists() ) {
+			if ( $wi && $wi->isItem() && !$wi->getTrailing() && $wi->getItemTitle()->exists() ) {
 				if ( ($i = array_search( 'broken', $options )) !== false ) {
 					array_splice( $options, $i, 1 );
 				}
@@ -353,12 +357,13 @@ class Wikilog {
  * given its title. It is used to derive the main wikilog article name or the
  * comments page name from the wikilog post, for example.
  */
-class WikilogInfo {
-
+class WikilogInfo
+{
 	public $mWikilogName;		///< Wikilog title (textual string).
 	public $mWikilogTitle;		///< Wikilog main article title object.
 	public $mItemName;			///< Wikilog post title (textual string).
 	public $mItemTitle;			///< Wikilog post title object.
+	public $mItemTalkTitle;		///< Wikilog post talk title object.
 
 	public $mIsTalk;			///< Constructed using a talk page title.
 	public $mTrailing = NULL;	///< Trailing subpage title.
@@ -371,6 +376,7 @@ class WikilogInfo {
 		$origns = $title->getNamespace();
 		$this->mIsTalk = MWNamespace::isTalk( $origns );
 		$ns = MWNamespace::getSubject( $origns );
+		$tns = MWNamespace::getTalk( $origns );
 
 		if ( strpos( $title->getText(), '/' ) !== false ) {
 			list( $this->mWikilogName, $this->mItemName ) =
@@ -381,13 +387,16 @@ class WikilogInfo {
 					explode( '/', $this->mItemName, 2 );
 			}
 
+			$rawtitle = "{$this->mWikilogName}/{$this->mItemName}";
 			$this->mWikilogTitle = Title::makeTitle( $ns, $this->mWikilogName );
-			$this->mItemTitle = Title::makeTitle( $ns, "{$this->mWikilogName}/{$this->mItemName}" );
+			$this->mItemTitle = Title::makeTitle( $ns, $rawtitle );
+			$this->mItemTalkTitle = Title::makeTitle( $tns, $rawtitle );
 		} else {
 			$this->mWikilogName = $title->getText();
 			$this->mWikilogTitle = Title::makeTitle( $ns, $this->mWikilogName );
 			$this->mItemName = NULL;
 			$this->mItemTitle = NULL;
+			$this->mItemTalkTitle = NULL;
 		}
 	}
 
@@ -400,6 +409,7 @@ class WikilogInfo {
 	function getTitle() { return $this->mWikilogTitle; }
 	function getItemName() { return $this->mItemName; }
 	function getItemTitle() { return $this->mItemTitle; }
+	function getItemTalkTitle() { return $this->mItemTitle->getTalkPage(); }
 
 	function getTrailing() { return $this->mTrailing; }
 

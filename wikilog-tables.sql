@@ -138,12 +138,10 @@ CREATE TABLE IF NOT EXISTS /*$wgDBprefix*/wikilog_comments (
   -- Comment status. For hidden or deleted comments, a placeholder is left
   -- with some description about what happened to the comment.
   wlc_status ENUM(
-    "OK",               -- OK, comment is visible
-    "PENDING",          -- Comment is pending moderation
-    "HIDDEN_SYSOP",     -- Comment was hidden by an operator
-    "DELETED_USER",     -- Comment was deleted by the user
-    "DELETED_SYSOP"     -- Comment was deleted by an operator
-  ) NOT NULL DEFAULT "OK",
+    'OK',               -- OK, comment is visible
+    'PENDING',          -- Comment is pending moderation
+    'DELETED'           -- Comment was deleted
+  ) NOT NULL DEFAULT 'OK',
 
   -- Date and time the comment was first posted.
   wlc_timestamp BINARY(14) NOT NULL,

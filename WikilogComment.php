@@ -29,19 +29,16 @@ if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
 
-class WikilogComment {
+class WikilogComment
+{
 	const S_OK				= 'OK';
 	const S_PENDING			= 'PENDING';
-	const S_HIDDEN_SYSOP	= 'HIDDEN_SYSOP';
-	const S_DELETED_USER	= 'DELETED_USER';
-	const S_DELETED_SYSOP	= 'DELETED_SYSOP';
+	const S_DELETED			= 'DELETED';
 
 	public static $statusMap = array(
 		self::S_OK				=> false,
 		self::S_PENDING			=> 'pending',
-		self::S_HIDDEN_SYSOP	=> 'hidden',
-		self::S_DELETED_USER	=> 'deleted',
-		self::S_DELETED_SYSOP	=> 'deleted'
+		self::S_DELETED			=> 'deleted',
 	);
 
 	public  $mItem			= NULL;
@@ -86,6 +83,10 @@ class WikilogComment {
 	public function setText( $text ) {
 		$this->mText = $text;
 		$this->mTextChanged = true;
+	}
+
+	public function isVisible() {
+		return $this->mStatus == self::S_OK;
 	}
 
 	public function loadText() {
@@ -144,10 +145,31 @@ class WikilogComment {
 				array( 'wlc_id' => $this->mID ), __METHOD__ );
 		}
 
-		# Update number of comments.
+		# Update number of comments
 		$this->mItem->updateNumComments( true );
 
+		# Commit
 		$dbw->commit();
+
+		# Invalidate some caches.
+		$this->mCommentTitle->invalidateCache();
+		$this->mItem->mTitle->invalidateCache();
+		$this->mItem->mTitle->getTalkPage()->invalidateCache();
+		$this->mItem->mParentTitle->invalidateCache();
+	}
+
+	public function deleteComment() {
+		$dbw = wfGetDB( DB_MASTER );
+		$dbw->begin();
+
+		$dbw->delete( 'wikilog_comments', array( 'wlc_id' => $this->mID ), __METHOD__ );
+
+		$dbw->commit();
+
+		$this->mItem->mTitle->invalidateCache();
+		$this->mItem->mTitle->getTalkPage()->invalidateCache();
+		$this->mItem->mParentTitle->invalidateCache();
+		$this->mID = NULL;
 	}
 
 	public function getCommentArticleTitle() {

@@ -1,6 +1,6 @@
 /*
  * Wikilog extension styles.
- * Copyright © 2008 Juliano F. Ravasi
+ * Copyright © 2008, 2009 Juliano F. Ravasi
  * http://www.mediawiki.org/wiki/Extension:Wikilog
  *
  * Lincensed under the GNU General Public License version 2.
@@ -69,14 +69,14 @@ div.wl-comment-pending .wl-comment-meta {
 }
 
 div.wl-comment-meta .wl-comment-status {
-	font-style: italic;
+/* 	font-style: italic; */
 	font-weight: bold;
 	margin: 0;
 	padding: 0 1em;
 }
 
 div.wl-comment-meta .wl-comment-edited {
-	font-style: italic;
+/* 	font-style: italic; */
 	margin: 0;
 	padding: 0 1em;
 }
@@ -86,7 +86,6 @@ div.wl-comment-text {
 }
 
 div.wl-comment-pending .wl-comment-text,
-div.wl-comment-hidden .wl-comment-text,
 div.wl-comment-deleted .wl-comment-text {
 	background-color: #FFFFFF;
 	color: #999999;

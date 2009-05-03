@@ -21,6 +21,13 @@ $messages['en'] = array(
 	'wikilog'					=> 'Wikilogs',	# Page title
 	'wikilog-specialwikilog'	=> 'Wikilog',	# Special page name
 
+	# Logs
+	'wikilog-log-pagename'		=> 'Wikilog actions log',
+	'wikilog-log-pagetext'		=> 'Below is a list of wikilog actions.',
+	'wikilog-log-cmt-approve'	=> 'approved comment [[$1]]',
+	'wikilog-log-cmt-reject'	=> 'rejected comment [[$1]]',
+	'wikilog-log-cmt-rejdel'	=> 'Rejected wikilog comment from [[Special:Contributions/$1|$1]]',
+
 	# Wikilog tab
 	'wikilog-tab'				=> 'Wikilog',
 	'wikilog-tab-title'			=> 'Wikilog actions',
@@ -44,6 +51,7 @@ $messages['en'] = array(
 	'wikilog-title'				=> 'Title',
 	'wikilog-actions'			=> 'Actions',
 	'wikilog-comments'			=> 'Comments',
+	'wikilog-replies'			=> 'Replies',
 	'wikilog-view-archives'		=> 'Archives',
 	'wikilog-view-summary'		=> 'Summary',
 	'wikilog-draft-title-mark'	=> '(draft)',
@@ -65,7 +73,9 @@ $messages['en'] = array(
 	'wikilog-no-comments'		=> 'no comments',
 	'wikilog-has-comments'		=> '{{PLURAL:$1|one comment|$1 comments}}',
 
-	'wikilog-author-signature'	=> '[[{{ns:User}}:$1|$1]] ([[{{ns:User_talk}}:$1|talk]])',
+	# Wikilog item header and footer
+	# $1 = Wikilog URL, $2 = Wikilog Name, $3 = Item URL, $4 = Item Title
+	# $5 = Authors, $6 = Publish date, $7 = Comments link
 	'wikilog-item-brief-header'	=> ': <i><small>by $5, from [[$1|$2]], $6, $7.</small></i>',
 	'wikilog-item-brief-footer'	=> '',
 	'wikilog-item-more'			=> '[[$3|&rarr; continue reading...]]',
@@ -73,16 +83,22 @@ $messages['en'] = array(
 	'wikilog-item-header'		=> '',
 	'wikilog-item-footer'		=> ': <i>&mdash; $5 &#8226; $6 &#8226; $7</i>',
 
+	'wikilog-author-signature'	=> '[[{{ns:User}}:$1|$1]] ([[{{ns:User_talk}}:$1|talk]])',
+
 	# Comments
 	'wikilog-comment-by-user'	=> 'Comment by <span class="wl-comment-author">$1</span> ($2)',
 	'wikilog-comment-by-anon'	=> 'Comment by <span class="wl-comment-author">$3</span> (anonymous)',
 	'wikilog-comment-pending'	=> 'This comment is awaiting approval.',
-	'wikilog-comment-hidden'	=> 'This comment is hidden.',
 	'wikilog-comment-deleted'	=> 'This comment was deleted.',
-	'wikilog-comment-edited'	=> 'This comment was last edited on $1 [$2].', # $1 = date and time, $2 = history link
+	'wikilog-comment-edited'	=> 'This comment was last edited on $1 ($2).', # $1 = date and time, $2 = history link
 	'wikilog-comment-autosumm'	=> 'New comment by $1: $2',
 	'wikilog-reply-to-comment'	=> 'Post a reply to this comment',
+	'wikilog-comment-page'		=> 'Go to this comment\'s page',
+	'wikilog-comment-edit'		=> 'Edit this comment',
+	'wikilog-comment-delete'	=> 'Delete this comment',
 	'wikilog-comment-history'	=> 'View comment history',
+	'wikilog-comment-approve'	=> 'Approve this comment (immediate action)',
+	'wikilog-comment-reject'	=> 'Reject this comment (immediate action)',
 	'wikilog-newtalk-text'		=> '<!-- blank page created by Wikilog -->',
 	'wikilog-newtalk-summary'	=> 'created automatically by wikilog',
 
@@ -113,6 +129,8 @@ $messages['en'] = array(
 			'Posted comment is too long.',
 	'wikilog-comment-invalid-name' =>
 			'Provided name is invalid.',
+	'wikilog-no-such-article' =>
+			'The requested wikilog article does not exist.',
 
 	'wikilog-reading-draft'		=>
 			'<div class="mw-warning">'.
@@ -124,6 +142,10 @@ $messages['en'] = array(
 			'anonymously, identified by your Internet connection address. '.
 			'You should either provide a pseudonym above to identify your '.
 			'comment or $1 for it to be properly attributed.',
+	'wikilog-anonymous-moderated' =>
+			'After you submit your comment, it will not be immediately '.
+			'visible on this page. The comment will only appear after it '.
+			'is reviewed by a moderator.',
 
 	# Forms
 	'wikilog-post-comment'		=> 'Post a new comment',
@@ -145,7 +167,11 @@ $messages['en'] = array(
 	'wikilog-preview'			=> 'Preview',	# verb
 	'wikilog-edit-lc'			=> 'edit',		# verb
 	'wikilog-reply-lc'			=> 'reply',		# verb
-	'wikilog-history-lc'		=> 'history',
+	'wikilog-delete-lc'			=> 'delete',	# verb
+	'wikilog-approve-lc'		=> 'approve',	# verb
+	'wikilog-reject-lc'			=> 'reject',	# verb
+	'wikilog-page-lc'			=> 'page',		# noun
+	'wikilog-history-lc'		=> 'history',	# noun
 
 	# Untranslatable strings
 	'wikilog-summary'			=> '',			# Special page summary
@@ -173,6 +199,13 @@ $messages['pt'] = array(
 	'wikilog'					=> 'Wikilogs',
 	'wikilog-specialwikilog'	=> 'Wikilog',
 
+	# Logs
+	'wikilog-log-pagename'		=> 'Registro de ações wikilog',
+	'wikilog-log-pagetext'		=> 'Abaixo está uma lista das ações wikilog.',
+	'wikilog-log-cmt-approve'	=> 'aprovou o comentário [[$1]]',
+	'wikilog-log-cmt-reject'	=> 'rejeitou o comentário [[$1]]',
+	'wikilog-log-cmt-rejdel'	=> 'Comentário wikilog de [[Special:Contributions/$1|$1]] rejeitado',
+
 	# Wikilog tab
 	'wikilog-tab'				=> 'Wikilog',
 	'wikilog-tab-title'			=> 'Ações wikilog',
@@ -196,6 +229,7 @@ $messages['pt'] = array(
 	'wikilog-title'				=> 'Título',
 	'wikilog-actions'			=> 'Ações',
 	'wikilog-comments'			=> 'Comentários',
+	'wikilog-replies'			=> 'Respostas',
 	'wikilog-view-archives'		=> 'Arquivos',
 	'wikilog-view-summary'		=> 'Resumo',
 	'wikilog-draft-title-mark'	=> '(rascunho)',
@@ -217,7 +251,7 @@ $messages['pt'] = array(
 	'wikilog-no-comments'		=> 'não há comentários',
 	'wikilog-has-comments'		=> '{{PLURAL:$1|um comentário|$1 comentários}}',
 
-	'wikilog-author-signature'	=> '[[{{ns:User}}:$1|$1]] ([[{{ns:User_talk}}:$1|discussão]])',
+	# Wikilog item header and footer
 	'wikilog-item-brief-header'	=> ': <i><small>por $5, em [[$1|$2]], $6, $7.</small></i>',
 	'wikilog-item-brief-footer'	=> '',
 	'wikilog-item-more'			=> '[[$3|&rarr; continuar lendo...]]',
@@ -225,16 +259,22 @@ $messages['pt'] = array(
 	'wikilog-item-header'		=> '',
 	'wikilog-item-footer'		=> ': <i>&mdash; $5 &#8226; $6 &#8226; $7</i>',
 
+	'wikilog-author-signature'	=> '[[{{ns:User}}:$1|$1]] ([[{{ns:User_talk}}:$1|discussão]])',
+
 	# Comments
 	'wikilog-comment-by-user'	=> 'Comentário por <span class="wl-comment-author">$1</span> ($2)',
 	'wikilog-comment-by-anon'	=> 'Comentário por <span class="wl-comment-author">$3</span> (anônimo)',
 	'wikilog-comment-pending'	=> 'Este comentário está aguardando aprovação.',
-	'wikilog-comment-hidden'	=> 'Este comentário está oculto.',
 	'wikilog-comment-deleted'	=> 'Este comentário foi apagado.',
-	'wikilog-comment-edited'	=> 'Este comentário foi editado pela última vez em $1 [$2].', # $1 = date and time, $2 = history link
+	'wikilog-comment-edited'	=> 'Este comentário foi editado pela última vez em $1 ($2).', # $1 = date and time, $2 = history link
 	'wikilog-comment-autosumm'	=> 'Novo comentário por $1: $2',
 	'wikilog-reply-to-comment'	=> 'Postar uma resposta a esse comentário',
+	'wikilog-comment-page'		=> 'Ir para a página deste comentário',
+	'wikilog-comment-edit'		=> 'Editar este comentário',
+	'wikilog-comment-delete'	=> 'Apagar este comentário',
 	'wikilog-comment-history'	=> 'Ver histórico do comentário',
+	'wikilog-comment-approve'	=> 'Aprovar este comentário (ação imediata)',
+	'wikilog-comment-reject'	=> 'Rejeitar este comentário (ação imediata)',
 	'wikilog-newtalk-text'		=> '<!-- página em branco criada pelo Wikilog -->',
 	'wikilog-newtalk-summary'	=> 'criado automaticamente pelo wikilog',
 
@@ -264,6 +304,8 @@ $messages['pt'] = array(
 			'O comentário postado é muito longo.',
 	'wikilog-comment-invalid-name' =>
 			'O nome fornecido é inválido.',
+	'wikilog-no-such-article' =>
+			'O artigo wikilog solicitado não existe.',
 
 	'wikilog-reading-draft'		=>
 			'<div class="mw-warning">'.
@@ -280,6 +322,10 @@ $messages['pt'] = array(
 	'wikilog-posting-anonymously' =>
 			"Seu comentário será postado anonimamente. Você pode " .
 			"$1 para que seu comentário seja identificado.",
+	'wikilog-anonymous-moderated' =>
+			'Após submeter seu comentário, este não será imediatamente '.
+			'visível nesta página. O comentário somente aparecerá após ser '.
+			'revisado por um moderador.',
 
 	# Forms
 	'wikilog-post-comment'		=> 'Postar um novo comentário',
@@ -301,7 +347,11 @@ $messages['pt'] = array(
 	'wikilog-preview'			=> 'Previsão',		# verb
 	'wikilog-edit-lc'			=> 'editar',		# verb
 	'wikilog-reply-lc'			=> 'responder',		# verb
-	'wikilog-history-lc'		=> 'histórico',
+	'wikilog-delete-lc'			=> 'apagar',		# verb
+	'wikilog-approve-lc'		=> 'aprovar',		# verb
+	'wikilog-reject-lc'			=> 'rejeitar',		# verb
+	'wikilog-page-lc'			=> 'página',		# noun
+	'wikilog-history-lc'		=> 'histórico',		# noun
 );
 
 /** German (Deutsch)
@@ -317,6 +367,13 @@ $messages['de'] = array(
 	# Special:Wikilog
 	'wikilog'					=> 'Wikilogs',	# Page title
 	'wikilog-specialwikilog'	=> 'Wikilog',	# Special page name
+
+	# Logs
+	##TRANSLATE##	'wikilog-log-pagename'		=> 'Wikilog actions log',
+	##TRANSLATE##	'wikilog-log-pagetext'		=> 'Below is a list of wikilog actions.',
+	##TRANSLATE##	'wikilog-log-cmt-approve'	=> 'approved comment [[$1]]',
+	##TRANSLATE##	'wikilog-log-cmt-reject'	=> 'rejected comment [[$1]]',
+	##TRANSLATE##	'wikilog-log-cmt-rejdel'	=> 'Rejected wikilog comment from [[Special:Contributions/$1|$1]]',
 
 	# Wikilog tab
 	'wikilog-tab'				=> 'Wikilog',
@@ -341,6 +398,8 @@ $messages['de'] = array(
 	'wikilog-title'				=> 'Titel',
 	'wikilog-actions'			=> 'Aktionen',
 	'wikilog-comments'			=> 'Kommentare',
+	##TRANSLATE##	'wikilog-replies'			=> 'Replies',
+
 	'wikilog-view-archives'		=> 'Archive',
 	'wikilog-view-summary'		=> 'Zusammenfassung',
 	'wikilog-draft-title-mark'	=> '(Entwurf)',
@@ -362,7 +421,7 @@ $messages['de'] = array(
 	'wikilog-no-comments'		=> 'keine Kommentare',
 	'wikilog-has-comments'		=> '{{PLURAL:$1|ein Kommentar|$1 Kommentare}}',
 
-	'wikilog-author-signature'	=> '[[{{ns:User}}:$1|$1]] ([[{{ns:User_talk}}:$1|Diskussion]])',
+	# Wikilog item header and footer
 	'wikilog-item-brief-header'	=> ': <i><small>von $5, aus [[$1|$2]], $6, $7.</small></i>',
 	'wikilog-item-brief-footer'	=> '',
 	'wikilog-item-more'			=> '[[$3|&rarr; weiterlesen...]]',
@@ -370,17 +429,22 @@ $messages['de'] = array(
 	'wikilog-item-header'		=> '',
 	'wikilog-item-footer'		=> ': <i>&mdash; $5 &#8226; $6 &#8226; $7</i>',
 
+	'wikilog-author-signature'	=> '[[{{ns:User}}:$1|$1]] ([[{{ns:User_talk}}:$1|Diskussion]])',
+
 	# Comments
 	'wikilog-comment-by-user'	=> 'Kommentar von <span class="wl-comment-author">$1</span> ($2)',
 	'wikilog-comment-by-anon'	=> 'Kommentar von <span class="wl-comment-author">$3</span> (anonym)',
 	'wikilog-comment-pending'	=> 'Dieser Kommentar muss noch zugelassen werden.',
-	'wikilog-comment-hidden'	=> 'Dieser Kommentar ist versteckt.',
 	'wikilog-comment-deleted'	=> 'Dieser Kommentar wurde gelöscht.',
-	##TRANSLATE##	'wikilog-comment-edited'	=> 'This comment was last edited on $1 [$2].', # $1 = date and time, $2 = history link
+	##TRANSLATE##	'wikilog-comment-edited'	=> 'This comment was last edited on $1 ($2).', # $1 = date and time, $2 = history link
 	'wikilog-comment-autosumm'	=> 'Neuer Kommentar von $1: $2',
 	'wikilog-reply-to-comment'	=> 'Poste eine Antwort auf diesen Kommentar',
+	##TRANSLATE##	'wikilog-comment-page'		=> 'Go to this comment\'s page',
+	##TRANSLATE##	'wikilog-comment-edit'		=> 'Edit this comment',
+	##TRANSLATE##	'wikilog-comment-delete'	=> 'Delete this comment',
 	##TRANSLATE##	'wikilog-comment-history'	=> 'View comment history',
-
+	##TRANSLATE##	'wikilog-comment-approve'	=> 'Approve this comment (immediate action)',
+	##TRANSLATE##	'wikilog-comment-reject'	=> 'Reject this comment (immediate action)',
 	'wikilog-newtalk-text'		=> '<!-- leere Seite erzeugt durch Wikilog -->',
 	'wikilog-newtalk-summary'	=> 'automatisch erzeugt durch Wikilog',
 
@@ -411,6 +475,8 @@ $messages['de'] = array(
 			'Der gesendete Kommentar ist zu lang.',
 	'wikilog-comment-invalid-name' =>
 			'Der angegebene Name ist ungültig.',
+	##TRANSLATE##	'wikilog-no-such-article' =>
+	##TRANSLATE##			'The requested wikilog article does not exist.',
 
 	'wikilog-reading-draft'		=>
 			'<div class="mw-warning">'.
@@ -422,6 +488,10 @@ $messages['de'] = array(
 			'versendet, identifiziert durch ihre Internetverbindungsadresse. '.
 			'Sie sollten oben entweder ein Pseudonym angeben, um ihren '.
 			'Kommentar zu identifizieren oder $1, damit er passend zugeordnet wird.',
+	##TRANSLATE##	'wikilog-anonymous-moderated' =>
+	##TRANSLATE##			'After you submit your comment, it will not be immediately '.
+	##TRANSLATE##			'visible on this page. The comment will only appear after it '.
+	##TRANSLATE##			'it is reviewed by a moderator.',
 
 	# Forms
 	'wikilog-post-comment'		=> 'Poste einen neuen Kommentar',
@@ -443,6 +513,10 @@ $messages['de'] = array(
 	'wikilog-preview'			=> 'Vorher betrachten',	# verb
 	'wikilog-edit-lc'			=> 'bearbeiten',		# verb
 	'wikilog-reply-lc'			=> 'antworten',		# verb
+	##TRANSLATE##	'wikilog-delete-lc'			=> 'delete',	# verb
+	##TRANSLATE##	'wikilog-approve-lc'		=> 'approve',	# verb
+	##TRANSLATE##	'wikilog-reject-lc'			=> 'reject',	# verb
+	##TRANSLATE##	'wikilog-page-lc'			=> 'page',		# noun
 	##TRANSLATE##	'wikilog-history-lc'		=> 'history',
 
 );
