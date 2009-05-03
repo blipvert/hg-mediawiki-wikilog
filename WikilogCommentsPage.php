@@ -49,15 +49,16 @@ class WikilogCommentsPage
 	implements WikilogCustomAction
 {
 	protected $mSkin;				///< Skin used for rendering the page.
-	protected $mItem;				///< Wikilog item the page is associated with.
-	protected $mTalkTitle;			///< Main talk page title.
 	protected $mFormOptions;		///< Post comment form fields.
 	protected $mUserCanPost;		///< User is allowed to post.
 	protected $mUserCanModerate;	///< User is allowed to moderate.
 	protected $mPostedComment;		///< Posted comment, from HTTP post data.
 	protected $mCaptchaForm;		///< Captcha form fields, when saving comment.
 	protected $mTrailing;			///< Trailing text in comments title page.
-	protected $mSingleComment;		///< Used when viewing a single comment.
+
+	public    $mItem;				///< Wikilog item the page is associated with.
+	public    $mTalkTitle;			///< Main talk page title.
+	public    $mSingleComment;		///< Used when viewing a single comment.
 
 	/**
 	 * Constructor.
@@ -388,7 +389,8 @@ class WikilogCommentsPage
 		global $wgUser;
 		$tools = array();
 
-		if ( $comment->mID && $comment->mCommentTitle->exists() ) {
+		if ( $comment->mID && $comment->mCommentTitle &&
+				$comment->mCommentTitle->exists() ) {
 			if ( $this->mUserCanPost && $comment->isVisible() ) {
 				$tools[] = $this->getCommentReplyLink( $comment );
 			}

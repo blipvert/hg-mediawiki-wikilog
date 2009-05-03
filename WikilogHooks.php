@@ -39,6 +39,16 @@ class WikilogHooks {
 	 * Performs post-edit updates if article is a wikilog article.
 	 */
 	static function ArticleEditUpdates( &$article, &$editInfo, $changed ) {
+		# When editing through MW interface, article is derived from
+		# WikilogCommentsPage. In this case, update the comment object.
+		if ( $article instanceof WikilogCommentsPage && $changed ) {
+			$cmt =& $article->mSingleComment;
+			if ( $cmt && !$cmt->isTextChanged() && $changed ) {
+				$cmt->mUpdated = wfTimestamp( TS_MW );
+				$cmt->saveComment();
+			}
+		}
+
 		$title = $article->getTitle();
 		$wi = Wikilog::getWikilogInfo( $title );
 
@@ -130,6 +140,15 @@ class WikilogHooks {
 	 * Purges wikilog metadata when an article is deleted.
 	 */
 	static function ArticleDeleteComplete( &$article, &$user, $reason, $id ) {
+		# Deleting comment through MW interface.
+		if ( $article instanceof WikilogCommentsPage ) {
+			$cmt =& $article->mSingleComment;
+			if ( $cmt ) {
+				$cmt->mStatus = WikilogComment::S_DELETED;
+				$cmt->saveComment();
+			}
+		}
+
 		# Retrieve wikilog information.
 		$wi = Wikilog::getWikilogInfo( $article->getTitle() );
 
@@ -139,9 +158,10 @@ class WikilogHooks {
 
 			if ( $wi->isItem() ) {
 				# Delete table entries.
-				$dbw->delete( 'wikilog_posts',   array( 'wlp_page' => $id ) );
-				$dbw->delete( 'wikilog_authors', array( 'wla_page' => $id ) );
-				$dbw->delete( 'wikilog_tags',    array( 'wlt_page' => $id ) );
+				$dbw->delete( 'wikilog_posts',    array( 'wlp_page' => $id ) );
+				$dbw->delete( 'wikilog_comments', array( 'wlc_parent' => $id ) );
+				$dbw->delete( 'wikilog_authors',  array( 'wla_page' => $id ) );
+				$dbw->delete( 'wikilog_tags',     array( 'wlt_page' => $id ) );
 
 				# Invalidate cache of parent wikilog page.
 				WikilogUtils::updateWikilog( $wi->getTitle() );

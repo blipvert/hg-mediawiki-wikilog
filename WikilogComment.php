@@ -89,6 +89,10 @@ class WikilogComment
 		return $this->mStatus == self::S_OK;
 	}
 
+	public function isTextChanged() {
+		return $this->mTextChanged;
+	}
+
 	public function loadText() {
 		$dbr = wfGetDB( DB_SLAVE );
 		$rev = Revision::loadFromId( $dbr, $this->mCommentRev );
@@ -163,6 +167,7 @@ class WikilogComment
 		$dbw->begin();
 
 		$dbw->delete( 'wikilog_comments', array( 'wlc_id' => $this->mID ), __METHOD__ );
+		$this->mItem->updateNumComments( true );
 
 		$dbw->commit();
 
