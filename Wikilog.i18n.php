@@ -213,7 +213,7 @@ $messages['pt'] = array(
 	'wikilog-post-count-published'	=>
 		'Há $1 {{PLURAL:$1|artigo publicado|artigos publicados}} neste wikilog,',
 	'wikilog-post-count-drafts'	=>
-		'mais $1 {{PLURAL:$1|artigo não-publicado (rascunho)|$1 artigos não-publicados (rascunhos)}},',
+		'mais $1 {{PLURAL:$1|artigo não-publicado (rascunho)|artigos não-publicados (rascunhos)}},',
 	'wikilog-post-count-all'	=>
 		'para um total de $1 {{PLURAL:$1|artigo|artigos}}.',
 	'wikilog-new-item'			=> 'Criar novo artigo wikilog',
