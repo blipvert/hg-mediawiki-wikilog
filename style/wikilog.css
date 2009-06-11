@@ -117,10 +117,4 @@ div.wl-comment-error-box {
 	text-align: center;
 }
 
-#feedlinks a,
-a.feed {
-	background: transparent url(images/feed-icon-12x12.png) center left no-repeat;
-	padding: 0 0 0 15px;
-}
-
 /* kate: indent-mode normal; space-indent off; tab-width 4; */

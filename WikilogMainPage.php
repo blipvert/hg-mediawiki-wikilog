@@ -224,10 +224,11 @@ class WikilogMainPage extends Article implements WikilogCustomAction {
 		if ( !empty( $wgWikilogFeedClasses ) ) {
 			$f = array();
 			foreach ( $wgWikilogFeedClasses as $format => $class ) {
-				$f[] = $skin->makeKnownLinkObj( $this->mTitle,
+				$f[] = $skin->link( $this->mTitle,
 					wfMsg( "feed-{$format}" ),
-					"view=archives&show={$type}&feed={$format}",
-					'', '', 'class="feed"'
+					array( 'class' => "feedlink", 'type' => "application/{$format}+xml" ),
+					array( 'view' => "archives", 'show' => $type, 'feed' => $format ),
+					'known'
 				);
 			}
 			$s .= ' (' . implode( ', ', $f ) . ')';
