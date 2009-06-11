@@ -6,6 +6,9 @@
 -- perform any needed database setup.
 --
 
+-- This patch should only be applied if you used the trunk version of
+-- Wikilog between r383 and r410.
+
 ALTER TABLE /*$wgDBprefix*/wikilog_comments
   CHANGE wlc_status
   wlc_status ENUM( 'OK', 'PENDING', 'DELETED' ) NOT NULL DEFAULT 'OK';
