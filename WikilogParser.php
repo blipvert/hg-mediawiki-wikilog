@@ -537,7 +537,11 @@ class WikilogParserCache extends ParserCache {
 		return $instance;
 	}
 
-	public function getKey( &$article, &$user ) {
+	public function getKey( &$article, $popts ) {
+		if( $popts instanceof User )	// API change in MediaWiki 1.15.
+			$popts = ParserOptions::newFromUser( $popts );
+
+		$user = $popts->mUser;
 		$pageid = intval( $article->getID() );
 		$hash = $user->getPageRenderingHash();
 		$key = wfMemcKey( 'wlcache', 'idhash', "$pageid-$hash" );
