@@ -201,7 +201,7 @@ class WikilogUtils {
 		$commentsNum = $item->getNumComments();
 		$commentsMsg = ( $commentsNum ? 'wikilog-has-comments' : 'wikilog-no-comments' );
 		$commentsUrl = $item->mTitle->getTalkPage()->getPrefixedURL();
-		$commentsTxt = wfMsgExt( $commentsMsg, array( 'parseinline', 'parsemag', 'content' ), $commentsNum );
+		$commentsTxt = wfMsgExt( $commentsMsg, array( 'parsemag', 'content' ), $commentsNum );
 		return "[[{$commentsUrl}|{$commentsTxt}]]";
 	}
 
