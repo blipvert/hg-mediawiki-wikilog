@@ -29,8 +29,11 @@ if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
 
-class WikilogItem {
-
+/**
+ * Wikilog article database entry.
+ */
+class WikilogItem
+{
 	public    $mID          = false;
 	public    $mName        = false;
 	public    $mTitle       = false;
@@ -185,7 +188,6 @@ class WikilogItem {
 
 	private static function loadFromConds( $dbr, $conds ) {
 		extract( self::selectInfo( $dbr ) );	// $tables, $fields
-		extract( $dbr->tableNames( 'page' ) );
 		$row = $dbr->selectRow( $tables, $fields, $conds, __METHOD__, array( ) );
 		return $row;
 	}

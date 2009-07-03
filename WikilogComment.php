@@ -29,6 +29,9 @@ if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
 
+/**
+ * Wikilog article comment database entry.
+ */
 class WikilogComment
 {
 	const S_OK				= 'OK';

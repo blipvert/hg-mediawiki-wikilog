@@ -379,6 +379,7 @@ class WikilogInfo
 		$tns = MWNamespace::getTalk( $origns );
 
 		if ( strpos( $title->getText(), '/' ) !== false ) {
+			# If title contains a '/', treat as a wikilog article title.
 			list( $this->mWikilogName, $this->mItemName ) =
 				explode( '/', $title->getText(), 2 );
 
@@ -392,6 +393,7 @@ class WikilogInfo
 			$this->mItemTitle = Title::makeTitle( $ns, $rawtitle );
 			$this->mItemTalkTitle = Title::makeTitle( $tns, $rawtitle );
 		} else {
+			# Title doesn't contain a '/', treat as a wikilog name.
 			$this->mWikilogName = $title->getText();
 			$this->mWikilogTitle = Title::makeTitle( $ns, $this->mWikilogName );
 			$this->mItemName = NULL;

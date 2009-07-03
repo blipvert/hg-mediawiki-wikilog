@@ -32,8 +32,8 @@ if ( !defined( 'MEDIAWIKI' ) )
 /**
  * General wikilog hooks.
  */
-class WikilogHooks {
-
+class WikilogHooks
+{
 	/**
 	 * ArticleEditUpdates hook handler function.
 	 * Performs post-edit updates if article is a wikilog article.
@@ -65,14 +65,15 @@ class WikilogHooks {
 		} else if ( $wi->isItem() ) {
 			# ::WikilogItemPage::
 			$item = WikilogItem::newFromInfo( $wi );
-			if ( $item === NULL ) {
+			if ( !$item ) {
 				$item = new WikilogItem();
-				$item->mName = $wi->getItemName();
-				$item->mTitle = $wi->getItemTitle();
-				$item->mParentName = $wi->getName();
-				$item->mParentTitle = $wi->getTitle();
-				$item->mParent = $item->mParentTitle->getArticleId();
 			}
+
+			$item->mName = $wi->getItemName();
+			$item->mTitle = $wi->getItemTitle();
+			$item->mParentName = $wi->getName();
+			$item->mParentTitle = $wi->getTitle();
+			$item->mParent = $item->mParentTitle->getArticleId();
 
 			$item->resetID( $article->getId() );
 
@@ -158,19 +159,20 @@ class WikilogHooks {
 
 			if ( $wi->isItem() ) {
 				# Delete table entries.
-				$dbw->delete( 'wikilog_posts',    array( 'wlp_page' => $id ) );
+				$dbw->delete( 'wikilog_posts',    array( 'wlp_page'   => $id ) );
 				$dbw->delete( 'wikilog_comments', array( 'wlc_parent' => $id ) );
-				$dbw->delete( 'wikilog_authors',  array( 'wla_page' => $id ) );
-				$dbw->delete( 'wikilog_tags',     array( 'wlt_page' => $id ) );
+				$dbw->delete( 'wikilog_authors',  array( 'wla_page'   => $id ) );
+				$dbw->delete( 'wikilog_tags',     array( 'wlt_page'   => $id ) );
+				$dbw->delete( 'wikilog_comments', array( 'wlc_post'   => $id ) );
 
 				# Invalidate cache of parent wikilog page.
 				WikilogUtils::updateWikilog( $wi->getTitle() );
 			} else {
 				# Delete table entries.
-				$dbw->delete( 'wikilog_wikilogs', array( 'wlw_page' => $id ) );
+				$dbw->delete( 'wikilog_wikilogs', array( 'wlw_page'   => $id ) );
 				$dbw->delete( 'wikilog_posts',    array( 'wlp_parent' => $id ) );
-				$dbw->delete( 'wikilog_authors',  array( 'wla_page' => $id ) );
-				$dbw->delete( 'wikilog_tags',     array( 'wlt_page' => $id ) );
+				$dbw->delete( 'wikilog_authors',  array( 'wla_page'   => $id ) );
+				$dbw->delete( 'wikilog_tags',     array( 'wlt_page'   => $id ) );
 			}
 		}
 
@@ -184,30 +186,46 @@ class WikilogHooks {
 	static function TitleMoveComplete( &$oldtitle, &$newtitle, &$user, $pageid, $redirid ) {
 		global $wgWikilogNamespaces;
 
+		# Check if it was or is now in a wikilog namespace.
 		$oldwl = in_array( ( $oldns = $oldtitle->getNamespace() ), $wgWikilogNamespaces );
 		$newwl = in_array( ( $newns = $newtitle->getNamespace() ), $wgWikilogNamespaces );
 
 		if ( $oldwl && $newwl ) {
-			# Moving titles in wikilog namespaces.
-			## Nothing to do.
-			wfDebug( __METHOD__ . ": Moving title in wikilog namespaces ".
-				"($oldns, $newns)." );
-		} else if ( $oldwl ) {
-			# Moving from wikilog namespace to normal namespace.
-			# Purge wikilog data.
-			wfDebug( __METHOD__ . ": Moving from wikilog namespace to other ".
-				"namespace ($oldns, $newns). Purging wikilog data." );
-			$dbw = wfGetDB( DB_MASTER );
-			$dbw->delete( 'wikilog_wikilogs', array( 'wlw_page' => $pageid ) );
-			$dbw->delete( 'wikilog_posts',    array( 'wlp_page' => $pageid ) );
-			$dbw->delete( 'wikilog_posts',    array( 'wlp_parent' => $pageid ) );
-			$dbw->delete( 'wikilog_authors',  array( 'wla_page' => $pageid ) );
-			$dbw->delete( 'wikilog_tags',     array( 'wlt_page' => $pageid ) );
+			# Moving title between wikilog namespaces.
+			# Update wikilog data.
+			wfDebug( __METHOD__ . ": Moving title between wikilog namespaces ".
+				"($oldns, $newns). Updating wikilog data.\n" );
+
+			$wi = Wikilog::getWikilogInfo( $newtitle );
+			$item = WikilogItem::newFromID( $pageid );
+			if ( $wi && $wi->isItem() && !$wi->isTalk() && $item ) {
+				$item->mName = $wi->getItemName();
+				$item->mTitle = $wi->getItemTitle();
+				$item->mParentName = $wi->getName();
+				$item->mParentTitle = $wi->getTitle();
+				$item->mParent = $item->mParentTitle->getArticleId();
+				$item->saveData();
+			}
 		} else if ( $newwl ) {
 			# Moving from normal namespace to wikilog namespace.
 			# Create wikilog data.
-			wfDebug( __METHOD__ . ": Moving from other namespace to wikilog ".
-				"namespace ($oldns, $newns). Creating wikilog data." );
+			wfDebug( __METHOD__ . ": Moving from another namespace to wikilog ".
+				"namespace ($oldns, $newns). Creating wikilog data.\n" );
+			# FIXME: This needs a reparse of the wiki text in order to
+			# populate wikilog metadata. Or forbid this action.
+		} else if ( $oldwl ) {
+			# Moving from wikilog namespace to normal namespace.
+			# Purge wikilog data.
+			wfDebug( __METHOD__ . ": Moving from wikilog namespace to another ".
+				"namespace ($oldns, $newns). Purging wikilog data.\n" );
+			$dbw = wfGetDB( DB_MASTER );
+			$dbw->delete( 'wikilog_wikilogs', array( 'wlw_page'   => $pageid ) );
+			$dbw->delete( 'wikilog_posts',    array( 'wlp_page'   => $pageid ) );
+			$dbw->delete( 'wikilog_posts',    array( 'wlp_parent' => $pageid ) );
+			$dbw->delete( 'wikilog_authors',  array( 'wla_page'   => $pageid ) );
+			$dbw->delete( 'wikilog_tags',     array( 'wlt_page'   => $pageid ) );
+//			$dbw->delete( 'wikilog_comments', array( 'wlc_post'   => $pageid ) );
+			# FIXME: Decide what to do with the comments.
 		}
 		return true;
 	}
