@@ -85,7 +85,7 @@ class WikilogUtils {
 		if ( is_null( $parser ) ) {
 			global $wgParser;
 			$parser = clone $wgParser;
-			$parser->startExternalParse( $title, $parserOpt, Parser::OT_HTML );
+			$parser->startExternalParse( &$title, $parserOpt, Parser::OT_HTML );
 		}
 
 		// Parse article.

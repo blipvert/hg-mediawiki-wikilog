@@ -147,7 +147,7 @@ class WikilogParser {
 	/**
 	 * Summary tag parser hook handler.
 	 */
-	public static function summary( $text, $params, &$parser ) {
+	public static function summary( $text, $params, $parser ) {
 		$mwHidden =& MagicWord::get( 'wlk-hidden' );
 
 		# Remove extra space to make block rendering easier.

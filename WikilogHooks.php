@@ -286,7 +286,7 @@ class WikilogHooks
 	 * UnknownAction hook handler function.
 	 * Handles ?action=wikilog requests.
 	 */
-	static function UnknownAction( $action, &$article ) {
+	static function UnknownAction( $action, $article ) {
 		if ( $action == 'wikilog' && $article instanceof WikilogCustomAction ) {
 			$article->wikilog();
 			return false;

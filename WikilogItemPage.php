@@ -154,7 +154,7 @@ class WikilogItemPage extends Article {
 			'/\n?(--)?~~~\n?/m' => "\n{{wl-author: {$user} }}\n"
 		);
 
-		$wgParser->startExternalParse( $this->mTitle, $popt, Parser::OT_WIKI );
+		$wgParser->startExternalParse( &$this->mTitle, $popt, Parser::OT_WIKI );
 
 		$text = $wgParser->replaceVariables( $text );
 		$text = preg_replace( array_keys( $sigs ), array_values( $sigs ), $text );

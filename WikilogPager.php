@@ -204,7 +204,7 @@ class WikilogTemplatePager extends WikilogSummaryPager {
 		# Private parser.
 		$this->mParserOpt = ParserOptions::newFromUser( $wgUser );
 		$this->mParser = clone $wgParser;
-		$this->mParser->startExternalParse( $wgTitle, $this->mParserOpt, Parser::OT_HTML );
+		$this->mParser->startExternalParse( &$wgTitle, $this->mParserOpt, Parser::OT_HTML );
 
 		# Load template
 		list( $this->mTemplate, $this->mTemplateTitle ) =
@@ -229,7 +229,7 @@ class WikilogTemplatePager extends WikilogSummaryPager {
 		global $wgTitle, $wgContLang;
 
 		# Clear parser state.
-		$this->mParser->startExternalParse( $wgTitle, $this->mParserOpt, Parser::OT_HTML );
+		$this->mParser->startExternalParse( &$wgTitle, $this->mParserOpt, Parser::OT_HTML );
 
 		# Retrieve article parser output and other data.
 		$item = WikilogItem::newFromRow( $row );
@@ -262,6 +262,12 @@ class WikilogTemplatePager extends WikilogSummaryPager {
 		);
 
 		$frame = $this->mParser->getPreprocessor()->newCustomFrame( $vars );
+
+		# XXX: Work around MediaWiki bug 20431
+		# https://bugzilla.wikimedia.org/show_bug.cgi?id=20431
+		$frame->title = $frame->parser->mTitle;
+		$frame->titleCache = array( $frame->title ? $frame->title->getPrefixedDBkey() : false );
+
 		$text = $frame->expand( $this->mTemplate );
 
 		$pout = $this->mParser->parse( $text, $wgTitle, $this->mParserOpt, true, false );
