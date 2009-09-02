@@ -128,15 +128,45 @@ class SpecialWikilog extends IncludableSpecialPage {
 			$pager = new WikilogSummaryPager( $query, $opts['limit'] );
 		}
 
+		# Wikilog CSS wrapper class.
 		$wgOut->addHTML( wfOpenElement( 'div', array( 'class' => 'wl-wrapper' ) ) );
+
 		if ( $this->including() ) {
+			/**
+			 * NOTE: Wikilog needs to call the parser a few times in order to
+			 * render the page. Some MediaWiki functions (like wfMsgExt() and
+			 * wfMsgWikiHtml()) reset the parser when called, and this causes
+			 * a lot of problems when Special:Wikilog is transcluded. Instead
+			 * of working around each call that resets the parser, we replace
+			 * the parser temporarily with a new blank instance.
+			 *
+			 * Unfortunately, we can't just clone $wgParser due to a possible
+			 * bug in Parser::__destruct(), that damages data of the orignal
+			 * parser object when the copy is destroyed.
+			 */
+			global $wgParser, $wgParserConf;
+			$saved =& $wgParser;
+			$class = $wgParserConf['class'];
+			$wgParser = new $class( $wgParserConf ); // clone $wgParser;
+
+			# Get pager body.
 			$wgOut->addHTML( $pager->getBody() );
+
+			# Restore saved parser.
+			$wgParser =& $saved;
 		} else {
+			# Get pager body.
 			$body = $pager->getBody();
+
+			# Add navigation bars.
 			if ( $wgWikilogNavTop ) $body = $pager->getNavigationBar() . $body;
 			if ( $wgWikilogNavBottom ) $body = $body . $pager->getNavigationBar();
+
+			# Output.
 			$wgOut->addHTML( $body );
 		}
+
+		# Wikilog CSS wrapper class.
 		$wgOut->addHTML( wfCloseElement( 'div' ) );
 
 		# Get query parameter array, for the following links.

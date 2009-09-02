@@ -82,7 +82,7 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 	}
 
 	function getEmptyBody() {
-		return wfMsgWikiHtml( 'wikilog-pager-empty' );
+		return wfMsgExt( 'wikilog-pager-empty', array( 'parsemag' ) );
 	}
 
 	function getNavigationBar( $pos = false ) {
@@ -98,7 +98,8 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 			$pagingLinks = $this->getPagingLinks( $linkTexts );
 			$limitLinks = $this->getLimitLinks();
 			$limits = implode( ' | ', $limitLinks );
-			$this->mNavigationBar = wfMsgWikiHtml( 'wikilog-navigation-bar',
+			$this->mNavigationBar = wfMsgExt( 'wikilog-navigation-bar',
+				array( 'parsemag' ),
 				/* $1 */ $pagingLinks['first'],
 				/* $2 */ $pagingLinks['prev'],
 				/* $3 */ $pagingLinks['next'],
@@ -326,7 +327,8 @@ class WikilogArchivesPager extends TablePager {
 			$pagingLinks = $this->getPagingLinks( $linkTexts );
 			$limitLinks = $this->getLimitLinks();
 			$limits = implode( ' | ', $limitLinks );
-			$this->mNavigationBar = wfMsgWikiHtml( 'wikilog-navigation-bar',
+			$this->mNavigationBar = wfMsgExt( 'wikilog-navigation-bar',
+				array( 'parsemag' ),
 				/* $1 */ $pagingLinks['first'],
 				/* $2 */ $pagingLinks['prev'],
 				/* $3 */ $pagingLinks['next'],
