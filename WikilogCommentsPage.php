@@ -634,8 +634,8 @@ class WikilogCommentsPage
 		global $wgUser, $wgRequest;
 
 		$parent = $wgRequest->getIntOrNull( 'wlParent' );
-		$anonname = $wgRequest->getText( 'wlAnonName' );
-		$text = $wgRequest->getText( 'wlComment' );
+		$anonname = trim( $wgRequest->getText( 'wlAnonName' ) );
+		$text = trim( $wgRequest->getText( 'wlComment' ) );
 
 		$comment = WikilogComment::newFromText( $this->mItem, $text, $parent );
 		$comment->setUser( $wgUser );
