@@ -99,9 +99,9 @@ class WikilogMainPage extends Article implements WikilogCustomAction {
 		$body = $pager->getBody();
 		if ( $wgWikilogNavTop ) $body = $pager->getNavigationBar() . $body;
 		if ( $wgWikilogNavBottom ) $body = $body . $pager->getNavigationBar();
-		$wgOut->addHTML( wfOpenElement( 'div', array( 'class' => 'wl-wrapper' ) ) );
+		$wgOut->addHTML( Xml::openElement( 'div', array( 'class' => 'wl-wrapper' ) ) );
 		$wgOut->addHTML( $body );
-		$wgOut->addHTML( wfCloseElement( 'div' ) );
+		$wgOut->addHTML( Xml::closeElement( 'div' ) );
 
 		# Get query parameter array, for the following links.
 		$qarr = $query->getDefaultQuery();

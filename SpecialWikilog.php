@@ -129,7 +129,7 @@ class SpecialWikilog extends IncludableSpecialPage {
 		}
 
 		# Wikilog CSS wrapper class.
-		$wgOut->addHTML( wfOpenElement( 'div', array( 'class' => 'wl-wrapper' ) ) );
+		$wgOut->addHTML( Xml::openElement( 'div', array( 'class' => 'wl-wrapper' ) ) );
 
 		if ( $this->including() ) {
 			/**
@@ -167,7 +167,7 @@ class SpecialWikilog extends IncludableSpecialPage {
 		}
 
 		# Wikilog CSS wrapper class.
-		$wgOut->addHTML( wfCloseElement( 'div' ) );
+		$wgOut->addHTML( Xml::closeElement( 'div' ) );
 
 		# Get query parameter array, for the following links.
 		$qarr = $query->getDefaultQuery();
