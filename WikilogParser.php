@@ -33,7 +33,8 @@ if ( !defined( 'MEDIAWIKI' ) )
  * This class holds the parser functions that hooks into the Parser in order
  * to collect Wikilog metadata.
  */
-class WikilogParser {
+class WikilogParser
+{
 
 	/**
 	 * True if parsing articles with feed output specific settings.
@@ -87,10 +88,14 @@ class WikilogParser {
 	 */
 	public static function BeforeInternalParse( &$parser, &$text, &$stripState ) {
 		global $wgUser;
-		$wi = Wikilog::getWikilogInfo( $parser->getTitle() );
+
+		# Do nothing if a title is not set.
+		if ( ! ( $title = $parser->getTitle() )  )
+			return true;
 
 		# Do nothing if it is not a wikilog article.
-		if ( !$wi ) return true;
+		if ( ! ( $wi = Wikilog::getWikilogInfo( $parser->getTitle() ) ) )
+			return true;
 
 		if ( $wi->isItem() ) {
 			# By default, use the item name as the default sort in categories.
@@ -497,7 +502,8 @@ class WikilogParser {
  * $parser->mExtWikilog, and then copied to the parser output
  * $popt->mExtWikilog in WikilogParser::AfterTidy().
  */
-class WikilogParserOutput {
+class WikilogParserOutput
+{
 
 	/* Item and Wikilog metadata */
 	public $mSummary = false;
@@ -521,12 +527,14 @@ class WikilogParserOutput {
 
 /**
  * Since wikilog parses articles with specific options in order to be
- * outputted in feeds, it is necessary to store these parsed outputs in
+ * rendered in feeds, it is necessary to store these parsed outputs in
  * the cache separately. This derived class from ParserCache overloads the
  * getKey() function in order to provide a specific namespace for this
  * purpose.
  */
-class WikilogParserCache extends ParserCache {
+class WikilogParserCache
+	extends ParserCache
+{
 
 	public static function &singleton() {
 		static $instance;
