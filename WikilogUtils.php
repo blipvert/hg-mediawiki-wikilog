@@ -83,6 +83,9 @@ class WikilogUtils
 
 		# Get a parser instance, if not already cached.
 		if ( is_null( $parser ) ) {
+			if ( !StubObject::isRealObject( $wgParser ) ) {
+				$wgParser->_unstub();
+			}
 			if ( $wgWikilogCloneParser ) {
 				$parser = clone $wgParser;
 			} else {
@@ -90,7 +93,7 @@ class WikilogUtils
 				$parser = new $class( $wgParserConf );
 			}
 		}
-		$parser->startExternalParse( &$title, $parserOpt, Parser::OT_HTML );
+		$parser->startExternalParse( $title, $parserOpt, Parser::OT_HTML );
 
 		# Parse article.
 		$arttext = $article->fetchContent();
