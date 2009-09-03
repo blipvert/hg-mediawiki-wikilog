@@ -34,7 +34,8 @@ if ( !defined( 'MEDIAWIKI' ) )
  * through the ConfirmEdit extension. Only Captchas derived from
  * SimpleCaptcha can be used.
  */
-class WlCaptcha {
+class WlCaptcha
+{
 
 	public static $instance = NULL;
 	public static $initialized = false;
@@ -88,7 +89,8 @@ class WlCaptcha {
  * A lot of code is duplicated and adapted from the original SimpleCaptcha
  * class, Copyright (C) 2005-2007 Brion Vibber.
  */
-class WlCaptchaAdapter {
+class WlCaptchaAdapter
+{
 
 	public $mCaptcha;
 

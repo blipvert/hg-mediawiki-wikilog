@@ -72,7 +72,8 @@ $wgExtensionFunctions[] = array( 'WlFeed', 'ExtensionInit' );
 /**
  * Main WlFeed class.
  */
-class WlFeed {
+class WlFeed
+{
 
 	/**
 	 * Configuration: Override default MediaWiki syndication classes. If set

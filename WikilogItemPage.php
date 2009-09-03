@@ -29,7 +29,9 @@ if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
 
-class WikilogItemPage extends Article {
+class WikilogItemPage
+	extends Article
+{
 
 	protected $mItem;
 

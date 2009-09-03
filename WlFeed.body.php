@@ -33,7 +33,8 @@ if ( !defined( 'MEDIAWIKI' ) )
  * Syndication base class. This class shares common metadata for both feeds
  * (RSS channels) and entries (RSS items).
  */
-abstract class WlSyndicationBase {
+abstract class WlSyndicationBase
+{
 
 	/**
 	 * A permanent, universally unique identifier for an entry or feed.
@@ -268,7 +269,9 @@ abstract class WlSyndicationBase {
  * Syndication feed class. This class represents a feed (Atom) or channel
  * (RSS).
  */
-abstract class WlSyndicationFeed extends WlSyndicationBase {
+abstract class WlSyndicationFeed
+	extends WlSyndicationBase
+{
 
 	/**
 	 * A text construct that conveys a human-readable description or subtitle
@@ -491,7 +494,9 @@ abstract class WlSyndicationFeed extends WlSyndicationBase {
  * Syndication entry class. This class represents individual entries (Atom) or
  * items (RSS).
  */
-class WlSyndicationEntry extends WlSyndicationBase {
+class WlSyndicationEntry
+	extends WlSyndicationBase
+{
 
 	/**
 	 * A date value indicating an instant in time when the entry was published.
@@ -569,7 +574,8 @@ class WlSyndicationEntry extends WlSyndicationBase {
  * A text construct, contains human-readable text and is language-sensitive.
  * May contain plain text, HTML or XHTML.
  */
-class WlTextConstruct {
+class WlTextConstruct
+{
 
 	const T_TEXT  = 'text';				///< Plain text, no markup.
 	const T_HTML  = 'html';				///< Contains HTML markup.
@@ -676,7 +682,9 @@ class WlTextConstruct {
 /**
  * Atom feed class.
  */
-class WlAtomFeed extends WlSyndicationFeed {
+class WlAtomFeed
+	extends WlSyndicationFeed
+{
 
 	/**
 	 * Returns the default content type for Atom feeds.
@@ -841,7 +849,9 @@ class WlAtomFeed extends WlSyndicationFeed {
 /**
  * RSS feed class.
  */
-class WlRSSFeed extends WlSyndicationFeed {
+class WlRSSFeed
+	extends WlSyndicationFeed
+{
 
 	/**
 	 * Returns the default content type for RSS feeds.
@@ -1046,7 +1056,9 @@ class WlRSSFeed extends WlSyndicationFeed {
  * MediaWiki compatibility classes.
  */
 
-class WlFeedItemCompat extends WlSyndicationEntry {
+class WlFeedItemCompat
+	extends WlSyndicationEntry
+{
 	function __construct( $item ) {
 		parent::__construct(
 			$item->Url,
@@ -1062,7 +1074,9 @@ class WlFeedItemCompat extends WlSyndicationEntry {
 	}
 }
 
-class WlRSSFeedCompat extends WlRSSFeed {
+class WlRSSFeedCompat
+	extends WlRSSFeed
+{
 	function __construct( $title, $descr, $url, $date = NULL ) {
 		parent::__construct( $url, $title, $date, $url );
 		$this->setSubtitle( $descr );
@@ -1072,7 +1086,9 @@ class WlRSSFeedCompat extends WlRSSFeed {
 	}
 }
 
-class WlAtomFeedCompat extends WlAtomFeed {
+class WlAtomFeedCompat
+	extends WlAtomFeed
+{
 	function __construct( $title, $descr, $url, $date = NULL ) {
 		parent::__construct( $url, $title, $date, $url );
 		$this->setSubtitle( $descr );

@@ -188,8 +188,9 @@ class WikilogSummaryPager
 			/* $6 */ $pubdate,
 			/* $7 */ $comments
 		);
-		if ( !empty( $msg ) )
+		if ( !empty( $msg ) ) {
 			$result .= $this->parse( $msg . "\n" );
+		}
 
 		# Item text.
 		if ( $summary ) {
@@ -214,8 +215,9 @@ class WikilogSummaryPager
 			/* $6 */ $pubdate,
 			/* $7 */ $comments
 		);
-		if ( !empty( $msg ) )
+		if ( !empty( $msg ) ) {
 			$result .= $this->parse( $msg . "\n" );
+		}
 
 		$result .= "</div>\n\n";
 		return $result;

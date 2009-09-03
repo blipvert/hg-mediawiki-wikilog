@@ -422,7 +422,8 @@ class WikilogInfo
  * Interface used by article derived classes that implement the "wikilog"
  * action handler. That is, pages that can be called with ?action=wikilog.
  */
-interface WikilogCustomAction {
+interface WikilogCustomAction
+{
 	public function wikilog();
 }
 

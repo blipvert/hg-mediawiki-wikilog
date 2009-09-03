@@ -33,7 +33,8 @@ if ( !defined( 'MEDIAWIKI' ) )
  * Wikilog post SQL query driver.
  * This class drives queries for wikilog posts, given the fields to filter.
  */
-class WikilogItemQuery {
+class WikilogItemQuery
+{
 
 	# Valid filter values for publish status.
 	const PS_ALL       = 0;		///< Return all items

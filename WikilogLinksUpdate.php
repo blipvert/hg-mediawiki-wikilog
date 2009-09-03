@@ -29,7 +29,9 @@ if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
 
-class WikilogLinksUpdate {
+class WikilogLinksUpdate
+{
+
 	private $mId;
 	private $mTitle;
 	private $mDb;

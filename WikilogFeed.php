@@ -29,7 +29,8 @@ if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
 
-class WikilogFeed {
+class WikilogFeed
+{
 
 	/**
 	 * Feed title (i.e., not Wikilog title). For Special:Wikilog, 'wikilog'
