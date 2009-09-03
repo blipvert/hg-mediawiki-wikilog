@@ -145,3 +145,17 @@ $wgWikilogNavBottom = true;
  */
 $wgWikilogNamespaces = array();
 
+/*
+ *                --- DEBUGGING CONFIGURATION OPTIONS ---
+ */
+
+/**
+ * Use a clone of the global parser object instead of creating a new instance.
+ *
+ * Optimally this setting would be disabled by default, since the parser is
+ * not designed to be cloned. Such usage may cause problems. But there are
+ * many broken extensions that don't properly initialize a second parser
+ * instance that is needed for parsing articles for syndication feeds. The
+ * default is to clone since this seems to work better.
+ */
+$wgWikilogCloneParser = true;

@@ -44,32 +44,35 @@ class WikilogUtils
 	 * @return Two-element array containing the article and its parser output.
 	 */
 	public static function parsedArticle( Title $title, $feed = false ) {
+		global $wgWikilogCloneParser;
 		global $wgUser, $wgEnableParserCache;
+		global $wgParser, $wgParserConf;
+
 		static $parser = NULL;
 
 		$article = new Article( $title );
 
-		// First try the parser cache.
+		# First try the parser cache.
 		if ( $wgEnableParserCache ) {
-			// Select parser cache according to the $feed flag.
+			# Select parser cache according to the $feed flag.
 			$parserCache = $feed
 				? WikilogParserCache::singleton()
 				: ParserCache::singleton();
 
-			// Look for the parsed article output in the parser cache.
+			# Look for the parsed article output in the parser cache.
 			$parserOutput = $parserCache->get( $article, $wgUser );
 
-			// On success, return the object retrieved from the cache.
+			# On success, return the object retrieved from the cache.
 			if ( $parserOutput ) {
 				return array( $article, $parserOutput );
 			}
 		}
 
-		// Parser options.
+		# Parser options.
 		$parserOpt = ParserOptions::newFromUser( $wgUser );
 		$parserOpt->setTidy( true );
 
-		// Enable some feed-specific behavior.
+		# Enable some feed-specific behavior.
 		if ( $feed ) {
 			$saveFeedParse = WikilogParser::enableFeedParsing();
 			$saveExpUrls = WikilogParser::expandLocalUrls();
@@ -78,30 +81,71 @@ class WikilogUtils
 			$parserOpt->enableLimitReport();
 		}
 
-		// Get a parser instance, if not already cached.
+		# Get a parser instance, if not already cached.
 		if ( is_null( $parser ) ) {
-			global $wgParser, $wgParserConf;
-			$class = $wgParserConf['class'];
-			$parser = new $class( $wgParserConf );
-			$parser->startExternalParse( &$title, $parserOpt, Parser::OT_HTML );
+			if ( $wgWikilogCloneParser ) {
+				$parser = clone $wgParser;
+			} else {
+				$class = $wgParserConf['class'];
+				$parser = new $class( $wgParserConf );
+			}
 		}
+		$parser->startExternalParse( &$title, $parserOpt, Parser::OT_HTML );
 
-		// Parse article.
+		# Parse article.
 		$arttext = $article->fetchContent();
 		$parserOutput = $parser->parse( $arttext, $title, $parserOpt );
 
-		// Save in parser cache.
+		# Save in parser cache.
 		if ( $wgEnableParserCache && $parserOutput->getCacheTime() != -1 ) {
 			$parserCache->save( $parserOutput, $article, $wgUser );
 		}
 
-		// Restore default behavior.
+		# Restore default behavior.
 		if ( $feed ) {
 			WikilogParser::enableFeedParsing( $saveFeedParse );
 			WikilogParser::expandLocalUrls( $saveExpUrls );
 		}
 
 		return array( $article, $parserOutput );
+	}
+
+	/**
+	 * Check sanity of a second parser instance against the global one.
+	 *
+	 * @param $newparser New parser instance to be checked.
+	 * @return Whether the second parser instance contains the same hooks as
+	 *   the global one.
+	 */
+	private static function parserSanityCheck( $newparser ) {
+		global $wgParser;
+
+		$newparser->firstCallInit();
+
+		$th_diff = array_diff_key( $wgParser->mTagHooks, $newparser->mTagHooks );
+		$tt_diff = array_diff_key( $wgParser->mTransparentTagHooks, $newparser->mTransparentTagHooks );
+		$fh_diff = array_diff_key( $wgParser->mFunctionHooks, $newparser->mFunctionHooks );
+
+		if ( !empty( $th_diff ) || !empty( $tt_diff ) || !empty( $fh_diff ) ) {
+			wfDebug("*** Wikilog WARNING: Detected broken extensions installed. "
+				  . "A second instance of the parser is not properly initialized. "
+				  . "The following hooks are missing:\n");
+			if ( !empty( $th_diff ) ) {
+				$hooks = implode( ', ', array_keys( $th_diff ) );
+				wfDebug("***    Tag hooks: $hooks.\n");
+			}
+			if ( !empty( $tt_diff ) ) {
+				$hooks = implode( ', ', array_keys( $tt_diff ) );
+				wfDebug("***    Transparent tag hooks: $hooks.\n");
+			}
+			if ( !empty( $fh_diff ) ) {
+				$hooks = implode( ', ', array_keys( $fh_diff ) );
+				wfDebug("***    Function hooks: $hooks.\n");
+			}
+			return false;
+		} else {
+			return true;
+		}
 	}
 
 	/**
