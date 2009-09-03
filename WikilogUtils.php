@@ -32,21 +32,20 @@ if ( !defined( 'MEDIAWIKI' ) )
 /**
  * Utilitary functions used by the Wikilog extension.
  */
-class WikilogUtils {
+class WikilogUtils
+{
 
 	/**
-	 * Retrieves an article parsed ouput either from parser cache or by
+	 * Retrieves an article parsed output either from parser cache or by
 	 * parsing it again. If parsing again, stores it back into parser cache.
 	 *
-	 * @note This should really be part of MediaWiki, but it doesn't provide
-	 *   such convenient functionality in a single function, and we have to
-	 *   implement it here.
-	 *
 	 * @param $title Article title object.
+	 * @param $feed Whether the result should is part of a feed.
 	 * @return Two-element array containing the article and its parser output.
 	 */
-	public static function parsedArticle( Title $title, $feed = false, &$parser = NULL ) {
+	public static function parsedArticle( Title $title, $feed = false ) {
 		global $wgUser, $wgEnableParserCache;
+		static $parser = NULL;
 
 		$article = new Article( $title );
 
@@ -66,8 +65,6 @@ class WikilogUtils {
 			}
 		}
 
-		// Now we know we will have to call the parser.
-
 		// Parser options.
 		$parserOpt = ParserOptions::newFromUser( $wgUser );
 		$parserOpt->setTidy( true );
@@ -81,10 +78,11 @@ class WikilogUtils {
 			$parserOpt->enableLimitReport();
 		}
 
-		// Get a parser instance, if not already provided by the caller.
+		// Get a parser instance, if not already cached.
 		if ( is_null( $parser ) ) {
-			global $wgParser;
-			$parser = clone $wgParser;
+			global $wgParser, $wgParserConf;
+			$class = $wgParserConf['class'];
+			$parser = new $class( $wgParserConf );
 			$parser->startExternalParse( &$title, $parserOpt, Parser::OT_HTML );
 		}
 

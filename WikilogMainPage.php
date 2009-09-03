@@ -29,7 +29,10 @@ if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
 
-class WikilogMainPage extends Article implements WikilogCustomAction {
+class WikilogMainPage
+	extends Article
+	implements WikilogCustomAction
+{
 
 	/**
 	 * Alternate views.
@@ -97,8 +100,8 @@ class WikilogMainPage extends Article implements WikilogCustomAction {
 
 		# Display list of wikilog posts.
 		$body = $pager->getBody();
-		if ( $wgWikilogNavTop ) $body = $pager->getNavigationBar() . $body;
-		if ( $wgWikilogNavBottom ) $body = $body . $pager->getNavigationBar();
+		if ( $wgWikilogNavTop ) $body = $pager->getNavigationBar( 'wl-navbar-top' ) . $body;
+		if ( $wgWikilogNavBottom ) $body = $body . $pager->getNavigationBar( 'wl-navbar-bottom' );
 		$wgOut->addHTML( Xml::openElement( 'div', array( 'class' => 'wl-wrapper' ) ) );
 		$wgOut->addHTML( $body );
 		$wgOut->addHTML( Xml::closeElement( 'div' ) );

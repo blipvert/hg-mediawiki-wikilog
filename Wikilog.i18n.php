@@ -78,7 +78,7 @@ $messages['en'] = array(
 	# $5 = Authors, $6 = Publish date, $7 = Comments link
 	'wikilog-item-brief-header'	=> ': <i><small>by $5, from [[$1|$2]], $6, $7.</small></i>',
 	'wikilog-item-brief-footer'	=> '',
-	'wikilog-item-more'			=> '[[$3|&rarr; continue reading...]]',
+	'wikilog-item-more'			=> '[[$3|→ continue reading...]]',
 	'wikilog-item-sub'			=> '',
 	'wikilog-item-header'		=> '',
 	'wikilog-item-footer'		=> ': <i>&mdash; $5 &#8226; $6 &#8226; $7</i>',
@@ -178,7 +178,7 @@ $messages['en'] = array(
 	'wikilog-backlink'			=> '← $1',
 	'wikilog-brackets'			=> '[$1]',
 	'wikilog-navigation-bar'	=>
-		'<div class="wl-navbar visualClear">'.
+		'<div class="$6 visualClear">'.
 		'<div style="float:left">$1 • $2</div>'.
 		'<div style="float:right">$3 • $4</div>'.
 		'<div style="text-align:center">$5</div>'.
@@ -254,7 +254,7 @@ $messages['pt'] = array(
 	# Wikilog item header and footer
 	'wikilog-item-brief-header'	=> ': <i><small>por $5, em [[$1|$2]], $6, $7.</small></i>',
 	'wikilog-item-brief-footer'	=> '',
-	'wikilog-item-more'			=> '[[$3|&rarr; continuar lendo...]]',
+	'wikilog-item-more'			=> '[[$3|→ continuar lendo...]]',
 	'wikilog-item-sub'			=> '',
 	'wikilog-item-header'		=> '',
 	'wikilog-item-footer'		=> ': <i>&mdash; $5 &#8226; $6 &#8226; $7</i>',
@@ -424,7 +424,7 @@ $messages['de'] = array(
 	# Wikilog item header and footer
 	'wikilog-item-brief-header'	=> ': <i><small>von $5, aus [[$1|$2]], $6, $7.</small></i>',
 	'wikilog-item-brief-footer'	=> '',
-	'wikilog-item-more'			=> '[[$3|&rarr; weiterlesen...]]',
+	'wikilog-item-more'			=> '[[$3|→ weiterlesen...]]',
 	'wikilog-item-sub'			=> '',
 	'wikilog-item-header'		=> '',
 	'wikilog-item-footer'		=> ': <i>&mdash; $5 &#8226; $6 &#8226; $7</i>',

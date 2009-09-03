@@ -29,18 +29,34 @@ if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
 
-class SpecialWikilog extends IncludableSpecialPage {
+/**
+ * Special:Wikilog special page.
+ * The primary function of this special page is to list all wikilog articles
+ * (from all wikilogs) in reverse chronological order. The special page
+ * provides many different ways to query articles by wikilog, date, tags, etc.
+ * The special page also provides syndication feeds and can be included from
+ * wiki articles.
+ */
+class SpecialWikilog
+	extends IncludableSpecialPage
+{
 
 	/**
 	 * Alternate views.
 	 */
 	protected static $views = array( 'summary', 'archives' );
 
+	/**
+	 * Constructor.
+	 */
 	function __construct( ) {
 		parent::__construct( 'Wikilog' );
 		wfLoadExtensionMessages('Wikilog');
 	}
 
+	/**
+	 * Returns default options.
+	 */
 	public function getDefaultOptions() {
 		global $wgWikilogNumArticles;
 
@@ -59,6 +75,9 @@ class SpecialWikilog extends IncludableSpecialPage {
 		return $opts;
 	}
 
+	/**
+	 * Prepare special page parameters for a web request.
+	 */
 	public function webSetup( $parameters ) {
 		global $wgRequest, $wgWikilogSummaryLimit;
 
@@ -72,6 +91,12 @@ class SpecialWikilog extends IncludableSpecialPage {
 		return $opts;
 	}
 
+	/**
+	 * Prepare special page parameters for a feed request.
+	 * Since feeds must be cached for performance purposes, it is not allowed
+	 * to make arbitrary queries. Only published status and limit parameters
+	 * are recognized. Other parameters are ignored.
+	 */
 	public function feedSetup() {
 		global $wgRequest, $wgFeedLimit, $wgWikilogSummaryLimit;
 
@@ -81,6 +106,10 @@ class SpecialWikilog extends IncludableSpecialPage {
 		return $opts;
 	}
 
+	/**
+	 * Execute the special page.
+	 * Called from MediaWiki.
+	 */
 	public function execute( $parameters ) {
 		global $wgRequest;
 
@@ -95,6 +124,10 @@ class SpecialWikilog extends IncludableSpecialPage {
 		}
 	}
 
+	/**
+	 * Format the HTML output of the special page.
+	 * @param $opts Form options, such as wikilog name, category, date, etc.
+	 */
 	public function webOutput( FormOptions $opts ) {
 		global $wgRequest, $wgOut, $wgMimeType, $wgTitle;
 		global $wgWikilogNavTop, $wgWikilogNavBottom;
@@ -106,72 +139,55 @@ class SpecialWikilog extends IncludableSpecialPage {
 		# Build query object.
 		$query = self::getQuery( $opts );
 
-		# If a wikilog is selected, set the title.
-		if ( !$this->including() && ( $title = $query->getWikilogTitle() ) ) {
-			# Retrieve wikilog front page
-			$article = new Article( $title );
-			$content = $article->getContent();
-			$wgOut->setPageTitle( $title->getPrefixedText() );
-			$wgOut->addWikiTextWithTitle( $content, $title );
-		}
-
-		# Display query options.
-		if ( !$this->including() ) $this->doHeader( $opts );
-
-		# Display the list of wikilog posts.
+		# Create the pager object that will create the list of articles.
 		if ( $opts['view'] == 'archives' ) {
 			$pager = new WikilogArchivesPager( $query );
 		} else if ( $opts['template'] ) {
-			$t = Title::makeTitle( NS_TEMPLATE, $opts['template'] );
-			$pager = new WikilogTemplatePager( $query, $t, $opts['limit'] );
+			$templ = Title::makeTitle( NS_TEMPLATE, $opts['template'] );
+			$pager = new WikilogTemplatePager( $query, $templ, $opts['limit'] );
 		} else {
 			$pager = new WikilogSummaryPager( $query, $opts['limit'] );
 		}
 
-		# Wikilog CSS wrapper class.
-		$wgOut->addHTML( Xml::openElement( 'div', array( 'class' => 'wl-wrapper' ) ) );
+		# Tell the pager whether the page is included.
+		$pager->including( $this->including() );
 
+		# Handle special page inclusion.
 		if ( $this->including() ) {
-			/**
-			 * NOTE: Wikilog needs to call the parser a few times in order to
-			 * render the page. Some MediaWiki functions (like wfMsgExt() and
-			 * wfMsgWikiHtml()) reset the parser when called, and this causes
-			 * a lot of problems when Special:Wikilog is transcluded. Instead
-			 * of working around each call that resets the parser, we replace
-			 * the parser temporarily with a new blank instance.
-			 *
-			 * Unfortunately, we can't just clone $wgParser due to a possible
-			 * bug in Parser::__destruct(), that damages data of the orignal
-			 * parser object when the copy is destroyed.
-			 */
-			global $wgParser, $wgParserConf;
-			$saved =& $wgParser;
-			$class = $wgParserConf['class'];
-			$wgParser = new $class( $wgParserConf ); // clone $wgParser;
-
-			# Get pager body.
-			$wgOut->addHTML( $pager->getBody() );
-
-			# Restore saved parser.
-			$wgParser =& $saved;
-		} else {
 			# Get pager body.
 			$body = $pager->getBody();
+		}
+		else {
+			# If a wikilog is selected, set the title.
+			$title = $query->getWikilogTitle();
+			if ( !is_null( $title ) ) {
+				# Retrieve wikilog front page
+				$article = new Article( $title );
+				$content = $article->getContent();
+				$wgOut->setPageTitle( $title->getPrefixedText() );
+				$wgOut->addWikiTextWithTitle( $content, $title );
+			}
+
+			# Display query options.
+			$body = $this->getHeader( $opts );
+
+			# Get pager body.
+			$body .= $pager->getBody();
 
 			# Add navigation bars.
-			if ( $wgWikilogNavTop ) $body = $pager->getNavigationBar() . $body;
-			if ( $wgWikilogNavBottom ) $body = $body . $pager->getNavigationBar();
-
-			# Output.
-			$wgOut->addHTML( $body );
+			if ( $wgWikilogNavTop )
+				$body = $pager->getNavigationBar( 'wl-navbar-top' ) . $body;
+			if ( $wgWikilogNavBottom )
+				$body = $body . $pager->getNavigationBar( 'wl-navbar-bottom' );
 		}
 
-		# Wikilog CSS wrapper class.
-		$wgOut->addHTML( Xml::closeElement( 'div' ) );
+		# Output.
+		$body = Xml::wrapClass( $body, 'wl-wrapper', 'div' );
+		$wgOut->addHTML( $body );
 
 		# Get query parameter array, for the following links.
 		$qarr = $query->getDefaultQuery();
-		
+
 		# Add feed links.
 		$wgOut->setSyndicated();
 		if ( isset( $qarr['show'] ) ) {
@@ -194,6 +210,11 @@ class SpecialWikilog extends IncludableSpecialPage {
 		}
 	}
 
+	/**
+	 * Format the syndication feed output of the special page.
+	 * @param $format Feed format ('atom' or 'rss').
+	 * @param $opts Form options, such as wikilog name, category, date, etc.
+	 */
 	public function feedOutput( $format, FormOptions $opts ) {
 		global $wgTitle;
 
@@ -202,6 +223,12 @@ class SpecialWikilog extends IncludableSpecialPage {
 		return $feed->execute();
 	}
 
+	/**
+	 * Parse inline parameters passed after the special page name.
+	 * Example: Special:Wikilog/Category:catname;tag=tagname;5
+	 * @param $parameters Inline parameters after the special page name.
+	 * @param $opts Form options.
+	 */
 	public function parseInlineParams( $parameters, FormOptions $opts ) {
 		global $wgWikilogNamespaces;
 
@@ -237,8 +264,8 @@ class SpecialWikilog extends IncludableSpecialPage {
 		}
 	}
 
-	protected function doHeader( FormOptions $opts ) {
-		global $wgScript, $wgOut;
+	protected function getHeader( FormOptions $opts ) {
+		global $wgScript;
 
 		$out = Xml::hidden( 'title', $this->getTitle()->getPrefixedText() );
 
@@ -249,12 +276,11 @@ class SpecialWikilog extends IncludableSpecialPage {
 			$out .= Xml::hidden( $key, $value );
 		}
 
-		$form = Xml::tags( 'form', array( 'action' => $wgScript ), $out );
-
-		$wgOut->addHTML(
-			Xml::fieldset( wfMsg( 'wikilog-form-legend' ), $form,
-				array( 'class' => 'wl-options' ) )
+		$out = Xml::tags( 'form', array( 'action' => $wgScript ), $out );
+		$out = Xml::fieldset( wfMsg( 'wikilog-form-legend' ), $out,
+			array( 'class' => 'wl-options' )
 		);
+		return $out;
 	}
 
 	protected static function queryForm( FormOptions $opts ) {
@@ -296,23 +322,23 @@ class SpecialWikilog extends IncludableSpecialPage {
 		$fields = array();
 
 		$fields['wikilog'] = Xml::inputLabelSep(
-			wfMsg( 'wikilog-form-wikilog' ), 'wikilog', 'wl-wikilog', 25,
+			wfMsg( 'wikilog-form-wikilog' ), 'wikilog', 'wl-wikilog', 40,
 			$opts->consumeValue( 'wikilog' )
 		);
 
 		$fields['category'] = Xml::inputLabelSep(
-			wfMsg( 'wikilog-form-category' ), 'category', 'wl-category', 25,
+			wfMsg( 'wikilog-form-category' ), 'category', 'wl-category', 40,
 			$opts->consumeValue( 'category' )
 		);
 
 		$fields['author'] = Xml::inputLabelSep(
-			wfMsg( 'wikilog-form-author' ), 'author', 'wl-author', 25,
+			wfMsg( 'wikilog-form-author' ), 'author', 'wl-author', 40,
 			$opts->consumeValue( 'author' )
 		);
 
 		if ( $wgWikilogEnableTags ) {
 			$fields['tag'] = Xml::inputLabelSep(
-				wfMsg( 'wikilog-form-tag' ), 'tag', 'wl-tag', 25,
+				wfMsg( 'wikilog-form-tag' ), 'tag', 'wl-tag', 40,
 				$opts->consumeValue( 'tag' )
 			);
 		}

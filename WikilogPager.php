@@ -29,14 +29,43 @@ if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
 
-class WikilogSummaryPager extends ReverseChronologicalPager {
+interface WikilogPager
+{
+	function including( $x );
+	function getNavigationBar( $class = 'wl-navbar-any' );
+}
+
+
+/**
+ * Summary pager.
+ *
+ * Lists wikilog articles from one or more wikilogs (selected by the provided
+ * query parameters) in reverse chronological order, displaying article
+ * sumaries, authors, date and number of comments. This pager also provides
+ * a "read more" link when appropriate. If there are more articles than
+ * some threshold, the user may navigate through "newer posts"/"older posts"
+ * links.
+ *
+ * Formatting is controlled by a number of system messages.
+ */
+class WikilogSummaryPager
+	extends ReverseChronologicalPager
+	implements WikilogPager
+{
 
 	# Override default limits.
 	public $mLimitsShown = array( 5, 10, 20, 50 );
 
 	# Local variables.
-	protected $mQuery;			///< Wikilog item query data
+	protected $mQuery = NULL;			///< Wikilog item query data
+	protected $mIncluding = false;		///< If pager is being included
 
+	/**
+	 * Constructor.
+	 * @param $query Query object, containing the parameters that will select
+	 *   which articles will be shown.
+	 * @param $limit Override how many articles will be listed.
+	 */
 	function __construct( WikilogItemQuery $query, $limit = false ) {
 		# WikilogItemQuery object drives our queries.
 		$this->mQuery = $query;
@@ -60,6 +89,11 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		if ( $this->mLimit > $wgWikilogSummaryLimit )
 			$this->mLimit = $wgWikilogSummaryLimit;
 	}
+
+	/**
+	 * Property accessor/mutators.
+	 */
+	function including( $x ) { return wfSetVar( $this->mIncluding, $x ); }
 
 	function getQueryInfo() {
 		return $this->mQuery->getQueryInfo( $this->mDb );
@@ -85,9 +119,10 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		return wfMsgExt( 'wikilog-pager-empty', array( 'parsemag' ) );
 	}
 
-	function getNavigationBar( $pos = false ) {
-		if ( !isset( $this->mNavigationBar ) ) {
+	function getNavigationBar( $class = 'wl-navbar-any' ) {
+		if ( !isset( $this->mNavigationBar[$class] ) ) {
 			global $wgLang;
+
 			$nicenumber = $wgLang->formatNum( $this->mLimit );
 			$linkTexts = array(
 				'prev'	=> wfMsgExt( 'wikilog-pager-newer-n', array( 'parsemag' ), $nicenumber ),
@@ -97,21 +132,25 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 			);
 			$pagingLinks = $this->getPagingLinks( $linkTexts );
 			$limitLinks = $this->getLimitLinks();
+
 			$limits = implode( ' | ', $limitLinks );
-			$this->mNavigationBar = wfMsgExt( 'wikilog-navigation-bar',
+			$classes = implode( ' ', array( 'wl-navbar', $class ) );
+
+			$this->mNavigationBar[$class] = wfMsgExt( 'wikilog-navigation-bar',
 				array( 'parsemag' ),
 				/* $1 */ $pagingLinks['first'],
 				/* $2 */ $pagingLinks['prev'],
 				/* $3 */ $pagingLinks['next'],
 				/* $4 */ $pagingLinks['last'],
-				/* $5 */ $limits
+				/* $5 */ $limits,
+				/* $6 */ $classes
 			);
 		}
-		return $this->mNavigationBar;
+		return $this->mNavigationBar[$class];
 	}
 
 	function formatRow( $row ) {
-		global $wgParser, $wgUser, $wgContLang;
+		global $wgUser, $wgContLang;
 
 		$skin = $this->getSkin();
 
@@ -140,34 +179,7 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 		$result .= "<h2>{$heading}</h2>\n";
 
 		# Item header.
-		$result .= wfMsgExt( 'wikilog-item-brief-header',
-			array( 'parse', 'content' ),
-			/* $1 */ $item->mParentTitle->getPrefixedURL(),
-			/* $2 */ $item->mParentName,
-			/* $3 */ $item->mTitle->getPrefixedURL(),
-			/* $4 */ $item->mName,
-			/* $5 */ $authors,
-			/* $6 */ $pubdate,
-			/* $7 */ $comments
-		) . "\n";
-
-		# Item text.
-		if ( $summary ) {
-			$more = wfMsgExt( 'wikilog-item-more',
-				array( 'parse', 'content' ),
-				/* $1 */ $item->mParentTitle->getPrefixedURL(),
-				/* $2 */ $item->mParentName,
-				/* $3 */ $item->mTitle->getPrefixedURL(),
-				/* $4 */ $item->mName
-			);
-			$result .= "<div class=\"wl-summary\">{$summary}{$more}</div>\n";
-		} else {
-			$result .= "<div class=\"wl-summary\">{$content}</div>\n";
-		}
-
-		# Item footer.
-		$result .= wfMsgExt( 'wikilog-item-brief-footer',
-			array( 'parse', 'content' ),
+		$msg = wfMsgForContentNoTrans( 'wikilog-item-brief-header',
 			/* $1 */ $item->mParentTitle->getPrefixedURL(),
 			/* $2 */ $item->mParentName,
 			/* $3 */ $item->mTitle->getPrefixedURL(),
@@ -176,9 +188,46 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 			/* $6 */ $pubdate,
 			/* $7 */ $comments
 		);
+		if ( !empty( $msg ) )
+			$result .= $this->parse( $msg . "\n" );
+
+		# Item text.
+		if ( $summary ) {
+			$more = $this->parse( wfMsgForContentNoTrans( 'wikilog-item-more',
+				/* $1 */ $item->mParentTitle->getPrefixedURL(),
+				/* $2 */ $item->mParentName,
+				/* $3 */ $item->mTitle->getPrefixedURL(),
+				/* $4 */ $item->mName
+			) );
+			$result .= "<div class=\"wl-summary\">{$summary}\n{$more}\n</div>\n";
+		} else {
+			$result .= "<div class=\"wl-summary\">{$content}</div>\n";
+		}
+
+		# Item footer.
+		$msg = wfMsgForContentNoTrans( 'wikilog-item-brief-footer',
+			/* $1 */ $item->mParentTitle->getPrefixedURL(),
+			/* $2 */ $item->mParentName,
+			/* $3 */ $item->mTitle->getPrefixedURL(),
+			/* $4 */ $item->mName,
+			/* $5 */ $authors,
+			/* $6 */ $pubdate,
+			/* $7 */ $comments
+		);
+		if ( !empty( $msg ) )
+			$result .= $this->parse( $msg . "\n" );
 
 		$result .= "</div>\n\n";
 		return $result;
+	}
+
+	protected function parse( $text ) {
+		global $wgParser, $wgOut;
+		if ( $this->mIncluding ) {
+			return $wgParser->recursiveTagParse( $text );
+		} else {
+			return $wgOut->parse( $text );
+		}
 	}
 
 	private function editLink( $title ) {
@@ -191,25 +240,21 @@ class WikilogSummaryPager extends ReverseChronologicalPager {
 }
 
 
-class WikilogTemplatePager extends WikilogSummaryPager {
+class WikilogTemplatePager
+	extends WikilogSummaryPager
+{
 
 	protected $mTemplate, $mTemplateTitle;
-	protected $mParser, $mParserOpt;
 
 	function __construct( WikilogItemQuery $query, Title $template, $limit = false ) {
-		global $wgParser, $wgUser, $wgTitle;
+		global $wgParser;
 
 		# Parent constructor.
 		parent::__construct( $query, $limit );
 
-		# Private parser.
-		$this->mParserOpt = ParserOptions::newFromUser( $wgUser );
-		$this->mParser = clone $wgParser;
-		$this->mParser->startExternalParse( &$wgTitle, $this->mParserOpt, Parser::OT_HTML );
-
 		# Load template
 		list( $this->mTemplate, $this->mTemplateTitle ) =
-			$this->mParser->getTemplateDom( $template );
+			$wgParser->getTemplateDom( $template );
 	}
 
 	function getDefaultQuery() {
@@ -227,14 +272,11 @@ class WikilogTemplatePager extends WikilogSummaryPager {
 	}
 
 	function formatRow( $row ) {
-		global $wgTitle, $wgContLang;
-
-		# Clear parser state.
-		$this->mParser->startExternalParse( &$wgTitle, $this->mParserOpt, Parser::OT_HTML );
+		global $wgParser, $wgContLang;
 
 		# Retrieve article parser output and other data.
 		$item = WikilogItem::newFromRow( $row );
-		list( $article, $parserOutput ) = WikilogUtils::parsedArticle( $item->mTitle, false, $this->mParser );
+		list( $article, $parserOutput ) = WikilogUtils::parsedArticle( $item->mTitle );
 		list( $summary, $content ) = WikilogUtils::splitSummaryContent( $parserOutput );
 		if ( !$summary ) $summary = $content;
 
@@ -258,11 +300,11 @@ class WikilogTemplatePager extends WikilogSummaryPager {
 			'published'     => $item->getIsPublished(),
 			'pubdate'       => $pubdate,
 			'updated'       => $updated,
-			'summary'       => $this->mParser->insertStripItem( $summary ),
+			'summary'       => $wgParser->insertStripItem( $summary ),
 			'comments'      => $comments
 		);
 
-		$frame = $this->mParser->getPreprocessor()->newCustomFrame( $vars );
+		$frame = $wgParser->getPreprocessor()->newCustomFrame( $vars );
 
 		# XXX: Work around MediaWiki bug 20431
 		# https://bugzilla.wikimedia.org/show_bug.cgi?id=20431
@@ -271,16 +313,20 @@ class WikilogTemplatePager extends WikilogSummaryPager {
 
 		$text = $frame->expand( $this->mTemplate );
 
-		$pout = $this->mParser->parse( $text, $wgTitle, $this->mParserOpt, true, false );
-		return $pout->getText();
+		return $this->parse( $text );
 	}
 
 }
 
 
-class WikilogArchivesPager extends TablePager {
+class WikilogArchivesPager
+	extends TablePager
+	implements WikilogPager
+{
 
-	protected $mQuery;
+	# Local variables.
+	protected $mQuery = NULL;			///< Wikilog item query data
+	protected $mIncluding = false;		///< If pager is being included
 
 	function __construct( WikilogItemQuery $query ) {
 		# WikilogItemQuery object drives our queries.
@@ -289,6 +335,11 @@ class WikilogArchivesPager extends TablePager {
 		# Parent constructor.
 		parent::__construct();
 	}
+
+	/**
+	 * Property accessor/mutators.
+	 */
+	function including( $x ) { return wfSetVar( $this->mIncluding, $x ); }
 
 	function getQueryInfo() {
 		return $this->mQuery->getQueryInfo( $this->mDb );
@@ -314,9 +365,10 @@ class WikilogArchivesPager extends TablePager {
 		return in_array( $field, $sortableFields );
 	}
 
-	function getNavigationBar( $pos = false ) {
-		if ( !isset( $this->mNavigationBar ) ) {
+	function getNavigationBar( $class = 'wl-navbar-any' ) {
+		if ( !isset( $this->mNavigationBar[$class] ) ) {
 			global $wgLang;
+
 			$nicenumber = $wgLang->formatNum( $this->mLimit );
 			$linkTexts = array(
 				'prev'	=> wfMsgHtml( 'wikilog-pager-prev' ),
@@ -326,17 +378,21 @@ class WikilogArchivesPager extends TablePager {
 			);
 			$pagingLinks = $this->getPagingLinks( $linkTexts );
 			$limitLinks = $this->getLimitLinks();
+
 			$limits = implode( ' | ', $limitLinks );
-			$this->mNavigationBar = wfMsgExt( 'wikilog-navigation-bar',
+			$classes = implode( ' ', array( 'wl-navbar', $class ) );
+
+			$this->mNavigationBar[$class] = wfMsgExt( 'wikilog-navigation-bar',
 				array( 'parsemag' ),
 				/* $1 */ $pagingLinks['first'],
 				/* $2 */ $pagingLinks['prev'],
 				/* $3 */ $pagingLinks['next'],
 				/* $4 */ $pagingLinks['last'],
-				/* $5 */ $limits
+				/* $5 */ $limits,
+				/* $6 */ $classes
 			);
 		}
-		return $this->mNavigationBar;
+		return $this->mNavigationBar[$class];
 	}
 
 	function formatRow( $row ) {
