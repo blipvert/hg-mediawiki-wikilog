@@ -29,6 +29,9 @@ if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
 
+/**
+ * Common wikilog pager interface.
+ */
 interface WikilogPager
 {
 	function including( $x );
@@ -242,6 +245,26 @@ class WikilogSummaryPager
 }
 
 
+/**
+ * Template pager.
+ *
+ * Lists wikilog articles like #WikilogSummaryPager, but using a given
+ * template to format the summaries. The template receives the article
+ * data through its parameters:
+ *
+ * - 'class': div element class attribute
+ * - 'wikilogTitle': title (as text) of the wikilog page
+ * - 'wikilogPage': title (prefixed, for link) of the wikilog page
+ * - 'title': title (as text) of the article page
+ * - 'page': title (prefixed, for link) of the article page
+ * - 'authors': authors
+ * - 'tags': tags
+ * - 'published': 0 (draft) or 1 (published)
+ * - 'pubdate': article publication date
+ * - 'updated': article last update date
+ * - 'summary': article summary
+ * - 'comments': comments page link
+ */
 class WikilogTemplatePager
 	extends WikilogSummaryPager
 {
@@ -321,6 +344,13 @@ class WikilogTemplatePager
 }
 
 
+/**
+ * Archives pager.
+ *
+ * Lists wikilog articles in a table, with date, authors, wikilog and
+ * title, without summaries, for easy navigation through large amounts of
+ * articles.
+ */
 class WikilogArchivesPager
 	extends TablePager
 	implements WikilogPager

@@ -76,6 +76,7 @@ $wgAutoloadClasses += array(
 	'WikilogParserCache'	=> $dir . 'WikilogParser.php',
 
 	// WikilogPager.php
+	'WikilogPager'			=> $dir . 'WikilogPager.php',
 	'WikilogSummaryPager'	=> $dir . 'WikilogPager.php',
 	'WikilogTemplatePager'	=> $dir . 'WikilogPager.php',
 	'WikilogArchivesPager'	=> $dir . 'WikilogPager.php',

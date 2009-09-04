@@ -29,18 +29,35 @@ if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
 
+/**
+ * Wikilog article namespace handler class.
+ *
+ * Displays a wikilog article. Includes a header and a footer, counts the
+ * number of comments, provides a link back to the wikilog main page, etc.
+ */
 class WikilogItemPage
 	extends Article
 {
 
+	/**
+	 * Wikilog article item object.
+	 */
 	protected $mItem;
 
+	/**
+	 * Constructor.
+	 * @param $title Article title object.
+	 * @param $wi Wikilog info object.
+	 */
 	function __construct( &$title, &$wi ) {
 		parent::__construct( $title );
 		wfLoadExtensionMessages( 'Wikilog' );
 		$this->mItem = WikilogItem::newFromInfo( $wi );
 	}
 
+	/**
+	 * View page action handler.
+	 */
 	function view() {
 		global $wgOut, $wgUser, $wgContLang, $wgFeed, $wgWikilogFeedClasses;
 

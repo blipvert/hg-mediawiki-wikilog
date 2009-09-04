@@ -34,6 +34,7 @@ if ( !defined( 'MEDIAWIKI' ) )
  */
 class WikilogHooks
 {
+
 	/**
 	 * ArticleEditUpdates hook handler function.
 	 * Performs post-edit updates if article is a wikilog article.

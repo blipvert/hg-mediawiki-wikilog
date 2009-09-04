@@ -34,68 +34,117 @@ if ( !defined( 'MEDIAWIKI' ) )
  */
 class WikilogComment
 {
-	const S_OK				= 'OK';
-	const S_PENDING			= 'PENDING';
-	const S_DELETED			= 'DELETED';
 
+	/**
+	 * Comment statuses.
+	 */
+	const S_OK				= 'OK';			///< Comment is published.
+	const S_PENDING			= 'PENDING';	///< Comment is pending moderation.
+	const S_DELETED			= 'DELETED';	///< Comment was removed.
+
+	/**
+	 * Mapping of comment statuses to readable messages. System messages are
+	 * "wikilog-comment-{$statusMap[$status]}", except when false (for S_OK).
+	 */
 	public static $statusMap = array(
 		self::S_OK				=> false,
 		self::S_PENDING			=> 'pending',
 		self::S_DELETED			=> 'deleted',
 	);
 
+	/**
+	 * Wikilog article item this comment is associated to.
+	 */
 	public  $mItem			= NULL;
+
+	/**
+	 * General data about the comment.
+	 */
+	public  $mID			= NULL;		///< Comment ID.
+	public  $mParent		= NULL;		///< Parent comment ID.
+	public  $mThread		= NULL;		///< Comment thread.
+	public  $mUserID		= NULL;		///< Comment author user id.
+	public  $mUserText		= NULL;		///< Comment author user name.
+	public  $mAnonName		= NULL;		///< Comment anonymous author name.
+	public  $mStatus		= NULL;		///< Comment status.
+	public  $mTimestamp		= NULL;		///< Date the comment was published.
+	public  $mUpdated		= NULL;		///< Date the comment was last updated.
+	public  $mCommentPage	= NULL;		///< Comment page id.
+	public  $mCommentTitle  = NULL;		///< Comment page title.
+	public  $mCommentRev	= NULL;		///< Comment revision id.
+	public  $mText			= NULL;		///< Comment text.
+
+	/**
+	 * Whether the text was changed, and thus a database update is required.
+	 */
 	private $mTextChanged	= false;
 
-	public  $mID			= NULL;
-	public  $mParent		= NULL;
-	public  $mThread		= NULL;
-	public  $mUserID		= NULL;
-	public  $mUserText		= NULL;
-	public  $mAnonName		= NULL;
-	public  $mStatus		= NULL;
-	public  $mTimestamp		= NULL;
-	public  $mUpdated		= NULL;
-	public  $mCommentPage	= NULL;		///< comment page id
-	public  $mCommentTitle  = NULL;		///< comment page title
-	public  $mCommentRev	= NULL;		///< comment revision id
-	public  $mText			= NULL;		///< comment text
-
+	/**
+	 * Constructor.
+	 */
 	public function __construct( WikilogItem &$item ) {
 		$this->mItem = $item;
 	}
 
+	/**
+	 * Returns the wikilog comment id.
+	 */
 	public function getID() {
 		return $this->mID;
 	}
 
+	/**
+	 * Set the author of the comment to the given (authenticated) user.
+	 *
+	 * This function can also be used when $user->getId() == 0
+	 * (i.e. anonymous). In this case, a call to $this->setAnon() should
+	 * follow, in order to set the anonymous name.
+	 */
 	public function setUser( $user ) {
 		$this->mUserID = $user->getId();
 		$this->mUserText = $user->getName();
 		$this->mAnonName = NULL;
 	}
 
+	/**
+	 * Set the anonymous (i.e. not logged in) author name.
+	 */
 	public function setAnon( $name ) {
 		$this->mAnonName = $name;
 	}
 
+	/**
+	 * Returns the wikitext of the comment.
+	 */
 	public function getText() {
 		return $this->mText;
 	}
 
+	/**
+	 * Changes the wikitext of the comment.
+	 */
 	public function setText( $text ) {
 		$this->mText = $text;
 		$this->mTextChanged = true;
 	}
 
+	/**
+	 * Returns whether the comment is visible (not pending or deleted).
+	 */
 	public function isVisible() {
 		return $this->mStatus == self::S_OK;
 	}
 
+	/**
+	 * Returns whether the comment text is changed (DB update required).
+	 */
 	public function isTextChanged() {
 		return $this->mTextChanged;
 	}
 
+	/**
+	 * Load current revision of comment wikitext.
+	 */
 	public function loadText() {
 		$dbr = wfGetDB( DB_SLAVE );
 		$rev = Revision::loadFromId( $dbr, $this->mCommentRev );
@@ -103,6 +152,9 @@ class WikilogComment
 		$this->mTextChanged = false;
 	}
 
+	/**
+	 * Saves comment data in the database.
+	 */
 	public function saveComment() {
 		$dbw = wfGetDB( DB_MASTER );
 		$dbw->begin();
@@ -165,6 +217,9 @@ class WikilogComment
 		$this->mItem->mParentTitle->invalidateCache();
 	}
 
+	/**
+	 * Deletes comment data from the database.
+	 */
 	public function deleteComment() {
 		$dbw = wfGetDB( DB_MASTER );
 		$dbw->begin();
@@ -180,6 +235,9 @@ class WikilogComment
 		$this->mID = NULL;
 	}
 
+	/**
+	 * Returns comment article title.
+	 */
 	public function getCommentArticleTitle() {
 		if ( $this->mCommentTitle ) {
 			return $this->mCommentTitle;
@@ -194,6 +252,9 @@ class WikilogComment
 		}
 	}
 
+	/**
+	 * Returns automatic summary (for recent changes) for the posted comment.
+	 */
 	public function getAutoSummary() {
 		global $wgContLang;
 		$user = $this->mUserID ? $this->mUserText : $this->mAnonName;
@@ -203,6 +264,16 @@ class WikilogComment
 		return wfMsgForContent( 'wikilog-comment-autosumm', $user, $summ );
 	}
 
+	/**
+	 * Returns the discussion history for a given comment. This is used to
+	 * populate the $comment->mThread of a new comment whose id is @a $id
+	 * and parent is @a $parent.
+	 *
+	 * @param $id Comment id of the new comment.
+	 * @param $parent Comment id of its parent.
+	 * @return Array of ids from the history since the first comment until
+	 *   the given one.
+	 */
 	public static function getThreadHistory( $id, $parent ) {
 		$thread = array();
 
@@ -225,10 +296,19 @@ class WikilogComment
 		return $thread;
 	}
 
+	/**
+	 * Formats the id of a comment as a string, padding it with zeros if
+	 * necessary.
+	 */
 	public static function padID( $id ) {
 		return str_pad( intval( $id ), 6, '0', STR_PAD_LEFT );
 	}
 
+	/**
+	 * Creates a new comment object from a database row.
+	 * @param $row Row from database.
+	 * @return New WikilogComment object.
+	 */
 	public static function newFromRow( &$item, $row ) {
 		$comment = new WikilogComment( $item );
 		$comment->mID           = intval( $row->wlc_id );
@@ -250,6 +330,14 @@ class WikilogComment
 		return $comment;
 	}
 
+	/**
+	 * Creates a new comment object for a new comment, given the text and
+	 * the parent comment.
+	 * @param $item Wikilog article object this is a comment for.
+	 * @param $text Comment wikitext as a string.
+	 * @param $parent Parent comment id.
+	 * @return New WikilogComment object.
+	 */
 	public static function newFromText( &$item, $text, $parent = NULL ) {
 		$ts = wfTimestamp( TS_MW );
 		$comment = new WikilogComment( $item );
@@ -261,6 +349,13 @@ class WikilogComment
 		return $comment;
 	}
 
+	/**
+	 * Creates a new comment object from an existing comment id.
+	 * Data is fetched from the database.
+	 * @param $item Wikilog article item.
+	 * @param $id Comment id.
+	 * @return New WikilogComment object, or NULL if comment doesn't exist.
+	 */
 	public static function newFromID( &$item, $id ) {
 		$dbr = wfGetDB( DB_SLAVE );
 		$row = self::loadFromID( $dbr, $id );
@@ -270,6 +365,13 @@ class WikilogComment
 		return NULL;
 	}
 
+	/**
+	 * Creates a new comment object from an existing comment page id.
+	 * Data is fetched from the database.
+	 * @param $item Wikilog article item.
+	 * @param $pageid Comment page id.
+	 * @return New WikilogComment object, or NULL if comment doesn't exist.
+	 */
 	public static function newFromPageID( &$item, $pageid ) {
 		$dbr = wfGetDB( DB_SLAVE );
 		$row = self::loadFromPageID( $dbr, $pageid );
@@ -279,6 +381,13 @@ class WikilogComment
 		return NULL;
 	}
 
+	/**
+	 * Load information about a comment from the database given a set of
+	 * conditions.
+	 * @param $dbr Database connection object.
+	 * @param $conds Conditions.
+	 * @return Database row, or false.
+	 */
 	private static function loadFromConds( $dbr, $conds ) {
 		extract( self::selectInfo( $dbr ) );	// $tables, $fields
 		$row = $dbr->selectRow(
@@ -291,32 +400,35 @@ class WikilogComment
 		return $row;
 	}
 
+	/**
+	 * Load information about a comment from the database given a set a
+	 * comment id.
+	 * @param $dbr Database connection object.
+	 * @param $id Comment id.
+	 * @return Database row, or false.
+	 */
 	private static function loadFromID( $dbr, $id ) {
 		return self::loadFromConds( $dbr, array( 'wlc_id' => $id ) );
 	}
 
+	/**
+	 * Load information about a comment from the database given a set of
+	 * conditions.
+	 * @param $dbr Database connection object.
+	 * @param $pageid Comment page id.
+	 * @return Database row, or false.
+	 */
 	private static function loadFromPageID( $dbr, $pageid ) {
 		return self::loadFromConds( $dbr, array( 'wlc_comment_page' => $pageid ) );
 	}
 
-	public static function fetchAllFromItem( $dbr, $itemid ) {
-		return self::fetchFromConds( $dbr,
-			array( 'wlc_post' => $itemid ),
-			array( 'ORDER BY' => 'wlc_thread, wlc_id' )
-		);
-	}
-
-	public static function fetchAllFromItemThread( $dbr, $itemid, $thread ) {
-		if ( is_array( $thread ) ) {
-			$thread = implode( '/', $thread );
-		}
-		$thread = $dbr->escapeLike( $thread );
-		return self::fetchFromConds( $dbr,
-			array( 'wlc_post' => $itemid, "wlc_thread LIKE '{$thread}/%'" ),
-			array( 'ORDER BY' => 'wlc_thread, wlc_id' )
-		);
-	}
-
+	/**
+	 * Fetch all comments given a set of conditions.
+	 * @param $dbr Database connection object.
+	 * @param $conds Query conditions.
+	 * @param $options Query options.
+	 * @return Database query result object.
+	 */
 	private static function fetchFromConds( $dbr, $conds, $options = array() ) {
 		extract( self::selectInfo( $dbr ) );	// $tables, $fields
 		$result = $dbr->select(
@@ -329,6 +441,44 @@ class WikilogComment
 		return $result;
 	}
 
+	/**
+	 * Fetch all comments given a wikilog article item.
+	 * @param $dbr Database connection object.
+	 * @param $itemid Wikilog article item id.
+	 * @return Database query result object.
+	 */
+	public static function fetchAllFromItem( $dbr, $itemid ) {
+		return self::fetchFromConds( $dbr,
+			array( 'wlc_post' => $itemid ),
+			array( 'ORDER BY' => 'wlc_thread, wlc_id' )
+		);
+	}
+
+	/**
+	 * Fetch all comments given a wikilog article item and a thread.
+	 * @param $dbr Database connection object.
+	 * @param $itemid Wikilog article item id.
+	 * @param $thread Thread description (array of comment ids).
+	 * @return Database query result object.
+	 */
+	public static function fetchAllFromItemThread( $dbr, $itemid, $thread ) {
+		if ( is_array( $thread ) ) {
+			$thread = implode( '/', $thread );
+		}
+		$thread = $dbr->escapeLike( $thread );
+		return self::fetchFromConds( $dbr,
+			array( 'wlc_post' => $itemid, "wlc_thread LIKE '{$thread}/%'" ),
+			array( 'ORDER BY' => 'wlc_thread, wlc_id' )
+		);
+	}
+
+	/**
+	 * Returns the tables and fields used for database queries for comment
+	 * objects.
+	 * @param $dbr Database connection object.
+	 * @return Array(2) with the description of the tables and fields to be
+	 *   used in database queries.
+	 */
 	private static function selectInfo( $dbr ) {
 		extract( $dbr->tableNames( 'wikilog_comments', 'page' ) );
 		return array(

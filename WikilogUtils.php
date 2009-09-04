@@ -40,7 +40,7 @@ class WikilogUtils
 	 * parsing it again. If parsing again, stores it back into parser cache.
 	 *
 	 * @param $title Article title object.
-	 * @param $feed Whether the result should is part of a feed.
+	 * @param $feed Whether the result should be part of a feed.
 	 * @return Two-element array containing the article and its parser output.
 	 */
 	public static function parsedArticle( Title $title, $feed = false ) {

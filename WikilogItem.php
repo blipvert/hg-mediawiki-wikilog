@@ -34,47 +34,75 @@ if ( !defined( 'MEDIAWIKI' ) )
  */
 class WikilogItem
 {
-	public    $mID          = false;
-	public    $mName        = false;
-	public    $mTitle       = false;
-	public    $mParent      = false;
-	public    $mParentName  = false;
-	public    $mParentTitle = false;
-	public    $mPublish     = false;
-	public    $mPubDate     = false;
-	public    $mUpdated     = false;
-	public    $mAuthors     = array();
-	public    $mTags        = array();
-	public    $mNumComments = false;
 
+	/**
+	 * General data about the article.
+	 */
+	public    $mID          = NULL;		///< Article ID.
+	public    $mName        = NULL;		///< Article title text (as in DB).
+	public    $mTitle       = NULL;		///< Article Title object.
+	public    $mParent      = NULL;		///< Parent wikilog article ID.
+	public    $mParentName  = NULL;		///< Parent wikilog title text.
+	public    $mParentTitle = NULL;		///< Parent wikilog Title object.
+	public    $mPublish     = NULL;		///< Article is published.
+	public    $mPubDate     = NULL;		///< Date the article was published.
+	public    $mUpdated     = NULL;		///< Date the article was last updated.
+	public    $mAuthors     = array();	///< Array of authors.
+	public    $mTags        = array();	///< Array of tags.
+	public    $mNumComments = NULL;		///< Cached number of comments.
+
+	/**
+	 * Constructor.
+	 */
 	public function __construct( ) {
 	}
 
+	/**
+	 * Returns the wikilog article id.
+	 */
 	public function getID() {
 		return $this->mID;
 	}
 
+	/**
+	 * Checks for the existence of the article in the database.
+	 */
 	public function exists() {
 		return $this->getID() != 0;
 	}
 
+	/**
+	 * Returns whether the article is published.
+	 */
 	public function getIsPublished() {
 		return $this->mPublish;
 	}
 
+	/**
+	 * Returns the publication date of the article.
+	 */
 	public function getPublishDate() {
 		return $this->mPubDate;
 	}
 
+	/**
+	 * Returns the last update date of the article.
+	 */
 	public function getUpdatedDate() {
 		return $this->mUpdated;
 	}
 
+	/**
+	 * Returns the number of comments in the article.
+	 */
 	public function getNumComments() {
 		$this->updateNumComments();
 		return $this->mNumComments;
 	}
 
+	/**
+	 * Saves article data in the database.
+	 */
 	public function saveData() {
 		$dbw = wfGetDB( DB_MASTER );
 		$dbw->replace(
@@ -94,13 +122,19 @@ class WikilogItem
 		);
 	}
 
+	/**
+	 * Deletes article data from the database.
+	 */
 	public function deleteData() {
 		$dbw = wfGetDB( DB_MASTER );
 		$dbw->delete( 'wikilog_posts', array( 'wlp_page' => $this->getID() ), __METHOD__ );
 	}
 
+	/**
+	 * Updates the number of article comments.
+	 */
 	public function updateNumComments( $force = false ) {
-		if ( $force || $this->mNumComments === false ) {
+		if ( $force || is_null( $this->mNumComments ) ) {
 			$dbw = wfGetDB( DB_MASTER );
 
 			# Retrieve estimated number of comments
@@ -118,11 +152,17 @@ class WikilogItem
 		}
 	}
 
+	/**
+	 * Resets the article id.
+	 */
 	public function resetID( $id ) {
 		$this->mTitle->resetArticleID( $id );
 		$this->mID = $id;
 	}
 
+	/**
+	 * Returns an array with all published comments.
+	 */
 	public function getComments( $thread = NULL ) {
 		$dbr = wfGetDB( DB_SLAVE );
 
@@ -145,6 +185,11 @@ class WikilogItem
 		return $comments;
 	}
 
+	/**
+	 * Creates a new wikilog article object from a database row.
+	 * @param $row Row from database.
+	 * @return New WikilogItem object.
+	 */
 	public static function newFromRow( $row ) {
 		$item = new WikilogItem();
 		$item->mID          = intval( $row->wlp_page );
@@ -156,7 +201,7 @@ class WikilogItem
 		$item->mPublish     = intval( $row->wlp_publish );
 		$item->mPubDate     = $row->wlp_pubdate ? wfTimestamp( TS_MW, $row->wlp_pubdate ) : NULL;
 		$item->mUpdated     = $row->wlp_updated ? wfTimestamp( TS_MW, $row->wlp_updated ) : NULL;
-		$item->mNumComments = is_null( $row->wlp_num_comments ) ? false : $row->wlp_num_comments;
+		$item->mNumComments = $row->wlp_num_comments;
 		$item->mAuthors     = unserialize( $row->wlp_authors );
 		$item->mTags        = unserialize( $row->wlp_tags );
 		if ( !is_array( $item->mAuthors ) ) {
@@ -168,6 +213,12 @@ class WikilogItem
 		return $item;
 	}
 
+	/**
+	 * Creates a new wikilog article object from an existing article id.
+	 * Data is fetched from the database.
+	 * @param $id Article id.
+	 * @return New WikilogItem object, or NULL if article doesn't exist.
+	 */
 	public static function newFromID( $id ) {
 		$dbr = wfGetDB( DB_SLAVE );
 		$row = self::loadFromID( $dbr, $id );
@@ -177,6 +228,12 @@ class WikilogItem
 		return NULL;
 	}
 
+	/**
+	 * Creates a new wikilog article object from a wikilog info object.
+	 * Data is fetched from the database.
+	 * @param $wi WikilogItem object.
+	 * @return New WikilogItem object, or NULL if article doesn't exist.
+	 */
 	public static function newFromInfo( WikilogInfo &$wi ) {
 		$itemTitle = $wi->getItemTitle();
 		if ( $itemTitle ) {
@@ -186,16 +243,37 @@ class WikilogItem
 		}
 	}
 
+	/**
+	 * Load information about a wikilog article from the database given a set
+	 * of conditions.
+	 * @param $dbr Database connection object.
+	 * @param $conds Conditions.
+	 * @return Database row, or false.
+	 */
 	private static function loadFromConds( $dbr, $conds ) {
 		extract( self::selectInfo( $dbr ) );	// $tables, $fields
 		$row = $dbr->selectRow( $tables, $fields, $conds, __METHOD__, array( ) );
 		return $row;
 	}
 
+	/**
+	 * Load information about a wikilog article from the database given an
+	 * article id.
+	 * @param $dbr Database connection object.
+	 * @param $id Article id.
+	 * @return Database row, or false.
+	 */
 	private static function loadFromID( $dbr, $id ) {
 		return self::loadFromConds( $dbr, array( 'wlp_page' => $id ) );
 	}
 
+	/**
+	 * Returns the tables and fields used for database queries for wikilog
+	 * article objects.
+	 * @param $dbr Database connection object.
+	 * @return Array(2) with the description of the tables and fields to be
+	 *   used in database queries.
+	 */
 	private static function selectInfo( $dbr ) {
 		extract( $dbr->tableNames( 'wikilog_posts', 'page' ) );
 		return array(

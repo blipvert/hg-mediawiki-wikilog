@@ -29,6 +29,10 @@ if ( !defined( 'MEDIAWIKI' ) )
 	die();
 
 
+/**
+ * Syndication feed driver. Creates feeds from a list of wikilog articles,
+ * given a format and a query object.
+ */
 class WikilogFeed
 {
 

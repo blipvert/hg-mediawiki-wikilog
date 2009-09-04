@@ -264,12 +264,17 @@ class SpecialWikilog
 		}
 	}
 
+	/**
+	 * Formats and returns the page header.
+	 * @param $opts Form options.
+	 * @return HTML of the page header.
+	 */
 	protected function getHeader( FormOptions $opts ) {
 		global $wgScript;
 
 		$out = Xml::hidden( 'title', $this->getTitle()->getPrefixedText() );
 
-		$out .= self::queryForm( $opts );
+		$out .= self::getQueryForm( $opts );
 
 		$unconsumed = $opts->getUnconsumedValues();
 		foreach ( $unconsumed as $key => $value ) {
@@ -283,7 +288,12 @@ class SpecialWikilog
 		return $out;
 	}
 
-	protected static function queryForm( FormOptions $opts ) {
+	/**
+	 * Formats and returns a query form.
+	 * @param $opts Form options.
+	 * @return HTML of the query form.
+	 */
+	protected static function getQueryForm( FormOptions $opts ) {
 		global $wgContLang;
 
 		$align = $wgContLang->isRtl() ? 'left' : 'right';
@@ -316,6 +326,11 @@ class SpecialWikilog
 		return $out;
 	}
 
+	/**
+	 * Returns query form fields.
+	 * @param $opts Form options.
+	 * @return Array of form fields.
+	 */
 	protected static function getQueryFormFields( FormOptions $opts ) {
 		global $wgWikilogEnableTags;
 
@@ -363,6 +378,11 @@ class SpecialWikilog
 		return $fields;
 	}
 
+	/**
+	 * Returns a Wikilog query object given the form options.
+	 * @param $opts Form options.
+	 * @return Wikilog query object.
+	 */
 	public static function getQuery( $opts ) {
 		$query = new WikilogItemQuery();
 		$query->setPubStatus( $opts['show'] );
@@ -382,6 +402,13 @@ class SpecialWikilog
 		return $query;
 	}
 
+	/**
+	 * Parse inline date parameter.
+	 * @param $date Text representation of date "YYYY/MM/DD".
+	 * @return Array(3) if date parsed successfully, where each element
+	 *   represents a component of the date, being the last two optional.
+	 *   False in case of error.
+	 */
 	public static function parseDateParam( $date ) {
 		$m = array();
 		if ( preg_match( '/^(\d+)(?:\/(\d+)(?:\/(\d+))?)?$/', $date, $m ) ) {
