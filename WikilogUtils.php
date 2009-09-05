@@ -157,31 +157,22 @@ class WikilogUtils
 	 * with links to their user and user-talk pages, according to the
 	 * 'wikilog-author-signature' system message.
 	 *
+	 * @pre wfLoadExtensionMessages( 'Wikilog' ) must have been called. It
+	 *   is not called here since this function can potentially be called
+	 *   lots of times in a single page load.
+	 *
 	 * @param $list Array of authors.
 	 * @return Wikitext-formatted textual list of authors.
 	 */
 	public static function authorList( $list ) {
-		wfLoadExtensionMessages( 'Wikilog' );
+		global $wgContLang;
 
 		if ( is_string( $list ) ) {
 			return self::authorSig( $list );
 		}
 		else if ( is_array( $list ) ) {
-			$count = count( $list );
-
-			if ( $count == 0 ) {
-				return '';
-			}
-			else if ( $count == 1 ) {
-				return self::authorSig( $list[0] );
-			}
-			else {
-				$first = implode( ', ', array_map( array( 'Wikilog', 'authorSig' ),
-					array_slice( $list, 0, $count - 1 ) ) );
-				$last = self::authorSig( $list[$count-1] );
-				$and = wfMsgForContent( 'and' );
-				return "{$first} {$and} {$last}";
-			}
+			$authors = array_map( array( __CLASS__, 'authorSig' ), $list );
+			return $wgContLang->listToText( $authors );
 		}
 		else {
 			return '';
@@ -192,6 +183,10 @@ class WikilogUtils
 	 * Formats a single author signature.
 	 * Uses the 'wikilog-author-signature' system message, in order to provide
 	 * user and user-talk links.
+	 *
+	 * @pre wfLoadExtensionMessages( 'Wikilog' ) must have been called. It
+	 *   is not called here since this function can potentially be called
+	 *   lots of times in a single page load.
 	 *
 	 * @param $author String, author name.
 	 * @return Wikitext-formatted author signature.
