@@ -67,6 +67,7 @@ class WikilogParser
 		$parser->setFunctionHook( 'wl-publish',  array( 'WikilogParser', 'publish'  ), SFH_NO_HASH );
 		$parser->setFunctionHook( 'wl-author',   array( 'WikilogParser', 'author'   ), SFH_NO_HASH );
 		$parser->setFunctionHook( 'wl-tags',     array( 'WikilogParser', 'tags'     ), SFH_NO_HASH );
+		$parser->setFunctionHook( 'wl-info',     array( 'WikilogParser', 'info'     ), SFH_NO_HASH );
 		return true;
 	}
 
@@ -270,6 +271,36 @@ class WikilogParser
 				break;
 		}
 		return '<!-- -->';
+	}
+
+	/**
+	 * {{wl-info:...}} parser function handler.
+	 * Provides general information about the extension.
+	 */
+	public static function info( &$parser, $id /*, $tag... */ ) {
+		global $wgWikilogNamespaces;
+		global $wgContLang;
+
+		$args = array_slice( func_get_args(), 2 );
+
+		switch ( $id ) {
+			case 'num-namespaces':
+				return count( $wgWikilogNamespaces );
+			case 'all-namespaces':
+				$namespaces = array();
+				foreach ( $wgWikilogNamespaces as $ns )
+					$namespaces[] = $wgContLang->getFormattedNsText( $ns );
+				return $wgContLang->listToText( $namespaces );
+			case 'namespace-by-index':
+				$index = empty( $args ) ? 0 : intval( array_shift( $args ) );
+				if ( isset( $wgWikilogNamespaces[$index] ) ) {
+					return $wgContLang->getFormattedNsText( $wgWikilogNamespaces[$index] );
+				} else {
+					return '';
+				}
+			default:
+				return '';
+		}
 	}
 
 
