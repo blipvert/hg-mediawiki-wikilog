@@ -202,8 +202,8 @@ class WikilogMainPage
 			),
 			__METHOD__
 		);
-		$n_total = $row->total;
-		$n_published = $row->published;
+		$n_total = intval( $row->total );
+		$n_published = intval( $row->published );
 		$n_drafts = $n_total - $n_published;
 
 		$cont = $this->formatPostCount( $skin, 'p', 'published', $n_published );
