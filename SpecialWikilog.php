@@ -41,10 +41,11 @@ class SpecialWikilog
 	extends IncludableSpecialPage
 {
 
-	/**
-	 * Alternate views.
-	 */
+	/** Alternate views. */
 	protected static $views = array( 'summary', 'archives' );
+
+	/** Statuses. */
+	protected static $statuses = array( 'all', 'published', 'drafts' );
 
 	/**
 	 * Constructor.
@@ -225,7 +226,7 @@ class SpecialWikilog
 
 	/**
 	 * Parse inline parameters passed after the special page name.
-	 * Example: Special:Wikilog/Category:catname;tag=tagname;5
+	 * Example: Special:Wikilog/Category:catname/tag=tagname/5
 	 * @param $parameters Inline parameters after the special page name.
 	 * @param $opts Form options.
 	 */
@@ -234,15 +235,22 @@ class SpecialWikilog
 
 		if ( empty( $parameters ) ) return;
 
-		foreach ( explode( ';', $parameters ) as $par ) {
+		/* ';' supported for backwards compatibility */
+		foreach ( preg_split( '|[/;]|', $parameters ) as $par ) {
 			if ( is_numeric( $par ) ) {
 				$opts['limit'] = intval( $par );
-			} else if ( $par == 'all' || $par == 'published' || $par == 'drafts' ) {
+			} else if ( in_array( $par, self::$statuses ) ) {
 				$opts['show'] = $par;
 			} else if ( in_array( $par, self::$views ) ) {
 				$opts['view'] = $par;
-			} else if ( preg_match( '/^tag=(.+)$/', $par, $m ) ) {
+			} else if ( preg_match( '/^t(?:ag)?=(.+)$/', $par, $m ) ) {
 				$opts['tag'] = $m[1];
+			} else if ( preg_match( '/^y(?:ear)?=(.+)$/', $par, $m ) ) {
+				$opts['year'] = intval( $m[1] );
+			} else if ( preg_match( '/^m(?:onth)?=(.+)$/', $par, $m ) ) {
+				$opts['month'] = intval( $m[1] );
+			} else if ( preg_match( '/^d(?:ay)?=(.+)$/', $par, $m ) ) {
+				$opts['day'] = intval( $m[1] );
 			} else if ( preg_match( '/^date=(.+)$/', $par, $m ) ) {
 				if ( ( $date = self::parseDateParam( $m[1] ) ) ) {
 					list( $opts['year'], $opts['month'], $opts['day'] ) = $date;
@@ -404,14 +412,14 @@ class SpecialWikilog
 
 	/**
 	 * Parse inline date parameter.
-	 * @param $date Text representation of date "YYYY/MM/DD".
+	 * @param $date Text representation of date "YYYY-MM-DD".
 	 * @return Array(3) if date parsed successfully, where each element
 	 *   represents a component of the date, being the last two optional.
 	 *   False in case of error.
 	 */
 	public static function parseDateParam( $date ) {
 		$m = array();
-		if ( preg_match( '/^(\d+)(?:\/(\d+)(?:\/(\d+))?)?$/', $date, $m ) ) {
+		if ( preg_match( '|^(\d+)(?:[/-](\d+)(?:[/-](\d+))?)?$|', $date, $m ) ) {
 			return array(
 				intval( $m[1] ),
 				( isset( $m[2] ) ? intval( $m[2] ) : NULL ),
