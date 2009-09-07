@@ -278,7 +278,8 @@ class WikilogParser
 	 * Provides general information about the extension.
 	 */
 	public static function info( &$parser, $id /*, $tag... */ ) {
-		global $wgWikilogNamespaces;
+		global $wgWikilogNamespaces, $wgWikilogEnableTags;
+		global $wgWikilogEnableComments;
 		global $wgContLang;
 
 		$args = array_slice( func_get_args(), 2 );
@@ -298,6 +299,10 @@ class WikilogParser
 				} else {
 					return '';
 				}
+			case 'tags-enabled':
+				return $wgWikilogEnableTags ? '*' : '';
+			case 'comments-enabled':
+				return $wgWikilogEnableComments ? '*' : '';
 			default:
 				return '';
 		}
