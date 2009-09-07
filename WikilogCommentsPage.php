@@ -143,6 +143,8 @@ class WikilogCommentsPage
 	protected function viewComments() {
 		global $wgOut, $wgRequest;
 
+		$wgOut->addHtml( Xml::openElement( 'div', array( 'class' => 'wl-comments' ) ) );
+
 		if ( $this->mSingleComment ) {
 			$pid = $this->mSingleComment->getID();	# Post ID
 
@@ -180,6 +182,8 @@ class WikilogCommentsPage
 				$wgOut->addHtml( $this->getPostCommentForm() );
 			}
 		}
+
+		$wgOut->addHtml( Xml::closeElement( 'div' ) );
 	}
 
 	/**
@@ -264,7 +268,7 @@ class WikilogCommentsPage
 		$comments = $this->mItem->getComments( $parent ? $parent->mThread : NULL );
 		$top = count( $stack = array() );
 
-		$html = '';
+		$html = Xml::openElement( 'div', array( 'class' => 'wl-threads' ) );
 
 		foreach ( $comments as $comment ) {
 			while ( $top > 0 && $comment->mParent != $stack[$top-1] ) {
@@ -287,6 +291,7 @@ class WikilogCommentsPage
 			$html .= Xml::closeElement( 'div' );
 		}
 
+		$html .= Xml::closeElement( 'div' );	// wl-threads
 		return $html;
 	}
 
