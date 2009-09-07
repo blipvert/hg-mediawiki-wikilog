@@ -227,11 +227,13 @@ class WikilogSummaryPager
 	}
 
 	protected function parse( $text ) {
-		global $wgParser, $wgOut;
+		global $wgTitle, $wgParser, $wgOut;
 		if ( $this->mIncluding ) {
 			return $wgParser->recursiveTagParse( $text );
 		} else {
-			return $wgOut->parse( $text );
+			$popts = $wgOut->parserOptions();
+			$output = $wgParser->parse( $text, $wgTitle, $popts, true, false );
+			return $output->getText();
 		}
 	}
 
@@ -259,7 +261,7 @@ class WikilogSummaryPager
  * - 'page': title (prefixed, for link) of the article page
  * - 'authors': authors
  * - 'tags': tags
- * - 'published': 0 (draft) or 1 (published)
+ * - 'published': empty (draft) or "*" (published)
  * - 'pubdate': article publication date
  * - 'updated': article last update date
  * - 'summary': article summary
@@ -280,6 +282,8 @@ class WikilogTemplatePager
 		# Load template
 		list( $this->mTemplate, $this->mTemplateTitle ) =
 			$wgParser->getTemplateDom( $template );
+		if ( $this->mTemplate === false )
+			$this->mTemplate = "[[:$template]]";
 	}
 
 	function getDefaultQuery() {
@@ -322,7 +326,7 @@ class WikilogTemplatePager
 			'page'          => $item->mTitle->getPrefixedText(),
 			'authors'       => $authors,
 			'tags'          => $tags,
-			'published'     => $item->getIsPublished(),
+			'published'     => $item->getIsPublished() ? '*' : '',
 			'pubdate'       => $pubdate,
 			'updated'       => $updated,
 			'summary'       => $wgParser->insertStripItem( $summary ),

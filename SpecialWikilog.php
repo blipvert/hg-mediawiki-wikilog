@@ -130,7 +130,7 @@ class SpecialWikilog
 	 * @param $opts Form options, such as wikilog name, category, date, etc.
 	 */
 	public function webOutput( FormOptions $opts ) {
-		global $wgRequest, $wgOut, $wgMimeType, $wgTitle;
+		global $wgRequest, $wgOut, $wgMimeType, $wgTitle, $wgParser;
 		global $wgWikilogNavTop, $wgWikilogNavBottom;
 
 		# Set page title, html title, nofollow, noindex, etc...
@@ -139,6 +139,14 @@ class SpecialWikilog
 
 		# Build query object.
 		$query = self::getQuery( $opts );
+
+		# Prepare the parser.
+		# This must be called here if not including, before the pager
+		# object is created. WikilogTemplatePager fails otherwise.
+		if ( !$this->including() ) {
+			$popts = $wgOut->parserOptions();
+			$wgParser->startExternalParse( $wgTitle, $popts, Parser::OT_HTML );
+		}
 
 		# Create the pager object that will create the list of articles.
 		if ( $opts['view'] == 'archives' ) {
