@@ -34,7 +34,7 @@ if ( !defined( 'MEDIAWIKI' ) )
  */
 interface WikilogPager
 {
-	function including( $x );
+	function including( $x = NULL );
 	function getNavigationBar( $class = 'wl-navbar-any' );
 }
 
@@ -91,12 +91,18 @@ class WikilogSummaryPager
 		global $wgWikilogSummaryLimit;
 		if ( $this->mLimit > $wgWikilogSummaryLimit )
 			$this->mLimit = $wgWikilogSummaryLimit;
+
+		# We will need a clean parser if not including.
+		global $wgParser;
+		if ( !$this->mIncluding ) {
+			$wgParser->clearState();
+		}
 	}
 
 	/**
 	 * Property accessor/mutators.
 	 */
-	function including( $x ) { return wfSetVar( $this->mIncluding, $x ); }
+	function including( $x = NULL ) { return wfSetVar( $this->mIncluding, $x ); }
 
 	function getQueryInfo() {
 		return $this->mQuery->getQueryInfo( $this->mDb );
@@ -375,7 +381,7 @@ class WikilogArchivesPager
 	/**
 	 * Property accessor/mutators.
 	 */
-	function including( $x ) { return wfSetVar( $this->mIncluding, $x ); }
+	function including( $x = NULL ) { return wfSetVar( $this->mIncluding, $x ); }
 
 	function getQueryInfo() {
 		return $this->mQuery->getQueryInfo( $this->mDb );
