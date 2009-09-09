@@ -51,7 +51,7 @@ $wgWikilogStylePath = false;
  * Wikilog style version, incremented when $wgWikilogStylePath/wikilog.css
  * is changed.
  */
-$wgWikilogStyleVersion = 1;
+$wgWikilogStyleVersion = 2;
 
 /**
  * Maximum number of items in wikilog front page.

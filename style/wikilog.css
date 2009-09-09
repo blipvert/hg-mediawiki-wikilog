@@ -61,7 +61,7 @@ div.wl-comment-meta {
 	border-bottom: 1px solid #CCCCCC;
 	color: black;
 	margin: 0 0;
-	padding: 0.25em 0.75em;
+	padding: 0 0.75em;
 }
 
 div.wl-comment-pending .wl-comment-meta {
