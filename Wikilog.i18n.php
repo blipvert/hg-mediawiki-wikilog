@@ -106,6 +106,10 @@ $messages['en'] = array(
 	'wikilog-feed-title'		=> '{{SITENAME}} - $1 [$2]', # $1 = title, $2 = content language
 	'wikilog-feed-description'	=> 'Read the most recent posts in this feed.',
 
+	# Item and comments page titles
+	'wikilog-title-item-full'	=> '$1 - $2',	#1 = article title, $2 wikilog title
+	'wikilog-title-comments'	=> 'Comments - $1', #1 = article title
+
 	# Warning and error messages
 	'wikilog-error-msg'			=> 'Wikilog: $1',
 	'wikilog-error-title'		=> 'Wikilog error',
@@ -282,6 +286,10 @@ $messages['pt'] = array(
 	'wikilog-feed-title'		=> '{{SITENAME}} - $1 [$2]', # $1 = title, $2 = content language
 	'wikilog-feed-description'	=> 'Leia as postagens mais recentes neste feed.',
 
+	# Item and comments page titles
+	'wikilog-title-item-full'	=> '$1 - $2',	#1 = article title, $2 wikilog title
+	'wikilog-title-comments'	=> 'Comentários - $1', #1 = article title
+
 	# Warning and error messages
 	'wikilog-error-msg'			=> 'Wikilog: $1',
 	'wikilog-invalid-param'		=> 'Parâmetro inválido: $1.',
@@ -451,6 +459,10 @@ $messages['de'] = array(
 	# Atom and RSS feeds
 	'wikilog-feed-title'		=> '{{SITENAME}} - $1 [$2]', # $1 = title, $2 = content language
 	'wikilog-feed-description'	=> 'Lese die neuesten Beiträge in diesem Feed.',
+
+	# Item and comments page titles
+	'wikilog-title-item-full'	=> '$1 - $2',	#1 = article title, $2 wikilog title
+	##TRANSLATE##	'wikilog-title-comments'	=> 'Comments - $1', #1 = article title
 
 	# Warning and error messages
 	'wikilog-error-msg'			=> 'Wikilog: $1',

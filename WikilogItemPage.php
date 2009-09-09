@@ -66,7 +66,10 @@ class WikilogItemPage
 
 		if ( $this->mItem ) {
 			# Set page title
-			$fullPageTitle = $this->mItem->mName.' - '.$this->mItem->mParentTitle->getPrefixedText();
+			$fullPageTitle = wfMsg( 'wikilog-title-item-full',
+					$this->mItem->mName,
+					$this->mItem->mParentTitle->getPrefixedText()
+			);
 			$wgOut->setPageTitle( $this->mItem->mName );
 			$wgOut->setHTMLTitle( wfMsg( 'pagetitle', $fullPageTitle ) );
 

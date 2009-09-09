@@ -126,14 +126,31 @@ class WikilogCommentsPage
 	 * Wikilog comments page header.
 	 */
 	protected function viewHeader() {
-		global $wgOut;
+		global $wgOut, $wgUser;
 
 		if ( $this->mSingleComment ) {
+			# When viewing a single comment, add comment metadata.
 			$meta = $this->formatCommentMetadata( $this->mSingleComment );
 			$wgOut->addHtml( Xml::tags(
 				'div', array( 'class' => 'wl-comment-meta' ), $meta
 			) );
+		} else {
+			# Set a more human-friendly title to the comments page.
+			# Note: Sorry for the three-level cascade of wfMsg()'s...
+			$fullPageTitle = wfMsg( 'wikilog-title-item-full',
+					$this->mItem->mName,
+					$this->mItem->mParentTitle->getPrefixedText()
+			);
+			$fullPageTitle = wfMsg( 'wikilog-title-comments', $fullPageTitle );
+			$wgOut->setPageTitle( wfMsg( 'wikilog-title-comments', $this->mItem->mName ) );
+			$wgOut->setHTMLTitle( wfMsg( 'pagetitle', $fullPageTitle ) );
 		}
+
+		# Add a backlink to the original article. Specially important in
+		# single comment pages.
+		$skin = $wgUser->getSkin();
+		$link = $skin->link( $this->mItem->mTitle, $this->mItem->mName );
+		$wgOut->setSubtitle( wfMsg( 'wikilog-backlink', $link ) );
 	}
 
 	/**
