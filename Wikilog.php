@@ -323,9 +323,10 @@ class Wikilog
 	/**
 	 * SkinTemplateTabs hook handler function.
 	 * Adds a wikilog tab to articles in Wikilog namespaces.
+	 * Suppresses the "add section" tab in comments pages.
 	 */
 	static function SkinTemplateTabs( &$skin, &$contentActions ) {
-		global $wgRequest;
+		global $wgRequest, $wgWikilogEnableComments;
 
 		$wi = self::getWikilogInfo( $skin->mTitle );
 		if ( $wi ) {
@@ -336,6 +337,11 @@ class Wikilog
 					'text' => wfMsg('wikilog-tab'),
 					'href' => $skin->mTitle->getLocalUrl( 'action=wikilog' )
 				);
+			}
+			if ( $wgWikilogEnableComments && $wi->isTalk() ) {
+				if ( isset( $contentActions['addsection'] ) ) {
+					unset( $contentActions['addsection'] );
+				}
 			}
 		}
 		return true;
