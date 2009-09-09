@@ -104,6 +104,7 @@ $wgExtensionFunctions[] = array( 'Wikilog', 'ExtensionInit' );
 
 // Main Wikilog hooks
 $wgHooks['ArticleFromTitle'][]			= 'Wikilog::ArticleFromTitle';
+$wgHooks['ArticleViewHeader'][]			= 'Wikilog::ArticleViewHeader';
 $wgHooks['BeforePageDisplay'][]			= 'Wikilog::BeforePageDisplay';
 $wgHooks['LinkBegin'][]					= 'Wikilog::LinkBegin';
 $wgHooks['SkinTemplateTabAction'][]		= 'Wikilog::SkinTemplateTabAction';
@@ -252,6 +253,20 @@ class Wikilog
 				$article = new WikilogMainPage( $title, $wi );
 			}
 			return false;	// stop processing
+		}
+		return true;
+	}
+
+	/**
+	 * ArticleViewHeader hook handler function.
+	 * If viewing a WikilogCommentsPage, and the page doesn't exist in the
+	 * database, don't show the "there is no text in this page" message
+	 * (msg:noarticletext), since it gives wrong instructions to visitors.
+	 * The comment form is self-explaining enough.
+	 */
+	static function ArticleViewHeader( &$article, &$outputDone, &$pcache ) {
+		if ( $article instanceof WikilogCommentsPage && $article->getID() == 0 ) {
+			$outputDone = true;
 		}
 		return true;
 	}
