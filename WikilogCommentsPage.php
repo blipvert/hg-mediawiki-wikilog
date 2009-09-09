@@ -590,7 +590,7 @@ class WikilogCommentsPage
 	 * @param $comment Posted comment.
 	 */
 	protected function postComment( WikilogComment &$comment ) {
-		global $wgOut;
+		global $wgOut, $wgUser;
 		global $wgWikilogModerateAnonymous;
 
 		$check = $this->validateComment( $comment );
@@ -605,6 +605,12 @@ class WikilogCommentsPage
 			$wgOut->setPageTitle( $this->mTitle->getPrefixedText() );
 			$wgOut->setRobotPolicy( 'noindex,nofollow' );
 			$wgOut->addHtml( $this->getPostCommentForm( $comment->mParent ) );
+			return;
+		}
+
+		# Limit rate of comments.
+		if ( $wgUser->pingLimiter() ) {
+			$wgOut->rateLimited();
 			return;
 		}
 
