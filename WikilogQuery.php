@@ -276,7 +276,7 @@ class WikilogItemQuery
 		if ( $opts['last-comment-timestamp'] ) {
 			$q_tables[] = 'wikilog_comments';
 			$q_fields[] = 'MAX(wlc_updated) AS _wlp_last_comment_timestamp';
-			$q_joins['wikilog_posts'] = array( 'LEFT JOIN', 'wlp_page = wlc_post' );
+			$q_joins['wikilog_comments'] = array( 'LEFT JOIN', 'wlp_page = wlc_post' );
 			$q_options['GROUP BY'] = 'wlp_page';
 		}
 
