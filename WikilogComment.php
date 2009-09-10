@@ -288,7 +288,7 @@ class WikilogComment
 			if ( $thread !== false ) {
 				$thread = explode( '/', $thread );
 			} else {
-				throw MWException( 'Invalid parent history.' );
+				throw new MWException( 'Invalid parent history.' );
 			}
 		}
 
