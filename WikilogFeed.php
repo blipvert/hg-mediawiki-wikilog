@@ -165,6 +165,8 @@ class WikilogFeed
 		$this->doQuery();
 		$numRows = min( $this->mResult->numRows(), $this->mLimit );
 
+		wfDebug( "Wikilog: Feed query returned $numRows results.\n" );
+
 		if ( $numRows ) {
 			$this->mResult->rewind();
 			for ( $i = 0; $i < $numRows; $i++ ) {
