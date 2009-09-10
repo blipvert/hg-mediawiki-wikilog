@@ -280,8 +280,6 @@ class WikilogItemQuery
 			$q_options['GROUP BY'] = 'wlp_page';
 		}
 
-// 		$tables[] = 'x';	// DEBUG
-
 		return array(
 			'tables' => $q_tables,
 			'fields' => $q_fields,
