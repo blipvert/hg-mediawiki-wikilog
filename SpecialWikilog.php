@@ -354,23 +354,23 @@ class SpecialWikilog
 
 		$fields['wikilog'] = Xml::inputLabelSep(
 			wfMsg( 'wikilog-form-wikilog' ), 'wikilog', 'wl-wikilog', 40,
-			$opts->consumeValue( 'wikilog' )
+			str_replace( '_', ' ', $opts->consumeValue( 'wikilog' ) )
 		);
 
 		$fields['category'] = Xml::inputLabelSep(
 			wfMsg( 'wikilog-form-category' ), 'category', 'wl-category', 40,
-			$opts->consumeValue( 'category' )
+			str_replace( '_', ' ', $opts->consumeValue( 'category' ) )
 		);
 
 		$fields['author'] = Xml::inputLabelSep(
 			wfMsg( 'wikilog-form-author' ), 'author', 'wl-author', 40,
-			$opts->consumeValue( 'author' )
+			str_replace( '_', ' ', $opts->consumeValue( 'author' ) )
 		);
 
 		if ( $wgWikilogEnableTags ) {
 			$fields['tag'] = Xml::inputLabelSep(
 				wfMsg( 'wikilog-form-tag' ), 'tag', 'wl-tag', 40,
-				$opts->consumeValue( 'tag' )
+				str_replace( '_', ' ', $opts->consumeValue( 'tag' ) )
 			);
 		}
 
