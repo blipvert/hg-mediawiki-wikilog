@@ -50,6 +50,12 @@ class WikilogItemQuery
 	private $mDate = false;					///< Filter by date.
 	private $mNeedWikilogParam = false;		///< Need wikilog param in queries.
 
+	# Options
+	/** Query options. */
+	private $mOptions = array(
+		'last-comment-timestamp' => false
+	);
+
 	/**
 	 * Constructor. Creates a new instance and optionally sets the Wikilog
 	 * title to query.
@@ -61,6 +67,16 @@ class WikilogItemQuery
 		# If constructed without a title (from Special:Wikilog), it means that
 		# the listing is global, and needs wikilog parameter to filter.
 		$this->mNeedWikilogParam = ($wikilogTitle == NULL);
+	}
+
+	/**
+	 * Options.
+	 */
+	function setOption( $key, $value = true ) {
+		$this->mOptions[$key] = $value;
+	}
+	function getOption( $key, $default = false ) {
+		return isset( $this->mOptions[$key] ) ? $this->mOptions[$key] : $default;
 	}
 
 	/**
@@ -172,17 +188,24 @@ class WikilogItemQuery
 	function getTag()			{ return $this->mTag; }
 	function getDate()			{ return $this->mDate; }
 
-	function getQueryInfo( $db ) {
-		extract( $db->tableNames( 'page' ) );
+	function getQueryInfo( $db, $opts = array() ) {
+		# Check options, convert from string if necessary, merge.
+		if ( is_string( $opts ) ) {
+			$opts = array( $opts => true );
+		}
+		if ( !is_array( $opts ) ) {
+			throw new MWException( __METHOD__ . ': Invalid $opts parameter.' );
+		}
+		$opts += $this->mOptions;
 
 		# Basic defaults.
-
-		$tables = array(
+		extract( $db->tableNames( 'page' ) );
+		$q_tables = array(
 			'wikilog_posts',
 			"{$page} AS w",
 			"{$page} AS p",
 		);
-		$fields = array(
+		$q_fields = array(
 			'wlp_page',
 			'wlp_parent',
 			'w.page_namespace AS wlw_namespace',
@@ -197,13 +220,13 @@ class WikilogItemQuery
 			'wlp_tags',
 			'wlp_num_comments',
 		);
-		$conds = array(
+		$q_conds = array(
 			'p.page_is_redirect' => 0
 		);
-		$options = array(
+		$q_options = array(
 			'USE INDEX' => array()
 		);
-		$joins = array(
+		$q_joins = array(
 			"{$page} AS p" => array( 'LEFT JOIN', 'p.page_id = wlp_page' ),
 			"{$page} AS w" => array( 'LEFT JOIN', 'w.page_id = wlp_parent' ),
 		);
@@ -212,51 +235,59 @@ class WikilogItemQuery
 
 		## Filter by wikilog name.
 		if ( $this->mWikilogTitle !== NULL ) {
-			$conds['wlp_parent'] = $this->mWikilogTitle->getArticleId();
+			$q_conds['wlp_parent'] = $this->mWikilogTitle->getArticleId();
 		}
 
 		## Filter by published status.
 		if ( $this->mPubStatus === self::PS_PUBLISHED ) {
-			$conds['wlp_publish'] = 1;
+			$q_conds['wlp_publish'] = 1;
 		} else if ( $this->mPubStatus === self::PS_DRAFTS ) {
-			$conds['wlp_publish'] = 0;
+			$q_conds['wlp_publish'] = 0;
 		}
 
 		## Filter by category.
 		if ( $this->mCategory ) {
-			$tables[] = 'categorylinks';
-			$joins['categorylinks'] = array( 'JOIN', 'wlp_page = cl_from' );
-			$conds['cl_to'] = $this->mCategory->getDBkey();
+			$q_tables[] = 'categorylinks';
+			$q_joins['categorylinks'] = array( 'JOIN', 'wlp_page = cl_from' );
+			$q_conds['cl_to'] = $this->mCategory->getDBkey();
 		}
 
 		## Filter by author.
 		if ( $this->mAuthor ) {
-			$tables[] = 'wikilog_authors';
-			$joins['wikilog_authors'] = array( 'JOIN', 'wlp_page = wla_page' );
-			$conds['wla_author_text'] = $this->mAuthor->getDBkey();
+			$q_tables[] = 'wikilog_authors';
+			$q_joins['wikilog_authors'] = array( 'JOIN', 'wlp_page = wla_page' );
+			$q_conds['wla_author_text'] = $this->mAuthor->getDBkey();
 		}
 
 		## Filter by tag.
 		if ( $this->mTag ) {
-			$tables[] = 'wikilog_tags';
-			$joins['wikilog_tags'] = array( 'JOIN', 'wlp_page = wlt_page' );
-			$conds['wlt_tag'] = $this->mTag;
+			$q_tables[] = 'wikilog_tags';
+			$q_joins['wikilog_tags'] = array( 'JOIN', 'wlp_page = wlt_page' );
+			$q_conds['wlt_tag'] = $this->mTag;
 		}
 
 		## Filter by date.
 		if ( $this->mDate ) {
-			$conds[] = 'wlp_pubdate >= ' . $db->addQuotes( $this->mDate->start );
-			$conds[] = 'wlp_pubdate < ' . $db->addQuotes( $this->mDate->end );
+			$q_conds[] = 'wlp_pubdate >= ' . $db->addQuotes( $this->mDate->start );
+			$q_conds[] = 'wlp_pubdate < ' . $db->addQuotes( $this->mDate->end );
+		}
+
+		## Add last comment timestamp, used in syndication feeds.
+		if ( $opts['last-comment-timestamp'] ) {
+			$q_tables[] = 'wikilog_comments';
+			$q_fields[] = 'MAX(wlc_updated) AS _wlp_last_comment_timestamp';
+			$q_joins['wikilog_posts'] = array( 'LEFT JOIN', 'wlp_page = wlc_post' );
+			$q_options['GROUP BY'] = 'wlp_page';
 		}
 
 // 		$tables[] = 'x';	// DEBUG
 
 		return array(
-			'tables' => $tables,
-			'fields' => $fields,
-			'conds' => $conds,
-			'options' => $options,
-			'join_conds' => $joins
+			'tables' => $q_tables,
+			'fields' => $q_fields,
+			'conds' => $q_conds,
+			'options' => $q_options,
+			'join_conds' => $q_joins
 		);
 	}
 
