@@ -895,6 +895,7 @@ class WlRSSFeed
 			array(
 				'version'       => "2.0",
 				'xmlns:atom'    => "http://www.w3.org/2005/Atom",
+				'xmlns:thr'     => "http://purl.org/syndication/thread/1.0",
 				'xmlns:content' => "http://purl.org/rss/1.0/modules/content/",
 				'xmlns:dc'      => "http://purl.org/dc/elements/1.1/"
 			)

@@ -180,6 +180,7 @@ class WikilogFeed
 		global $wgMimeType;
 		global $wgWikilogFeedSummary, $wgWikilogFeedContent;
 		global $wgWikilogFeedCategories, $wgWikilogFeedRelated;
+		global $wgWikilogEnableComments;
 
 		# Make titles.
 		$wikilogName = str_replace( '_', ' ', $row->wlw_title );
@@ -202,10 +203,17 @@ class WikilogFeed
 		);
 
 		# Comments link.
-		$entry->addLinkRel( 'replies', array(
+		$cmtLink = array(
 			'href' => $itemTitle->getTalkPage()->getFullUrl(),
 			'type' => $wgMimeType
-		) );
+		);
+		if ( $wgWikilogEnableComments ) {
+			$cmtLink['thr:count'] = $row->wlp_num_comments;
+			if ( !is_null( $row->_wlp_last_comment_timestamp ) ) {
+				$cmtLink['thr:updated'] = wfTimestamp( TS_ISO_8601, $row->_wlp_last_comment_timestamp );
+			}
+		}
+		$entry->addLinkRel( 'replies', $cmtLink );
 
 		# Source feed.
 		if ( $this->mSiteFeed ) {
@@ -271,7 +279,7 @@ class WikilogFeed
 	}
 
 	function getQueryInfo() {
-		return $this->mQuery->getQueryInfo( $this->mDb );
+		return $this->mQuery->getQueryInfo( $this->mDb, 'last-comment-timestamp' );
 	}
 
 	/**
