@@ -232,6 +232,15 @@ class WikilogSummaryPager
 		return $result;
 	}
 
+	/**
+	 * Parse a given wikitext and returns the resulting HTML fragment.
+	 * Uses either $wgParser->recursiveTagParse() or $wgParser->parse()
+	 * depending whether the content is being included in another
+	 * article. Note that the parser state can't be reset, or it will
+	 * break the parser output.
+	 * @param $text Wikitext that should be parsed.
+	 * @return Resulting HTML fragment.
+	 */
 	protected function parse( $text ) {
 		global $wgTitle, $wgParser, $wgOut;
 		if ( $this->mIncluding ) {
@@ -243,6 +252,12 @@ class WikilogSummaryPager
 		}
 	}
 
+	/**
+	 * Returns a wikilog article edit link, much similar to a section edit
+	 * link in normal articles.
+	 * @param $title Wikilog article title object.
+	 * @return HTML fragment.
+	 */
 	private function editLink( $title ) {
 		$skin = $this->getSkin();
 		$url = $skin->makeKnownLinkObj( $title, wfMsg('wikilog-edit-lc'), 'action=edit' );
@@ -279,6 +294,9 @@ class WikilogTemplatePager
 
 	protected $mTemplate, $mTemplateTitle;
 
+	/**
+	 * Constructor.
+	 */
 	function __construct( WikilogItemQuery $query, Title $template, $limit = false ) {
 		global $wgParser;
 
@@ -370,6 +388,9 @@ class WikilogArchivesPager
 	protected $mQuery = NULL;			///< Wikilog item query data
 	protected $mIncluding = false;		///< If pager is being included
 
+	/**
+	 * Constructor.
+	 */
 	function __construct( WikilogItemQuery $query ) {
 		# WikilogItemQuery object drives our queries.
 		$this->mQuery = $query;
@@ -531,6 +552,11 @@ class WikilogArchivesPager
 		return $fields;
 	}
 
+	/**
+	 * Formats the given list of authors into a textual comma-separated list.
+	 * @param $list Array with wikilog article author information.
+	 * @return Resulting HTML fragment.
+	 */
 	private function authorList( $list ) {
 		if ( is_string( $list ) ) {
 			return $this->authorLink( $list );
@@ -544,16 +570,27 @@ class WikilogArchivesPager
 		}
 	}
 
+	/**
+	 * Formats an author user page link.
+	 * @param $name Username of the author.
+	 * @return Resulting HTML fragment.
+	 */
 	private function authorLink( $name ) {
 		$skin = $this->getSkin();
 		$title = Title::makeTitle( NS_USER, $name );
 		return $skin->makeLinkObj( $title, $name );
 	}
 
+	/**
+	 * Returns a wikilog article edit link for the actions column of the table.
+	 * @param $title Wikilog article title object.
+	 * @return HTML fragment.
+	 */
 	private function editLink( $title ) {
 		$skin = $this->getSkin();
 		$url = $skin->makeKnownLinkObj( $title, wfMsg('wikilog-edit-lc'), 'action=edit' );
 		return wfMsg( 'wikilog-brackets', $url );
 	}
+
 }
 
