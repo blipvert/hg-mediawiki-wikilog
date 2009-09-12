@@ -177,6 +177,9 @@ $messages['en'] = array(
 	'wikilog-page-lc'			=> 'page',		# noun
 	'wikilog-history-lc'		=> 'history',	# noun
 
+	# Other
+	'wikilog-doc-import-comment' => "Imported Wikilog documentation",
+
 	# Untranslatable strings
 	'wikilog-summary'			=> '',			# Special page summary
 	'wikilog-backlink'			=> '← $1',
@@ -360,6 +363,9 @@ $messages['pt'] = array(
 	'wikilog-reject-lc'			=> 'rejeitar',		# verb
 	'wikilog-page-lc'			=> 'página',		# noun
 	'wikilog-history-lc'		=> 'histórico',		# noun
+
+	# Other
+	'wikilog-doc-import-comment' => "Documentação Wikilog importada",
 );
 
 /** German (Deutsch)
@@ -530,5 +536,8 @@ $messages['de'] = array(
 	##TRANSLATE##	'wikilog-reject-lc'			=> 'reject',	# verb
 	##TRANSLATE##	'wikilog-page-lc'			=> 'page',		# noun
 	##TRANSLATE##	'wikilog-history-lc'		=> 'history',
+
+	# Other
+	##TRANSLATE##	'wikilog-doc-import-comment' => "Imported Wikilog documentation",
 
 );
