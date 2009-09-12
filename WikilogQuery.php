@@ -61,7 +61,7 @@ class WikilogItemQuery
 	 * title to query.
 	 * @param $wikilogTitle Wikilog title object to query for.
 	 */
-	function __construct( $wikilogTitle = NULL ) {
+	public function __construct( $wikilogTitle = NULL ) {
 		$this->setWikilogTitle( $wikilogTitle );
 
 		# If constructed without a title (from Special:Wikilog), it means that
@@ -72,10 +72,10 @@ class WikilogItemQuery
 	/**
 	 * Options.
 	 */
-	function setOption( $key, $value = true ) {
+	public function setOption( $key, $value = true ) {
 		$this->mOptions[$key] = $value;
 	}
-	function getOption( $key, $default = false ) {
+	public function getOption( $key, $default = false ) {
 		return isset( $this->mOptions[$key] ) ? $this->mOptions[$key] : $default;
 	}
 
@@ -83,7 +83,7 @@ class WikilogItemQuery
 	 * Sets the wikilog title to query for.
 	 * @param $wikilogTitle Wikilog title object to query for.
 	 */
-	function setWikilogTitle( $wikilogTitle ) {
+	public function setWikilogTitle( $wikilogTitle ) {
 		$this->mWikilogTitle = $wikilogTitle;
 	}
 
@@ -91,7 +91,7 @@ class WikilogItemQuery
 	 * Sets the publish status to query for.
 	 * @param $pubStatus Publish status, string or integer.
 	 */
-	function setPubStatus( $pubStatus ) {
+	public function setPubStatus( $pubStatus ) {
 		if ( is_null( $pubStatus ) ) {
 			$pubStatus = self::PS_PUBLISHED;
 		} else if ( is_string( $pubStatus ) ) {
@@ -104,7 +104,7 @@ class WikilogItemQuery
 	 * Sets the category to query for.
 	 * @param $category Category title object or text.
 	 */
-	function setCategory( $category ) {
+	public function setCategory( $category ) {
 		if ( is_object( $category ) ) {
 			$this->mCategory = $category;
 		} else if ( is_string( $category ) ) {
@@ -119,7 +119,7 @@ class WikilogItemQuery
 	 * Sets the author to query for.
 	 * @param $category User page title object or text.
 	 */
-	function setAuthor( $author ) {
+	public function setAuthor( $author ) {
 		if ( is_object( $author ) ) {
 			$this->mAuthor = $author;
 		} else if ( is_string( $author ) ) {
@@ -134,7 +134,7 @@ class WikilogItemQuery
 	 * Sets the tag to query for.
 	 * @param $category Tag text.
 	 */
-	function setTag( $tag ) {
+	public function setTag( $tag ) {
 		global $wgWikilogEnableTags;
 		if ( $wgWikilogEnableTags ) {
 			$this->mTag = $tag;
@@ -149,7 +149,7 @@ class WikilogItemQuery
 	 * @param $day Publish date day, optional. If ommited, queries for items
 	 *   during the whole month or year.
 	 */
-	function setDate( $year, $month = false, $day = false ) {
+	public function setDate( $year, $month = false, $day = false ) {
 		$year  = ($year  > 0 && $year  <= 9999) ? $year  : false;
 		$month = ($month > 0 && $month <=   12) ? $month : false;
 		$day   = ($day   > 0 && $day   <=   31) ? $day   : false;
@@ -181,14 +181,28 @@ class WikilogItemQuery
 		}
 	}
 
-	function getWikilogTitle()	{ return $this->mWikilogTitle; }
-	function getPubStatus()		{ return $this->mPubStatus; }
-	function getCategory()		{ return $this->mCategory; }
-	function getAuthor()		{ return $this->mAuthor; }
-	function getTag()			{ return $this->mTag; }
-	function getDate()			{ return $this->mDate; }
+	/**
+	 * Accessor functions.
+	 */
+	public function getWikilogTitle()	{ return $this->mWikilogTitle; }
+	public function getPubStatus()		{ return $this->mPubStatus; }
+	public function getCategory()		{ return $this->mCategory; }
+	public function getAuthor()		{ return $this->mAuthor; }
+	public function getTag()			{ return $this->mTag; }
+	public function getDate()			{ return $this->mDate; }
 
-	function getQueryInfo( $db, $opts = array() ) {
+	/**
+	 * Organizes all the query information and constructs the table and
+	 * field lists that will later form the SQL SELECT statement.
+	 * @param $db Database object.
+	 * @param $opts Array with query options. Keys are option names, values
+	 *   are option values. Valid options are:
+	 *   - 'last-comment-timestamp': If true, the most recent article comment
+	 *     timestamps are included in the results. This is used in Atom feeds.
+	 * @return Array with tables, fields, conditions, options and join
+	 *   conditions, to be used in a call to $db->select(...).
+	 */
+	public function getQueryInfo( $db, $opts = array() ) {
 		# Check options, convert from string if necessary, merge.
 		if ( is_string( $opts ) ) {
 			$opts = array( $opts => true );
@@ -289,7 +303,12 @@ class WikilogItemQuery
 		);
 	}
 
-	function getDefaultQuery() {
+	/**
+	 * Returns the query information as an array suitable to be used to
+	 * construct a URL to a wikilog or Special:Wikilog pages with the proper
+	 * query parameters. Used in navigation links.
+	 */
+	public function getDefaultQuery() {
 		$query = array();
 
 		if ( $this->mNeedWikilogParam && $this->mWikilogTitle ) {
@@ -323,11 +342,19 @@ class WikilogItemQuery
 		return $query;
 	}
 
-	function isSingleWikilog() {
+	/**
+	 * Returns whether this query object returns articles from only a single
+	 * wikilog.
+	 */
+	public function isSingleWikilog() {
 		return $this->mWikilogTitle !== NULL;
 	}
 
-	static function parsePubStatusText( $show = 'published' ) {
+	/**
+	 * Parse a publication status text ( 'drafts', 'published', etc.) and
+	 * return a self::PS_* constant that represents that status.
+	 */
+	public static function parsePubStatusText( $show = 'published' ) {
 		if ( $show == 'all' || $show == 'any' ) {
 			return self::PS_ALL;
 		} else if ( $show == 'draft' || $show == 'drafts' ) {
@@ -336,6 +363,7 @@ class WikilogItemQuery
 			return self::PS_PUBLISHED;
 		}
 	}
+
 }
 
 

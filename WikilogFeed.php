@@ -109,6 +109,10 @@ class WikilogFeed
 		WikilogParser::expandLocalUrls( $saveExpUrls );
 	}
 
+	/**
+	 * Execute the feed driver, generating the syndication feed and printing
+	 * the results.
+	 */
 	public function execute() {
 		global $wgOut;
 
@@ -157,6 +161,11 @@ class WikilogFeed
 		}
 	}
 
+	/**
+	 * Generates the list of entries for a given feed and print the resulting
+	 * feed document.
+	 * @param $feed Prepared syndication feed object.
+	 */
 	public function feed( $feed ) {
 		global $wgOut, $wgFavicon;
 
@@ -178,6 +187,11 @@ class WikilogFeed
 		$feed->outFooter();
 	}
 
+	/**
+	 * Generates and returns a single feed entry.
+	 * @param $row The wikilog article database entry.
+	 * @return A new WlSyndicationEntry object.
+	 */
 	function feedEntry( $row ) {
 		global $wgMimeType;
 		global $wgWikilogFeedSummary, $wgWikilogFeedContent;
@@ -261,11 +275,20 @@ class WikilogFeed
 		return $entry;
 	}
 
+	/**
+	 * Performs the database query that returns the syndication feed entries
+	 * and store the result wrapper in $this->mResult.
+	 */
 	function doQuery() {
 		$this->mIndexField = 'wlp_pubdate';
 		$this->mResult = $this->reallyDoQuery( $this->mLimit );
 	}
 
+	/**
+	 * Performs the database query and return the result wrapper.
+	 * @param $limit Maximum number of entries to return.
+	 * @return The database query ResultWrapper object.
+	 */
 	function reallyDoQuery( $limit ) {
 		$fname = __METHOD__ . ' (' . get_class( $this ) . ')';
 		$info = $this->getQueryInfo();
@@ -280,6 +303,9 @@ class WikilogFeed
 		return new ResultWrapper( $this->mDb, $res );
 	}
 
+	/**
+	 * Returns the query information.
+	 */
 	function getQueryInfo() {
 		return $this->mQuery->getQueryInfo( $this->mDb, 'last-comment-timestamp' );
 	}
