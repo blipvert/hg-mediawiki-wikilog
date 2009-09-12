@@ -1,0 +1,13 @@
+= Wikilog release notes =
+
+Wikilog is a MediaWiki extension that enhances the wiki software with some
+common blogging features, making it a wiki-blog hybrid.  More information
+about the extension, including installation instructions, can be found on:
+
+http://www.mediawiki.org/wiki/Extension:Wikilog
+
+== Wikilog 0.8.0 ==
+
+Sep 12, 2009
+
+This is the first pre-stable release of the extension.
