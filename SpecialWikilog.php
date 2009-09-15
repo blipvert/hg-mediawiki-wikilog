@@ -150,16 +150,13 @@ class SpecialWikilog
 
 		# Create the pager object that will create the list of articles.
 		if ( $opts['view'] == 'archives' ) {
-			$pager = new WikilogArchivesPager( $query );
+			$pager = new WikilogArchivesPager( $query, $this->including() );
 		} else if ( $opts['template'] ) {
 			$templ = Title::makeTitle( NS_TEMPLATE, $opts['template'] );
-			$pager = new WikilogTemplatePager( $query, $templ, $opts['limit'] );
+			$pager = new WikilogTemplatePager( $query, $templ, $opts['limit'], $this->including() );
 		} else {
-			$pager = new WikilogSummaryPager( $query, $opts['limit'] );
+			$pager = new WikilogSummaryPager( $query, $opts['limit'], $this->including() );
 		}
-
-		# Tell the pager whether the page is included.
-		$pager->including( $this->including() );
 
 		# Handle special page inclusion.
 		if ( $this->including() ) {

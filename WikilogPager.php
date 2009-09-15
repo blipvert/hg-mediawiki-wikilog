@@ -69,9 +69,10 @@ class WikilogSummaryPager
 	 *   which articles will be shown.
 	 * @param $limit Override how many articles will be listed.
 	 */
-	function __construct( WikilogItemQuery $query, $limit = false ) {
+	function __construct( WikilogItemQuery $query, $limit = false, $including = false ) {
 		# WikilogItemQuery object drives our queries.
 		$this->mQuery = $query;
+		$this->mIncluding = $including;
 
 		# Parent constructor.
 		parent::__construct();
@@ -297,11 +298,11 @@ class WikilogTemplatePager
 	/**
 	 * Constructor.
 	 */
-	function __construct( WikilogItemQuery $query, Title $template, $limit = false ) {
+	function __construct( WikilogItemQuery $query, Title $template, $limit = false, $including = false ) {
 		global $wgParser;
 
 		# Parent constructor.
-		parent::__construct( $query, $limit );
+		parent::__construct( $query, $limit, $including );
 
 		# Load template
 		list( $this->mTemplate, $this->mTemplateTitle ) =
@@ -391,9 +392,10 @@ class WikilogArchivesPager
 	/**
 	 * Constructor.
 	 */
-	function __construct( WikilogItemQuery $query ) {
+	function __construct( WikilogItemQuery $query, $including = false ) {
 		# WikilogItemQuery object drives our queries.
 		$this->mQuery = $query;
+		$this->mIncluding = $including;
 
 		# Parent constructor.
 		parent::__construct();
