@@ -34,7 +34,7 @@ if ( !defined( 'MEDIAWIKI' ) )
  */
 $wgExtensionCredits['specialpage'][] = array(
 	'name'				=> 'Wikilog',
-	'version'			=> '0.8.1',
+	'version'			=> '0.8.1.1dev',
 	'author'			=> 'Juliano F. Ravasi',
 	'description'		=> 'Adds blogging features, creating a wiki-blog hybrid.',
 	'descriptionmsg'	=> 'wikilog-desc',
