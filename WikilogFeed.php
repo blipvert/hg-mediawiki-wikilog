@@ -476,7 +476,7 @@ class WikilogFeed
 	 * $wgFeedClasses.
 	 */
 	public function checkFeedOutput() {
-		global $wgFeed, $wgWikilogFeedClasses;
+		global $wgOut, $wgFeed, $wgWikilogFeedClasses;
 		if ( !$wgFeed ) {
 			$wgOut->addWikiMsg( 'feed-unavailable' );
 			return false;
