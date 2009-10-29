@@ -79,7 +79,8 @@ class WikilogCommentsPage
 		$this->mItem = WikilogItem::newFromInfo( $wi );
 
 		# Check if user can post.
-		$this->mUserCanPost = $wgUser->isAllowed( 'wl-postcomment' );
+		$this->mUserCanPost = $wgUser->isAllowed( 'wl-postcomment' ) ||
+			( $wgUser->isAllowed( 'edit' ) && $wgUser->isAllowed( 'createtalk' ) );
 		$this->mUserCanModerate = $wgUser->isAllowed( 'wl-moderation' );
 
 		# Form options.
