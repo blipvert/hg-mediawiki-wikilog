@@ -34,7 +34,7 @@ if ( !defined( 'MEDIAWIKI' ) )
  */
 $wgExtensionCredits['other'][] = array(
 	'name'				=> 'WlFeed',
-	'version'			=> '0.8.2',
+	'version'			=> '1.0.0',
 	'author'			=> 'Juliano F. Ravasi',
 	'description'		=> 'Enhanced feed generation classes.',
 	'descriptionmsg'	=> 'wlfeed-desc',
