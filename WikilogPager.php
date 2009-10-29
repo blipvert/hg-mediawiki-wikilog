@@ -179,7 +179,7 @@ class WikilogSummaryPager
 		$result = "<div class=\"{$divclass} visualClear\">";
 
 		# Edit section link.
-		if ( $item->mTitle->userCanEdit() ) {
+		if ( $item->mTitle->quickUserCan( 'edit' ) ) {
 			$result .= $this->editLink( $item->mTitle );
 		}
 
@@ -518,7 +518,7 @@ class WikilogArchivesPager
 				return $this->getSkin()->makeKnownLinkObj( $page, $text );
 
 			case '_wl_actions':
-				if ( $this->mCurrentItem->mTitle->userCanEdit() ) {
+				if ( $this->mCurrentItem->mTitle->quickUserCan( 'edit' ) ) {
 					return $this->editLink( $this->mCurrentItem->mTitle );
 				} else {
 					return '';

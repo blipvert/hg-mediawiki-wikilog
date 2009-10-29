@@ -65,14 +65,6 @@ class WikilogItemPage
 		$skin = $wgUser->getSkin();
 
 		if ( $this->mItem ) {
-			# Set page title
-			$fullPageTitle = wfMsg( 'wikilog-title-item-full',
-					$this->mItem->mName,
-					$this->mItem->mParentTitle->getPrefixedText()
-			);
-			$wgOut->setPageTitle( $this->mItem->mName );
-			$wgOut->setHTMLTitle( wfMsg( 'pagetitle', $fullPageTitle ) );
-
 			# Set page subtitle
 			$subtitleTxt = wfMsgExt( 'wikilog-item-sub',
 				array( 'parse', 'content' ),
@@ -110,6 +102,15 @@ class WikilogItemPage
 
 			# Display article.
 			parent::view();
+
+			# Override page title
+			# NOTE (MW1.16+): Must come after parent::view().
+			$fullPageTitle = wfMsg( 'wikilog-title-item-full',
+					$this->mItem->mName,
+					$this->mItem->mParentTitle->getPrefixedText()
+			);
+			$wgOut->setPageTitle( $this->mItem->mName );
+			$wgOut->setHTMLTitle( wfMsg( 'pagetitle', $fullPageTitle ) );
 
 			# Item page footer.
 			$footerTxt = wfMsgExt( 'wikilog-item-footer',
