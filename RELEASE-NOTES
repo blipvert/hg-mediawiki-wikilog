@@ -6,6 +6,28 @@ about the extension, including installation instructions, can be found on:
 
 http://www.mediawiki.org/wiki/Extension:Wikilog
 
+== Current development version ==
+
+=== New features ===
+
+* Users with edit and createtalk rights are allowed to use the post comment
+  interface.
+
+=== Bug fixes ===
+
+* Fix missing global in WikilogFeed::checkFeedOutput().
+* Various MediaWiki 1.16alpha compatibility fixes.
+
+
+== Wikilog 0.8.1 ==
+
+Sep 15, 2009
+
+=== Bug fixes in 0.8.1 ===
+
+* Fix regression that caused the template pager to damage the parser state.
+
+
 == Wikilog 0.8.0 ==
 
 Sep 12, 2009
