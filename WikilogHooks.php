@@ -268,12 +268,7 @@ class WikilogHooks
 		$dir = dirname(__FILE__) . '/';
 
 		if( $wgDBtype == 'mysql' ) {
-			foreach ( array( 'wikilogs', 'posts', 'authors', 'tags', 'comments' ) as $t )
-				$wgExtNewTables[] = array( "wikilog_{$t}", "{$dir}wikilog-tables.sql" );
-			$wgExtNewFields[] = array( 'wikilog_posts', 'wlp_parent', $dir . 'archives/patch-post-titles.sql' );
-			$wgExtNewFields[] = array( 'wikilog_posts', 'wlp_title',  $dir . 'archives/patch-post-titles.sql' );
-			$wgExtNewFields[] = array( 'wikilog_wikilogs', 'wlw_authors', $dir . 'archives/patch-wikilog-authors.sql' );
-			$wgExtNewFields[] = array( 'wikilog_posts', 'wlp_num_comments', $dir . 'archives/patch-comment-count.sql' );
+			$wgExtNewTables[] = array( "wikilog_wikilogs", "{$dir}wikilog-tables.sql" );
 		} else {
 			/// TODO: PostgreSQL, SQLite, etc...
 			print "\n".
