@@ -8,6 +8,10 @@
   for the template pager, used when embedding using templates. Old parameters
   'pubdate' and 'updated' were deprecated, and should be removed on v1.2.0.
 
+=== Bug fixes ===
+
+* wikilogImportDocumentation.php updated to work with MediaWiki 1.16.
+
 
 == Wikilog 1.0.0 ==
 
