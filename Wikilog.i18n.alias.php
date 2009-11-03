@@ -6,18 +6,17 @@
 
 $specialPageAliases = array();
 
-/**
- * English.
+/** English.
  * @author Juliano F. Ravasi
  */
 $specialPageAliases['en'] = array(
 	'Wikilog' => array( 'Wikilog', 'Wikilogs' ),
 );
 
-/**
- * Portuguese (Português)
+/** Portuguese (Português)
  * @author Juliano F. Ravasi
  */
 $specialPageAliases['pt'] = array(
 	'Wikilog' => array( 'Wikilog', 'Wikilogs' ),
 );
+
