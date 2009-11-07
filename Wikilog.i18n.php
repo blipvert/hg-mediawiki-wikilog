@@ -213,7 +213,7 @@ $messages['qqq'] = array(
 * $1 = Wikilog URL
 * $2 = Wikilog Name
 * $5 = Authors,
-* $6 = Publish date,
+* $6 = Publication date,
 * $7 = Comments link',
 	'wikilog-item-more' => 'Parameters:
 * $3 = Item URL',
@@ -223,7 +223,7 @@ $messages['qqq'] = array(
 * $3 is a date
 * $4 is a time',
 	'wikilog-comment-autosumm' => 'Parameters:
-* $1 is a  user name
+* $1 is a user name
 * $2 is a summary',
 	'wikilog-feed-title' => 'Parameters:
 * $1 is a title
