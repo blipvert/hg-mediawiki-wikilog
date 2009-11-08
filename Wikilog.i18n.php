@@ -81,6 +81,12 @@ $messages['en'] = array(
 
 	'wikilog-author-signature' => '[[{{ns:User}}:$1|$1]] ([[{{ns:User_talk}}:$1|talk]])',
 
+	# Edit page
+	'wikilog-edit-fieldset-legend' => 'Wikilog options:',
+	'wikilog-edit-signpub' => 'Sign and publish this article',
+	'wikilog-edit-signpub-tooltip' => 'Causes this article to be signed and published in its wikilog when saved. 
+Uncheck this box to keep the article as a draft.',
+
 	# Comments
 	'wikilog-comment-by-user' => 'Comment by $1 ($2)',
 	'wikilog-comment-by-anon' => 'Comment by $3 (anonymous)',
