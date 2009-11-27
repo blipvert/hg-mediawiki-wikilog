@@ -1,6 +1,13 @@
 = Wikilog release notes =
 
-== Current development version ==
+== Wikilog 1.0.1 ==
+
+Nov 27, 2009
+
+=== General notes ===
+
+This is a bugfix release of the 1.0.x branch.  There are no database changes
+since Wikilog 1.0.0.
 
 === New configuration options ===
 
@@ -19,6 +26,9 @@
 === Bug fixes ===
 
 * wikilogImportDocumentation.php updated to work with MediaWiki 1.16.
+* Fix pass-by-reference call warning on SkinTemplateTabs hook.
+* Fix timezone warnings with {{wl-publish:...}} parser function.
+* Allow 'wikilog-log-cmt-rejdel' message to use {{GENDER:...}}.
 
 
 == Wikilog 1.0.0 ==
@@ -30,8 +40,8 @@ First stable release of the Wikilog extension.
 === General notes ===
 
 Database patch archives were reset in the transition to version 1.0.0.  If
-were using a Wikilog version before 0.8.0, you should first upgrade to the
-last 0.8.x version and then upgrade to the latest version.  The database
+you was using a Wikilog version before 0.8.0, you should first upgrade to
+the last 0.8.x version and then upgrade to the latest version.  The database
 schema of 1.0.0 is the same of 0.8.x.
 
 
