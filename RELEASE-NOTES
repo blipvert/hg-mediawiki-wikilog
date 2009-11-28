@@ -1,5 +1,25 @@
 = Wikilog release notes =
 
+== Current development version ==
+
+=== New configuration options ===
+
+* $wgWikilogExtSummaries: use of categories and tags parameters in summary
+  entry header and footer messages.
+
+=== New features ===
+
+* Messages wikilog-item-brief-header/footer, wikilog-item-header/footer and
+  others replaced by wikilog-summary-header/footer, wikilog-entry-header/footer
+  and others, with better support for plural and gender inflection, separate
+  date and time, and also support to category and tag lists.
+
+=== Bug fixes ===
+
+* (mw:bug 21657) Message wikilog-item-brief-header/footer replaced by
+  wikilog-summary-header/footer and others, with proper PLURAL support.
+* (wl:issue 1) Improve header/footer item messages.
+
 == Wikilog 1.0.1 ==
 
 Nov 27, 2009
