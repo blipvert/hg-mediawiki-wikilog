@@ -14,6 +14,7 @@ $messages['en'] = array(
 	# Extension information
 	'wikilog-desc' => 'Adds blogging features, creating a wiki-blog hybrid',
 	'wikilog-auto' => 'Wikilog Auto', # reserved username
+	'wikilog-help' => "{{ns:Help}}:Wikilog",
 	'right-wl-postcomment' => 'Post comments to wikilog articles',
 	'right-wl-moderation' => 'Moderation of wikilog article comments',
 
@@ -31,6 +32,14 @@ $messages['en'] = array(
 	# Wikilog tab
 	'wikilog-tab' => 'Wikilog',
 	'wikilog-tab-title' => 'Wikilog actions',
+	'wikilog-missing-wikilog' => "
+This is the [[{{int:wikilog-help}}|wikilog]] page for [[{{FULLPAGENAME}}]].
+
+This wikilog does not exist yet.
+In order to publish articles and enable other wikilog features, it has to be created first.
+
+* <span class=\"plainlinks\">[{{fullurl:{{FULLPAGENAME}}|action=edit}} Create this wikilog].</span>
+",
 	'wikilog-information' => 'Wikilog information',
 	'wikilog-post-count-published' => 'There {{PLURAL:$1|is one published article|are $1 published articles}} in this wikilog',
 	'wikilog-post-count-drafts' => 'There {{PLURAL:$1|is one unpublished (draft) article|are $1 unpublished (draft) articles}}',
@@ -190,9 +199,14 @@ The comment will only appear after it is reviewed by a moderator.',
 $messages['qqq'] = array(
 	'wikilog-desc' => '{{desc}}',
 	'wikilog-auto' => 'This is a reserved username that will edit as a robot.',
+	'wikilog-help' => 'This is the title of the front help page for the extension.
+This should only be changed when a translation of the extension manual is available in the target language.
+Currently, English is the only language the manual is available in.
+So, let this value untranslated until the manual is available in your language.',
 	'right-wl-postcomment' => '{{doc-right|wl-postcomment}}',
 	'right-wl-moderation' => '{{doc-right|wl-moderation}}',
 	'wikilog-specialwikilog' => 'This is a special page name',
+	'wikilog-missing-wikilog' => 'Displayed when user visits a page for a wikilog that has not been created yet. Similar to {{msg-mw:noarticletext}}.',
 	'wikilog-log-cmt-approve' => 'Log action message used for entries describing comments approved by moderators, as in someone "did that". Similar to {{msg-mw|deletedarticle}} and {{msg-mw|protectedarticle}}.
 Parameters:
 * $1 is the page title of the approved comment.',
