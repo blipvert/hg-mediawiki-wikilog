@@ -19,4 +19,3 @@ $specialPageAliases['en'] = array(
 $specialPageAliases['pt'] = array(
 	'Wikilog' => array( 'Wikilog', 'Wikilogs' ),
 );
-
