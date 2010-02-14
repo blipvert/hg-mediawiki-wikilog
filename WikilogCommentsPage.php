@@ -1,7 +1,7 @@
 <?php
 /**
  * MediaWiki Wikilog extension
- * Copyright © 2008, 2009 Juliano F. Ravasi
+ * Copyright © 2008-2010 Juliano F. Ravasi
  * http://www.mediawiki.org/wiki/Extension:Wikilog
  *
  * This program is free software; you can redistribute it and/or modify
@@ -40,14 +40,14 @@ if ( !defined( 'MEDIAWIKI' ) )
  * comments.
  *
  * @note This class was designed to integrate with Wikilog, and won't work
- * for the rest of the wiki. If you wan't a similar interface for the other
+ * for the rest of the wiki. If you want a similar interface for the other
  * talk pages, you may want to check LiquidThreads or some other extension.
  */
 class WikilogCommentsPage
 	extends Article
 	implements WikilogCustomAction
 {
-	protected $mSkin;				///< Skin used for rendering the page.
+	protected $mSkin;				///< Skin used while rendering the page.
 	protected $mFormOptions;		///< Post comment form fields.
 	protected $mUserCanPost;		///< User is allowed to post.
 	protected $mUserCanModerate;	///< User is allowed to moderate.
@@ -126,8 +126,8 @@ class WikilogCommentsPage
 		if ( !$this->mSingleComment ) {
 			# Note: Sorry for the three-level cascade of wfMsg()'s...
 			$fullPageTitle = wfMsg( 'wikilog-title-item-full',
-					$this->mItem->mName,
-					$this->mItem->mParentTitle->getPrefixedText()
+				$this->mItem->mName,
+				$this->mItem->mParentTitle->getPrefixedText()
 			);
 			$fullPageTitle = wfMsg( 'wikilog-title-comments', $fullPageTitle );
 			$wgOut->setPageTitle( wfMsg( 'wikilog-title-comments', $this->mItem->mName ) );
@@ -151,8 +151,7 @@ class WikilogCommentsPage
 
 		# Add a backlink to the original article. Specially important in
 		# single comment pages.
-		$skin = $wgUser->getSkin();
-		$link = $skin->link( $this->mItem->mTitle, $this->mItem->mName );
+		$link = $this->mSkin->link( $this->mItem->mTitle, $this->mItem->mName );
 		$wgOut->setSubtitle( wfMsg( 'wikilog-backlink', $link ) );
 	}
 
