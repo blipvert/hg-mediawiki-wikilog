@@ -386,9 +386,22 @@ $messages['lzz'] = array(
  * @author Naudefj
  */
 $messages['af'] = array(
+	'wikilog-help' => '{{ns:help}}:Wikilog',
+	'wikilog-specialwikilog-title' => 'Wikilogs',
+	'wikilog-specialwikilog' => 'Wikilog',
+	'wikilog-log-pagename' => 'Wikilog-aksieslogboek',
+	'wikilog-log-pagetext' => "Hieronder is 'n lys van wikilog aksies:",
+	'wikilog-log-cmt-approve' => 'het kommentaar [[$1]] goedgekeur',
+	'wikilog-log-cmt-reject' => 'het kommentaar [[$1]] afgekeur',
+	'wikilog-tab' => 'Wikilog',
+	'wikilog-tab-title' => 'Wikilog-aksies',
+	'wikilog-information' => 'Wikilog-inligting',
 	'wikilog-new-item-go' => 'Skep',
+	'wikilog-item-name' => 'Artikelnaam:',
+	'wikilog-published' => 'Gepubliseer',
 	'wikilog-updated' => 'Opgedateer',
 	'wikilog-authors' => 'Outeurs',
+	'wikilog-wikilog' => 'Wikilog',
 	'wikilog-title' => 'Titel',
 	'wikilog-actions' => 'Aksies',
 	'wikilog-comments' => 'Kommentaar',
@@ -397,6 +410,8 @@ $messages['af'] = array(
 	'wikilog-view-summary' => 'Samevatting',
 	'wikilog-draft-title-mark' => '(werkweergawe)',
 	'wikilog-anonymous-mark' => '(anoniem)',
+	'wikilog-pager-newer-n' => '← nuwer $1',
+	'wikilog-pager-older-n' => 'ouer $1 →',
 	'wikilog-pager-newest' => '←← nuutste',
 	'wikilog-pager-oldest' => 'oudste →→',
 	'wikilog-pager-prev' => '← vorige',
@@ -415,6 +430,7 @@ $messages['af'] = array(
 	'wikilog-newtalk-text' => '<!-- leë bladsy deur Wikilog geskep -->',
 	'wikilog-title-comments' => 'Kommentaar - $1',
 	'wikilog-error-msg' => 'Wikilog: $1',
+	'wikilog-error-title' => 'Wikilog-fout',
 	'wikilog-invalid-param' => 'Ongeldige parameter: $1.',
 	'wikilog-invalid-author' => 'Ongeldige outeur: $1.',
 	'wikilog-invalid-date' => 'Ongeldige datum: $1.',
@@ -3162,6 +3178,29 @@ Komentar tersebut hanya akan muncul setelah ditinjau oleh seorang moderator.',
 	'wikilog-doc-import-comment' => 'Dokumentasi Wikilog terimpor',
 );
 
+/** Igbo (Igbo)
+ * @author Ukabia
+ */
+$messages['ig'] = array(
+	'wikilog-new-item-go' => 'Ké',
+	'wikilog-item-name' => 'Áhạ edemede:',
+	'wikilog-authors' => 'Onye déré',
+	'wikilog-title' => 'Ishi edemede',
+	'wikilog-actions' => 'Mmèmé',
+	'wikilog-view-summary' => 'Mmẹkotá',
+	'wikilog-anonymous-mark' => '(onye amágị)',
+	'wikilog-pager-older-n' => 'nke dítú ichíé $1 →',
+	'wikilog-pager-newest' => '←← nke ohúrù',
+	'wikilog-pager-oldest' => 'nke ichíé →→',
+	'wikilog-pager-last' => 'nke lara azu →→',
+	'wikilog-no-comments' => 'okwu a nogị',
+	'wikilog-summary-uncategorized' => 'E tibọ ya na ébé o gi nọr',
+	'wikilog-form-name' => 'Áhạ:',
+	'wikilog-edit-lc' => 'rüwa',
+	'wikilog-page-lc' => 'ihü',
+	'wikilog-history-lc' => 'akíkó mbu',
+);
+
 /** Japanese (日本語)
  * @author Aotake
  * @author Fryed-peach
@@ -4914,10 +4953,12 @@ $messages['ru'] = array(
 
 /** Sinhala (සිංහල)
  * @author Calcey
+ * @author චතුනි අලහප්පෙරුම
  */
 $messages['si'] = array(
 	'wikilog-desc' => 'බ්ලොග් විශේෂාංග එකතු කිරීම,විකි-බ්ලොග් මුහුම නිර්මාණය',
 	'wikilog-auto' => 'ස්වයං විකි ලඝු සටහන',
+	'wikilog-help' => '{{ns:Help}}:විකිලඝුව',
 	'right-wl-postcomment' => 'විකි ලඝු  ලිපිවලට විචාර තැපැල් කරන්න.',
 	'right-wl-moderation' => 'විකි ලඝු ලිපි විචාරවල මධ්‍යස්ථතාව',
 	'wikilog-specialwikilog-title' => 'විකි ලඝු සටහන්',
@@ -5491,6 +5532,7 @@ $messages['uk'] = array(
 	'wikilog-invalid-param' => 'Неправильний параметр: $1.',
 	'wikilog-invalid-author' => 'Неправильне ім’я автора: $1.',
 	'wikilog-form-category' => 'Категорія:',
+	'wikilog-form-name' => 'Назва:',
 	'wikilog-form-author' => 'Автор:',
 	'wikilog-form-tag' => 'Мітка:',
 	'wikilog-edit-lc' => 'редагувати',
