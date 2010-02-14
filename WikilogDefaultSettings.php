@@ -55,7 +55,7 @@ $wgWikilogStylePath = false;
  * Wikilog style version, incremented when $wgWikilogStylePath/wikilog.css
  * is changed.
  */
-$wgWikilogStyleVersion = 3;
+$wgWikilogStyleVersion = 4;
 
 /* *** Presentation options *** */
 
