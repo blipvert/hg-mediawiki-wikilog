@@ -142,6 +142,13 @@ $messages['he'] = array(
 	'wlfeed-desc' => 'מחלקות מתקדמות לייצור הזנות',
 );
 
+/** Croatian (Hrvatski)
+ * @author Tivek
+ */
+$messages['hr'] = array(
+	'wlfeed-desc' => 'Poboljšane klase za stvaranje feedova',
+);
+
 /** Upper Sorbian (Hornjoserbsce)
  * @author Michawiki
  */
@@ -196,6 +203,13 @@ $messages['ksh'] = array(
  */
 $messages['lb'] = array(
 	'wlfeed-desc' => 'Verbessert Klasse vu Generatioun vu Feed',
+);
+
+/** Limburgish (Limburgs)
+ * @author Ooswesthoesbes
+ */
+$messages['li'] = array(
+	'wlfeed-desc' => "Klasse veur 't aanmake van verbaeterde feeds",
 );
 
 /** Macedonian (Македонски)

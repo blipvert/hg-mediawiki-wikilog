@@ -618,6 +618,9 @@ class WikilogParserOutput
  * the cache separately. This derived class from ParserCache overloads the
  * getKey() function in order to provide a specific namespace for this
  * purpose.
+ *
+ * @deprecated In MediaWiki 1.17, in favor of $parserOpt->addExtraKey().
+ * @todo (In Wikilog 1.3.x) Remove this class.
  */
 class WikilogParserCache
 	extends ParserCache
