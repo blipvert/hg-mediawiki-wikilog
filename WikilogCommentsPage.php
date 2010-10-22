@@ -72,7 +72,6 @@ class WikilogCommentsPage
 		global $wgUser, $wgRequest;
 
 		parent::__construct( $title );
-		wfLoadExtensionMessages( 'Wikilog' );
 
 		# Check if user can post.
 		$this->mUserCanPost = $wgUser->isAllowed( 'wl-postcomment' ) ||
@@ -314,10 +313,10 @@ class WikilogCommentsPage
 		}
 
 		$form =
-			Xml::hidden( 'title', $this->getTitle()->getPrefixedText() ) .
-			Xml::hidden( 'action', 'wikilog' ) .
-			Xml::hidden( 'wpEditToken', $wgUser->editToken() ) .
-			( $parent ? Xml::hidden( 'wlParent', $parent->mID ) : '' );
+			Html::hidden( 'title', $this->getTitle()->getPrefixedText() ) .
+			Html::hidden( 'action', 'wikilog' ) .
+			Html::hidden( 'wpEditToken', $wgUser->editToken() ) .
+			( $parent ? Html::hidden( 'wlParent', $parent->mID ) : '' );
 
 		$fields = array();
 
@@ -364,7 +363,7 @@ class WikilogCommentsPage
 		$form .= WikilogUtils::buildForm( $fields );
 
 		foreach ( $opts->getUnconsumedValues() as $key => $value ) {
-			$form .= Xml::hidden( $key, $value );
+			$form .= Html::hidden( $key, $value );
 		}
 
 		$form = Xml::tags( 'form', array(
