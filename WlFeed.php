@@ -35,7 +35,7 @@ if ( !defined( 'MEDIAWIKI' ) )
 $wgExtensionCredits['other'][] = array(
 	'path'           => __FILE__,
 	'name'           => 'WlFeed',
-	'version'        => '1.1.1',
+	'version'        => '1.1.2',
 	'author'         => 'Juliano F. Ravasi',
 	'descriptionmsg' => 'wlfeed-desc',
 	'url'            => 'http://www.mediawiki.org/wiki/Extension:Wikilog',

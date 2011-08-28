@@ -1,5 +1,17 @@
 = Wikilog release notes =
 
+== Wikilog 1.1.2 ==
+
+=== General notes ===
+
+This is a bugfix release for the 1.1.x branch of Wikilog.
+
+=== Bug fixes ===
+
+* (wl:issue 12) Fixed calls to $wgParser->clearState() (which is now a private
+  function).
+
+
 == Wikilog 1.1.1 ==
 
 === General notes ===
