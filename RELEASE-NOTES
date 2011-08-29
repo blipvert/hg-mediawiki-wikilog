@@ -10,6 +10,7 @@ This is a bugfix release for the 1.1.x branch of Wikilog.
 
 * (wl:issue 12) Fixed calls to $wgParser->clearState() (which is now a private
   function).
+* Fixed a crash when creating a new wikilog post as an unlogged user.
 
 
 == Wikilog 1.1.1 ==

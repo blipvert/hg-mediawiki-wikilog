@@ -476,7 +476,7 @@ class WikilogParser
 		}
 
 		$user = User::newFromName( $name );
-		if ( !is_null( $user ) ) {
+		if ( $user ) {
 			$parser->mExtWikilog->mAuthors[$user->getName()] = $user->getID();
 		}
 		else {
