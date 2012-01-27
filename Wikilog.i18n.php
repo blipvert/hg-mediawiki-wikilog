@@ -6757,7 +6757,7 @@ $messages['sr-ec'] = array(
 	'wikilog-delete-lc' => 'обриши',
 	'wikilog-approve-lc' => 'одобри',
 	'wikilog-reject-lc' => 'одбаци',
-	'wikilog-page-lc' => 'страна',
+	'wikilog-page-lc' => 'страница',
 	'wikilog-history-lc' => 'историја',
 );
 
