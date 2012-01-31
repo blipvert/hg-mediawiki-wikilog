@@ -4994,6 +4994,14 @@ $messages['nds-nl'] = array(
 	'wikilog-form-date' => 'Daotum:',
 );
 
+/** Nepali (नेपाली)
+ * @author RajeshPandey
+ */
+$messages['ne'] = array(
+	'wikilog-has-comments' => '{{PLURAL:$1|एक टिप्पणी|$1 टिप्पणीहरू}}',
+	'wikilog-form-comment' => 'टिप्पणी :',
+);
+
 /** Dutch (Nederlands)
  * @author McDutchie
  * @author Siebrand
