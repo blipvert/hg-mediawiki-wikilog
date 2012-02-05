@@ -5363,7 +5363,7 @@ $messages['pdc'] = array(
 	'wikilog-form-comment' => 'Aamaericking:',
 	'wikilog-preview' => 'Devor aagucke',
 	'wikilog-edit-lc' => 'ennere',
-	'wikilog-delete-lc' => 'lesche',
+	'wikilog-delete-lc' => 'verwische',
 	'wikilog-page-lc' => 'Blatt',
 );
 
