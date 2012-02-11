@@ -7728,6 +7728,7 @@ $messages['zh-hans'] = array(
 
 /** Traditional Chinese (‪中文(繁體)‬)
  * @author Mark85296341
+ * @author Oapbtommy
  */
 $messages['zh-hant'] = array(
 	'wikilog-new-item-go' => '建立',
@@ -7807,7 +7808,7 @@ $messages['zh-hant'] = array(
 	'wikilog-post-comment' => '發表新評論',
 	'wikilog-post-reply' => '發表新回復',
 	'wikilog-form-legend' => '搜尋 wikilog 文章',
-	'wikilog-form-category' => '分類：',
+	'wikilog-form-category' => '類別：',
 	'wikilog-form-name' => '名稱：',
 	'wikilog-form-author' => '作者：',
 	'wikilog-form-tag' => '標籤：',
