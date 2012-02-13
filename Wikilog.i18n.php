@@ -5113,7 +5113,7 @@ Geef hierboven een pseudoniem op bij uw reactie.
 U kunt zich ook $1.',
 	'wikilog-anonymous-moderated' => 'Uw reactie is niet direct zichtbaar op de pagina als u deze hebt opgeslagen.
 Er vindt eerst een controle plaats door een moderator.',
-	'wikilog-post-comment' => 'Nieuwe reactie plaatsen',
+	'wikilog-post-comment' => 'Nieuwe opmerking plaatsen',
 	'wikilog-post-reply' => 'Nieuwe reactie plaatsen',
 	'wikilog-form-legend' => 'Wikilog-artikelen zoeken',
 	'wikilog-form-wikilog' => 'Wikilog:',
