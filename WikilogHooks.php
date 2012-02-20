@@ -126,7 +126,7 @@ class WikilogHooks
 				# LinksUpdate process.
 				$dbw->replace(
 					'wikilog_wikilogs',
-					'wlw_page',
+					array('wlw_page'),
 					array(
 						'wlw_page' => $id,
 						'wlw_subtitle' => $dbw->encodeBlob( serialize( $subtitle ) ),
@@ -342,6 +342,11 @@ class WikilogHooks
 				"{$dir}wikilog-tables.sql", true ) );
 			$updater->addExtensionUpdate( array( 'addIndex', "wikilog_comments",
 				"wlc_timestamp", "{$dir}archives/patch-comments-indexes.sql", true ) );
+		} 		
+		elseif ( $updater->getDB()->getType() == 'postgres' ) {
+		  $updater->addExtensionUpdate( array( 'addTable', 
+						       "wikilog_wikilogs",
+						       "{$dir}wikilog-tables.psql.sql", true ) );
 		} else {
 			// TODO: PostgreSQL, SQLite, etc...
 			print "\n" .
