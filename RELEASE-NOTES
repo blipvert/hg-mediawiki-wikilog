@@ -8,6 +8,8 @@
 
 === New features ===
 
+* (wl:issue 19) Support for PostgreSQL added, thanks to John Morton.
+
 === Bug fixes ===
 
 
