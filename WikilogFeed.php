@@ -486,7 +486,7 @@ class WikilogItemFeed
 					$row->wlw_updated, $wikilogTitle->getFullUrl(), $self
 				);
 				if ( $row->wlw_subtitle ) {
-					$st = @ unserialize( $row->wlw_subtitle );
+					$st = @ unserialize( $this->mDb->decodeBlob( $row->wlw_subtitle ) );
 					if ( is_array( $st ) ) {
 						$feed->setSubtitle( new WlTextConstruct( $st[0], $st[1] ) );
 					} elseif ( is_string( $st ) ) {
@@ -505,7 +505,7 @@ class WikilogItemFeed
 					$this->addCategories( $feed, $row->wlw_page );
 				}
 				if ( $row->wlw_authors ) {
-					$authors = unserialize( $row->wlw_authors );
+					$authors = unserialize( $this->mDb->decodeBlob( $row->wlw_authors ) );
 					foreach ( $authors as $user => $userid ) {
 						$usertitle = Title::makeTitle( NS_USER, $user );
 						$feed->addAuthor( $user, $usertitle->getFullUrl() );
@@ -543,7 +543,7 @@ class WikilogItemFeed
 		list( $article, $parserOutput ) = WikilogUtils::parsedArticle( $itemTitle, true );
 
 		# Generate some fixed bits
-		$authors = unserialize( $row->wlp_authors );
+		$authors = unserialize( $this->mDb->decodeBlob( $row->wlp_authors ) );
 
 		# Create new syndication entry.
 		$entry = new WlSyndicationEntry(

@@ -366,8 +366,8 @@ class WikilogItemQuery
 
 		# Filter by date.
 		if ( $this->mDate ) {
-			$q_conds[] = 'wlp_pubdate >= ' . $db->addQuotes( $this->mDate->start );
-			$q_conds[] = 'wlp_pubdate < ' . $db->addQuotes( $this->mDate->end );
+			$q_conds[] = 'wlp_pubdate >= ' . $db->addQuotes( $db->timestamp( $this->mDate->start ) );
+			$q_conds[] = 'wlp_pubdate < ' . $db->addQuotes( $db->timestamp( $this->mDate->end ) );
 		}
 
 		# Add last comment timestamp, used in syndication feeds.
@@ -375,7 +375,11 @@ class WikilogItemQuery
 			$q_tables[] = 'wikilog_comments';
 			$q_fields[] = 'MAX(wlc_updated) AS _wlp_last_comment_timestamp';
 			$q_joins['wikilog_comments'] = array( 'LEFT JOIN', 'wlp_page = wlc_post' );
-			$q_options['GROUP BY'] = 'wlp_page';
+			if ( $db->implicitGroupby() ) {
+				$q_options['GROUP BY'] = 'wlp_page';
+			} else {
+				$q_options['GROUP BY'] = WikilogItem::selectFields( true /* for_groupby */ );
+			}
 		}
 
 		return array(
@@ -690,8 +694,8 @@ class WikilogCommentQuery
 
 		# Filter by date.
 		if ( $this->mDate ) {
-			$q_conds[] = 'wlc_timestamp >= ' . $db->addQuotes( $this->mDate->start );
-			$q_conds[] = 'wlc_timestamp < ' . $db->addQuotes( $this->mDate->end );
+			$q_conds[] = 'wlc_timestamp >= ' . $db->addQuotes( $db->timestamp( $this->mDate->start ) );
+			$q_conds[] = 'wlc_timestamp < ' . $db->addQuotes( $db->timestamp( $this->mDate->end ) );
 		}
 
 		# Additional data.

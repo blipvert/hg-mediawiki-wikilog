@@ -301,11 +301,11 @@ class WikilogMainPage
 			$dbr = wfGetDB( DB_SLAVE );
 			$data = $this->getWikilogDataFromId( $dbr, $this->getId() );
 			if ( $data ) {
-				$this->mWikilogSubtitle = unserialize( $data->wlw_subtitle );
+				$this->mWikilogSubtitle = unserialize( $dbr->decodeBlob( $data->wlw_subtitle ) );
 				$this->mWikilogIcon = $data->wlw_icon;
 				$this->mWikilogLogo = $data->wlw_logo;
 				$this->mWikilogUpdated = wfTimestamp( TS_MW, $data->wlw_updated );
-				$this->mWikilogAuthors = unserialize( $data->wlw_authors );
+				$this->mWikilogAuthors = unserialize( $dbr->decodeBlob( $data->wlw_authors ) );
 				if ( !is_array( $this->mWikilogAuthors ) ) {
 					$this->mWikilogAuthors = array();
 				}

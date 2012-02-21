@@ -114,8 +114,8 @@ class WikilogItem
 				'wlp_publish' => $this->mPublish,
 				'wlp_pubdate' => $this->mPubDate ? $dbw->timestamp( $this->mPubDate ) : '',
 				'wlp_updated' => $this->mUpdated ? $dbw->timestamp( $this->mUpdated ) : '',
-				'wlp_authors' => serialize( $this->mAuthors ),
-				'wlp_tags'    => serialize( $this->mTags ),
+				'wlp_authors' => $dbw->encodeBlob( serialize( $this->mAuthors ) ),
+				'wlp_tags'    => $dbw->encodeBlob( serialize( $this->mTags ) ),
 			),
 			__METHOD__
 		);
@@ -227,7 +227,7 @@ class WikilogItem
 	 * @param $row Row from database.
 	 * @return New WikilogItem object.
 	 */
-	public static function newFromRow( $row ) {
+	public static function newFromRow( $row, $db ) {
 		$item = new WikilogItem();
 		$item->mID          = intval( $row->wlp_page );
 		$item->mName        = strval( $row->wlp_title );
@@ -239,8 +239,8 @@ class WikilogItem
 		$item->mPubDate     = $row->wlp_pubdate ? wfTimestamp( TS_MW, $row->wlp_pubdate ) : null;
 		$item->mUpdated     = $row->wlp_updated ? wfTimestamp( TS_MW, $row->wlp_updated ) : null;
 		$item->mNumComments = $row->wlp_num_comments;
-		$item->mAuthors     = unserialize( $row->wlp_authors );
-		$item->mTags        = unserialize( $row->wlp_tags );
+		$item->mAuthors     = unserialize( $db->decodeBlob( $row->wlp_authors ) );
+		$item->mTags        = unserialize( $db->decodeBlob( $row->wlp_tags ) );
 		if ( !is_array( $item->mAuthors ) ) {
 			$item->mAuthors = array();
 		}
@@ -260,7 +260,7 @@ class WikilogItem
 		$dbr = wfGetDB( DB_SLAVE );
 		$row = self::loadFromID( $dbr, $id );
 		if ( $row ) {
-			return self::newFromRow( $row );
+			return self::newFromRow( $row, $dbr );
 		}
 		return null;
 	}
@@ -335,15 +335,32 @@ class WikilogItem
 	/**
 	 * Return the list of post fields required to create a new instance of
 	 * WikilogItem.
+	 * @param $for_groupby Return only the expressions, not the aliases, for
+	 *   use in SQL GROUP BY predicates.
 	 */
-	public static function selectFields() {
+	public static function selectFields( $for_groupby = false ) {
+		$ret = array();
+		foreach ( self::getFields() as $alias => $expression ) {
+			if ( is_numeric( $alias ) || $for_groupby ) {
+				$ret[] = $expression;
+			} else {
+				$ret[] = "${expression} AS ${alias}";
+			}
+		}
+		return $ret;
+	}
+
+	/**
+	 * Return the internal list of fields.
+	 */
+	private static function getFields() {
 		return array(
 			'wlp_page',
 			'wlp_parent',
-			'w.page_namespace AS wlw_namespace',
-			'w.page_title AS wlw_title',
-			'p.page_namespace AS page_namespace',
-			'p.page_title AS page_title',
+			'wlw_namespace'  => 'w.page_namespace',
+			'wlw_title'      => 'w.page_title',
+			'page_namespace' => 'p.page_namespace',
+			'page_title'     => 'p.page_title',
 			'wlp_title',
 			'wlp_publish',
 			'wlp_pubdate',

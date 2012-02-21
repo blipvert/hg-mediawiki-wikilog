@@ -129,10 +129,10 @@ class WikilogHooks
 					'wlw_page',
 					array(
 						'wlw_page' => $id,
-						'wlw_subtitle' => serialize( $subtitle ),
+						'wlw_subtitle' => $dbw->encodeBlob( serialize( $subtitle ) ),
 						'wlw_icon' => $output->mIcon ? $output->mIcon->getDBKey() : '',
 						'wlw_logo' => $output->mLogo ? $output->mLogo->getDBKey() : '',
-						'wlw_authors' => serialize( $output->mAuthors ),
+						'wlw_authors' => $dbw->encodeBlob( serialize( $output->mAuthors ) ),
 						'wlw_updated' => $dbw->timestamp()
 					),
 					__METHOD__

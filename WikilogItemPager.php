@@ -149,7 +149,7 @@ class WikilogSummaryPager
 		$header = $footer = '';
 
 		# Retrieve article parser output and other data.
-		$item = WikilogItem::newFromRow( $row );
+		$item = WikilogItem::newFromRow( $row, $this->mDb );
 		list( $article, $parserOutput ) = WikilogUtils::parsedArticle( $item->mTitle );
 		list( $summary, $content ) = WikilogUtils::splitSummaryContent( $parserOutput );
 
@@ -317,7 +317,7 @@ class WikilogTemplatePager
 		global $wgParser;
 
 		# Retrieve article parser output and other data.
-		$item = WikilogItem::newFromRow( $row );
+		$item = WikilogItem::newFromRow( $row, $this->mDb );
 		list( $article, $parserOutput ) = WikilogUtils::parsedArticle( $item->mTitle );
 		list( $summary, $content ) = WikilogUtils::splitSummaryContent( $parserOutput );
 		if ( empty( $summary ) ) {
@@ -437,7 +437,7 @@ class WikilogArchivesPager
 		$attribs = array();
 		$columns = array();
 		$this->mCurrentRow = $row;
-		$this->mCurrentItem = WikilogItem::newFromRow( $row );
+		$this->mCurrentItem = WikilogItem::newFromRow( $row, $this->mDb );
 		if ( !$this->mCurrentItem->getIsPublished() ) {
 			$attribs['class'] = 'wl-draft';
 		}
